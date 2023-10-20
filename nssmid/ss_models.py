@@ -278,8 +278,6 @@ class GRNSSM_dist(nn.Module):
         copy.load_state_dict(self.state_dict())
         return copy
 
-
-
 class FLNSSM_decoupling(nn.Module):
 
     def __init__(self, input_dim : int , hidden_dim : int , state_dim : int,  output_dim : int, 
@@ -462,7 +460,6 @@ class QFLNSSM(nn.Module):
                           self.output_dim, self.n_hid_layers, self.actF)
         copy.load_state_dict(self.state_dict())
         return copy
-
 
 
 class FLNSSM_Elman(nn.Module):
@@ -755,5 +752,24 @@ class DoublePendulum(nn.Module):
 
 
 
+class SDP_problem(torch.nn.Module):
+    def __init__(self, nx, c, vA, M0) -> None:
+        super(SDP_problem, self).__init__()
 
+        self.x = nn.parameter.Parameter(torch.rand((1,nx))).requires_grad_(True)
+        self.c = torch.Tensor(c)
+        self.vA = vA # List of Tensors
+        self.M0 = M0
+        self.layer = DDLayer(torch.eye(M0.shape[0]))
+
+    def forward(self):
+
+        nx = self.x.shape[1]
+        M = self.M0
+        for k in range(nx):
+            M = M + self.x[0][k]*self.vA[k]
+        dQ = self.layer(M)
+
+        obj = self.c @ self.x.T
+        return obj, dQ, M
 
