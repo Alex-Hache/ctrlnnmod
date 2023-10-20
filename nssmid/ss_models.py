@@ -1,12 +1,8 @@
 import torch.nn as nn
 import torch
-import numpy as np
-import math
 from  nssmid.linalg_utils import *
 from collections import OrderedDict
 from nssmid.layers import *
-import geotorch as geo
-from scipy.io import loadmat
 
 class NNLinear(nn.Module):
     """

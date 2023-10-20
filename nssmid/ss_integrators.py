@@ -111,7 +111,6 @@ class RK4Simulator(Simulator):
         Y_sim = torch.stack(Y_sim_list, 1)
         return X_sim, Y_sim
       
-
 class Sim_discrete(Simulator):
     def __init__(self, ss_model, ts = 1):
         super(Sim_discrete, self).__init__(ss_model=ss_model, ts=ts)
