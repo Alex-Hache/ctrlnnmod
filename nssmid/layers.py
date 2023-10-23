@@ -61,96 +61,6 @@ class BetaLayer(nn.Module):
         sig = self.pos_func(x)
         return self.U(sig.unsqueeze(-2) @ self.V.transpose(-2, -1))
 
-
-
-
-class InertiaMatrix(nn.Module):
-
-    def __init__(self, nq, nh, actF = nn.Tanh(), func = 'softplus', tol = 0.01) -> None:
-
-        '''
-        This function initiates a "beta layer" whiches produce a matrix valued function 
-        beta(x) where beta(x) is invertible and of size n_inputsx n_inputs : 
-            * beta(x) = U sigma(x) V
-            where U,V are orthogonal matrices and 
-            sigma(x) a one-layer feedforward neural network  : pos_func(W_out \sigma(W_in x + b_in)+b_out)
-
-            It is initialized to be Identity matrix
-        '''
-        super(InertiaMatrix, self).__init__()
-
-        self.nu = nq
-        self.nh = nh
-        self.actF = actF
-        self.U  = nn.Linear(self.nu, self.nu, bias = None)
-        nn.init.eye_(self.U.weight)
-        geotorch.orthogonal(self.U, "weight")
-
-        self.W_beta_in = nn.Linear(self.nu, self.nh)
-        self.W_beta_out = nn.Linear(self.nh, self.nu)
-        nn.init.zeros_(self.W_beta_out.weight)
-        nn.init.zeros_(self.W_beta_out.bias)
-
-        if func == 'softplus':
-            self.pos_func = CustomSoftplus(beta=1, threshold=20, margin=tol)
-        elif func == 'relu':
-            self.pos_func = nn.ReLU()
-        else:
-            raise(NotImplementedError("Not implemented yet"))
-
-    
-    def forward(self, x):
-        sig = self.W_beta_in(x)
-        sig = self.actF(sig)
-        sig = self.W_beta_out(sig)
-        sig = self.pos_func(x)
-        return self.U(sig.unsqueeze(-2) @ self.U.weight.transpose(-2, -1))
-
-
-
-class CoriolisMatrix(nn.Module):
-
-    def __init__(self, nq, nh, actF = nn.Tanh(), func = 'softplus', tol = 0.01) -> None:
-
-        '''
-        This function initiates a "beta layer" whiches produce a matrix valued function 
-        beta(x) where beta(x) is invertible and of size n_inputsx n_inputs : 
-            * beta(x) = U sigma(x) V
-            where U,V are orthogonal matrices and 
-            sigma(x) a one-layer feedforward neural network  : pos_func(W_out \sigma(W_in x + b_in)+b_out)
-
-            It is initialized to be Identity matrix
-        '''
-        super(BetaLayer, self).__init__()
-
-        self.nu = nq
-        self.nh = nh
-        self.actF = actF
-        self.U  = nn.Linear(self.nu, self.nu, bias = None)
-        nn.init.eye_(self.U.weight)
-        geotorch.orthogonal(self.U, "weight")
-
-        self.W_beta_in = nn.Linear(self.nu, self.nh)
-        self.W_beta_out = nn.Linear(self.nh, self.nu)
-        nn.init.zeros_(self.W_beta_out.weight)
-        nn.init.zeros_(self.W_beta_out.bias)
-
-        if func == 'softplus':
-            self.pos_func = CustomSoftplus(beta=1, threshold=20, margin=tol)
-        elif func == 'relu':
-            self.pos_func = nn.ReLU()
-        else:
-            raise(NotImplementedError("Not implemented yet"))
-
-    
-    def forward(self, x):
-        sig = self.W_beta_in(x)
-        sig = self.actF(sig)
-        sig = self.W_beta_out(sig)
-        sig = self.pos_func(x)
-        return self.U(sig.unsqueeze(-2) @ self.U.transpose(-2, -1))
-
-
 class DDLayer(nn.Module):
     def __init__(self, Ui : torch.Tensor) -> None:
         super(DDLayer, self).__init__()
@@ -178,7 +88,7 @@ class DDLayer(nn.Module):
             From the current M value we update U to update search region in DD+
             If correct : DDLayer(updateU_(M)) = I
         '''
-        Q = self(M)
+        #Q = self(M)
         #M_next = inv(self.Ui.T) @ Q @ inv(self.Ui)
         #assert torch.all(M_next == M)
         self.Ui = inv(cholesky(M).mH)

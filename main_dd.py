@@ -62,9 +62,8 @@ if __name__=='__main__':
 
         # First define alpha stability criterion
         alpha = torch.max(torch.real(torch.linalg.eigvals(A0))).numpy()
-        lmi = LMI_DecayRate(model.linmod.A.weight, alpha, epsilon = 1e-6)
-        Z = torch.eye((2*nx))
-        rel_lmi = RelaxedLMI(lmi, Z)
+        lmi = LMI_decay_rate(alpha,model.linmod.A.weight, epsilon = 1e-6)
+
         model_sim = RK4Simulator(model, ts)
 
 

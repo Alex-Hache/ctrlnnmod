@@ -1,5 +1,6 @@
 import torch
 from torch.nn import MSELoss
+from nssmid.layers import DDLayer
 
 class Mixed_MSELOSS(torch.nn.Module):
     """
@@ -36,6 +37,34 @@ class Mixed_MSELOSS_LMI(torch.nn.Module):
 
     def update_mu_(self, scale):
         self.mu = self.mu*scale
+
+
+class Mixed_MSELOSS_LMI_DD(torch.nn.Module):
+    def __init__(self, lmi, alpha= 0.5, mu = 1) -> None:
+        super(Mixed_MSELOSS_LMI, self).__init__()
+        self.crit = MSELoss()
+        self.lmi = lmi
+        self.mu = mu
+        self.alpha = alpha
+        M = lmi()
+        Ui = torch.eye(M.shape[0]) # Shape of the LMI
+        self.layer = DDLayer(Ui)
+
+    def forward(self, y_true, y_sim, x_true, x_sim):
+        x_mse = self.crit(x_true, x_sim)
+        y_mse = self.crit(y_true, y_sim)
+        L1 = self.alpha*x_mse + (1- self.alpha)*y_mse
+        lmi = self.lmi()
+        eig_val,_ = torch.linalg.eig(lmi)
+        assert torch.all(torch.real(eig_val)>0)
+
+        # DD+ approximation
+        dQ = self.layer(lmi)
+        L2 = torch.max(dQ)
+        return L1 + self.mu*L2
+
+    def update_basis_(self, M):
+        self.layer.updateU_(M) #The basis update for basis pursuit.
 
 class Mix_MSE_DistAtt(torch.nn.Module):
     def __init__(self, model, alpha=0, gamma = 1) -> None:
