@@ -7,6 +7,45 @@ import torch
 from torch.nn import Module
 from torch import Tensor
 
+
+
+'''
+    Utility functions
+
+'''
+
+def block_diag(arr_list):
+    '''create a block diagonal matrix from a list of cvxpy matrices'''
+
+    # rows and cols of block diagonal matrix
+    m = np.sum([arr.shape[0] for arr in arr_list])
+    n = np.sum([arr.shape[1] for arr in arr_list])
+
+    # loop to create the list for the bmat function
+    block_list = []  # list for bmat function
+    ind = np.array([0,0])
+    for arr in arr_list:
+        # index of the end of arr in the block diagonal matrix
+        ind += arr.shape
+
+        # list of one row of blocks
+        horz_list = [arr]
+
+        # block of zeros to the left of arr
+        zblock_l = np.zeros((arr.shape[0], ind[1]-arr.shape[1]))
+        if zblock_l.shape[1] > 0:
+            horz_list.insert(0, zblock_l)
+
+        # block of zeros to the right of arr
+        zblock_r = np.zeros((arr.shape[0], n-ind[1]))
+        if zblock_r.shape[1] > 0:
+            horz_list.append(zblock_r)
+
+        block_list.append(horz_list)
+
+    B = cp.bmat(block_list)
+
+    return B
 '''
     Continuous time LMI versions
 '''
@@ -20,7 +59,7 @@ class LMI_Lyap(Module):
     def __init__(self, A : torch.Tensor, epsilon : float = 1e-6) -> None:
         super(LMI_Lyap, self).__init__()
 
-        self.P = self.P = Parameter(torch.empty_like(A))
+        self.P = Parameter(torch.empty_like(A))
         #self.P = Parameter(torch.empty_like(A))
         geo.positive_semidefinite(self, "P")
         M, P = self.init_lmi(A,epsilon = epsilon)
@@ -283,7 +322,161 @@ class Lipschitz1Layer(Module):
     def symT(self):
         self.T = Parameter(0.5*(self.T + self.T.T))
 
+class Lipschitz(Module):
+    def __init__(self, model, upper_slope : float, epsilon : float = 1e-6, L_presc = 1e7) -> None:
+        super(Lipschitz, self).__init__()
 
+        layer_dims = []
+        idx_weights = []
+        idx = 0
+        for layer in model.layers:
+            if hasattr(layer, 'weight'):
+                layer_dims.append(tuple(layer.weight.shape))
+                idx_weights.append(idx)
+            idx = idx +1
+        self.idx_weights = idx_weights
+        self.beta = upper_slope
+        self.dims = model.dims
+        self.layers = model.layers # Model must be pure feedforward
+        T, L = self.solve_lmi()
+        # Implementation to do with n independent variables it won't be necessary to re diag the tensor at each step
+        self.T = Parameter(T.requires_grad_(True)) 
+        if L< L_presc:
+            self.L = L_presc
+        else:
+            self.L = L
+        print(f'Prescribed Lipschitz constant = {float(self.L):.4e}')
+
+
+
+    def solve_lmi(self, epsilon = 1e-6, solver = "MOSEK"):
+        print("Initializing Lipschitz LMI \n")
+
+        Ts = [cp.Variable((self.dims[i], self.dims[i]), diag = True) for i in range(1,len(self.dims)-1)]
+        T = block_diag(Ts)
+        Ft = cp.bmat([[np.zeros(T.shape), self.beta*T],[self.beta*T, -2*T]])
+        dims_A = self.idx_weights[:-1]
+        Ws = [self.layers[i].weight.detach().numpy() for i in dims_A]
+        W = block_diag(Ws)
+        print(W.shape)
+        A = cp.hstack([W,np.zeros((W.shape[0],self.dims[-2]))])
+        print(A.shape)
+        dims_B = self.dims[1:-1]
+        
+        I_B = np.eye(sum(dims_B))
+        B = cp.hstack([np.zeros((I_B.shape[0],self.dims[0])), I_B])
+        print(B.shape)
+        AB = cp.vstack([A,B])
+        LMI = AB.T @ Ft @ AB
+
+        LMI_schur = block_diag([LMI,np.zeros((self.dims[-1],self.dims[-1]))])
+
+        # 2eme partie LMI
+        lip = cp.Variable()
+
+        L = -lip*np.eye(self.dims[0])
+
+        # Block schur last layer
+        b11 = np.zeros((self.dims[-2],self.dims[-2]))
+        b12 = self.layers[self.idx_weights[-1]].weight.T.detach().numpy()
+        b21 = self.layers[self.idx_weights[-1]].weight.detach().numpy()
+        b22 = -np.eye(self.dims[-1])
+        bf = cp.bmat([[b11, b12], [b21,b22]])
+
+        dim_inter = sum(self.dims[1:-2]) 
+        if dim_inter > 0:
+            inter = np.zeros((dim_inter, dim_inter))
+            part2 = block_diag([L,inter, bf])
+        else:
+            part2 = block_diag([L,bf])
+
+        M = LMI_schur + part2 
+
+        '''      
+        Dn = -np.eye(self.dims[-1])
+
+
+        lDiag = [D0, Ts, Dn]
+
+        lSubDiag = [self.beta*Ts[i] @ self.layers[i].weight().detach().numpy() for i in range(0,len(self.layers)-1)] 
+        lSubDiag.append(self.layers[-1].weight().detach().numpy())
+        lUpDiag = [subDiagTensor.T for subDiagTensor in lSubDiag]
+
+        M_diag = block_diag(lDiag)
+        M_subdiag = block_diag(lSubDiag, k=-1)
+        M_updiag = block_diag(lUpDiag, k=1) 
+
+        M = M_diag + M_subdiag + M_updiag
+        '''
+        nM = M.shape[0]
+        nT = T.shape[0]
+        constraints = [M << -np.eye(nM)*epsilon, T -(epsilon)*np.eye(nT)>> 0, lip-epsilon >= 0] 
+        objective = cp.Minimize(lip) # Find lowest lipschitz constant
+
+        prob = cp.Problem(objective, constraints= constraints)
+        prob.solve(solver)
+        if prob.status not in ["infeasible", "unbounded"]:
+        # Otherwise, problem.value is inf or -inf, respectively.
+            print(" Lipschitz Constant upper bound : \n")
+            
+            print(np.sqrt(lip.value))
+            
+        else:
+            raise ValueError("SDP problem is infeasible or unbounded")
+
+        lip = torch.Tensor(np.array(np.sqrt(lip.value))).to(dtype=torch.float32)
+        # Evaluate if it closed to the boundary of the LMI
+        # X = np.linalg.inv(np.matmul(A.T ,P.value) + np.matmul(P.value,A))
+        # t = np.matmul(-A, X) -np.matmul(X,A.T) + 2*alpha*X
+        # If it is close to zero it is at the center
+        #Ts = [torch.Tensor(tens.value.todense()).to(dtype=torch.float32) for tens in Ts]
+        #T = torch.block_diag()
+        T = torch.Tensor(T.value).to(dtype=torch.float32)
+        M = torch.Tensor(M.value).to(dtype=torch.float32)
+        return T, lip
+
+    def forward(self):
+        
+        T = self.diagT_()
+        Ft = torch.vstack([torch.hstack([torch.zeros(T.shape), self.beta*T]),torch.hstack([self.beta*T, -2*T])])
+        dims_A = self.idx_weights[:-1]
+        Ws = [self.layers[i].weight for i in dims_A]
+        W = torch.block_diag(*tuple(Ws))
+        A = torch.hstack([W,torch.zeros((W.shape[0],self.dims[-2]))])
+        dims_B = self.dims[1:-1]
+        I_B = torch.eye(sum(dims_B))
+        B = torch.hstack([torch.zeros((I_B.shape[0],self.dims[0])), I_B])
+        AB = torch.cat([A,B])
+        LMI = AB.T @ Ft @ AB
+
+        LMI_schur = torch.block_diag(LMI,torch.zeros((self.dims[-1],self.dims[-1])))
+
+        # 2eme partie LMI
+        lip = self.L**2
+
+        L = -lip*torch.eye(self.dims[0])
+
+        # Block schur last layer
+        b11 = torch.zeros((self.dims[-2],self.dims[-2]))
+        b12 = self.layers[self.idx_weights[-1]].weight.T
+        b1 = torch.hstack([b11,b12])
+        b21 = self.layers[self.idx_weights[-1]].weight
+        b22 = -torch.eye(self.dims[-1])
+        b2 = torch.hstack([b21,b22])
+        bf = torch.vstack([b1,b2])
+
+        dim_inter = sum(self.dims[1:-2]) 
+        inter = torch.zeros((dim_inter, dim_inter))
+        part2 = torch.block_diag(L,inter, bf)
+
+        M = LMI_schur + part2 
+        #torch.block_diag
+        
+        return -M, T 
+
+    def diagT_(self):
+        return torch.diag(torch.diag(self.T))
+    
 '''
     Discrete time LMI versions
 '''

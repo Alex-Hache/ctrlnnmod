@@ -57,3 +57,4 @@ def setSavingName(model, nh, n_layers, n_seq, n_batch, lr, optimizer, n_iter, ga
     strSimFigName = f"Sim_{model}_{nh}_{n_layers}_{n_seq}_{n_batch}_{lr}_{optimizer}_{n_iter}epch_{gamma :.3e}.png"
 
     return strMatFileName, strLossFigName, strSimFigName
+

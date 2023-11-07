@@ -1,9 +1,164 @@
 import torch
 import numpy as np
 from torch.utils.data import Dataset, DataLoader
+import torch.nn as nn
+import torch.nn.functional as F
+import importlib 
+import os
+
+def seed_everything(seed: int = 42):
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    if torch.cuda.is_available(): 
+        torch.cuda.manual_seed(seed)
+        torch.cuda.manual_seed_all(seed)
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
+
+## square-wave ----------------------------------------------------------
+def square_wave_loaders(config):
+    fpath = "./data/square-wave.pt"
+    train_size, test_size = 300, 200
+    if os.path.isfile(fpath):
+        data = torch.load(fpath)
+    else:
+        x, y = square_wave(train_size)
+        xt, yt = square_wave(test_size, xrand=False)
+        data = {"xt":xt, "yt":yt, "x":x, "y":y}
+        torch.save(data, fpath)
+
+    train_dataset = Curve(data['x'], data['y'])
+    test_dataset  = Curve(data['xt'], data['yt'])
+        
+    trainLoader = DataLoader(train_dataset,batch_size=config.train_batch_size, shuffle=True, pin_memory=True)
+
+    testLoader = DataLoader(test_dataset, batch_size=config.test_batch_size, shuffle=False, pin_memory=True)
+
+    return trainLoader, testLoader
+
+def square_wave(size, xrand=True):
+        if xrand:
+            x = 2*(2*torch.rand(size,1) - 1)
+        else:
+            x = torch.linspace(-2.0, 2.0, size).reshape((size,1))
+        y = torch.zeros((size,1))
+        for i in range(size):
+            if x[i, 0] <= -1.0:
+                y[i, 0] = 1.0
+            if x[i, 0] > 0.0 and x[i, 0] <= 1.0:
+                y[i, 0] = 1.0
+        return x, y
+
+class Curve(torch.utils.data.Dataset):
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+        self.size = x.shape[0]
+
+    def __len__(self):
+        return self.size
+
+    def __getitem__(self, idx):
+        return self.x[idx], self.y[idx]
+
+
+def getDataLoader(config):
+    loaders = {
+        'square_wave': square_wave_loaders
+    }[config.dataset]
+    return loaders(config)
+
+def load_obj(obj_path: str, default_obj_path: str = ''):
+    """
+    Extract an object from a given path.
+    https://github.com/quantumblacklabs/kedro/blob/9809bd7ca0556531fa4a2fc02d5b2dc26cf8fa97/kedro/utils.py
+        Args:
+            obj_path: Path to an object to be extracted, including the object name.
+            default_obj_path: Default object path.
+        Returns:
+            Extracted object.
+        Raises:
+            AttributeError: When the object does not have the given named attribute.
+    """
+    obj_path_list = obj_path.rsplit('.', 1)
+    obj_path = obj_path_list.pop(0) if len(obj_path_list) > 1 else default_obj_path
+    obj_name = obj_path_list[0]
+    module_obj = importlib.import_module(obj_path)
+    if not hasattr(module_obj, obj_name):
+        raise AttributeError(f'Object `{obj_name}` cannot be loaded from `{obj_path}`.')
+    return getattr(module_obj, obj_name)
 
 
 
+class MultiMargin(nn.Module):
+
+    def __init__(self, margin = 0.5):
+        super().__init__()
+        self.margin = margin 
+
+    def __call__(self, outputs, labels):
+        return F.multi_margin_loss(outputs, labels, margin=self.margin)
+    
+## from https://github.com/araujoalexandre/lipschitz-sll-networks
+class Xent(nn.Module):
+
+  def __init__(self, num_classes, offset=3.0/2):
+    super().__init__()
+    self.criterion = nn.CrossEntropyLoss()
+    self.offset = (2 ** 0.5) * offset
+    self.temperature = 0.25 
+    self.num_classes = num_classes
+
+  def __call__(self, outputs, labels):
+    one_hot_labels = F.one_hot(labels, num_classes=self.num_classes)
+    offset_outputs = outputs - self.offset * one_hot_labels
+    offset_outputs /= self.temperature
+    loss = self.criterion(offset_outputs, labels) * self.temperature
+    return loss
+
+def empirical_lipschitz(model, x, eps=0.05):
+
+    norms = lambda X: X.view(X.shape[0], -1).norm(dim=1) ** 2
+    gam = 0.0
+    for r in range(10):
+        dx = torch.zeros_like(x)
+        dx.uniform_(-eps,eps)
+        x.requires_grad = True
+        dx.requires_grad = True
+        optimizer = torch.optim.Adam([x, dx], lr=1E-1)
+        iter, j = 0, 0
+        LipMax = 0.0
+        while j < 50:
+            LipMax_1 = LipMax
+            optimizer.zero_grad()
+            dy = model(x + dx) - model(x)
+            Lip = norms(dy) / (norms(dx) + 1e-6)
+            Obj = -Lip.sum()
+            Obj.backward()
+            optimizer.step()
+            LipMax = Lip.max().item()
+            iter += 1
+            j += 1
+            if j >= 5:
+                if LipMax < LipMax_1 + 1E-3:  
+                    optimizer.param_groups[0]["lr"] /= 10.0
+                    j = 0
+
+                if optimizer.param_groups[0]["lr"] <= 1E-5:
+                    break
+        
+        gam = max(gam, np.sqrt(LipMax))
+
+    return gam 
+
+def seed_everything(seed: int = 42):
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    if torch.cuda.is_available(): 
+        torch.cuda.manual_seed(seed)
+        torch.cuda.manual_seed_all(seed)
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
 
 def preprocess_mat_file(dMat : dict, idxMax : int = 100000):
         fs = dMat['fs']

@@ -1,7 +1,37 @@
 import torch
 from torch.nn import MSELoss
 from nssmid.layers import DDLayer
+from nssmid.lmis import *
+from nssmid.linalg_utils import *
+import torch.nn as nn
 
+def getLoss(config, model = None):
+    if config.loss == 'mse':
+
+        if config.lmi is not '':
+
+            if config.lmi== 'lipschitz':
+                lmi = Lipschitz(model, config.slope, config.epsilon, config.gamma)
+            elif config.lmi == 'lyap':
+                A= model.linmod.A.weight
+                lmi = LMI_decay_rate(config.alpha_lyap, A, config.epsilon)
+            if config.reg_lmi == 'logdet':
+                crition = Mixed_LOSS_LMI(lmi, config.mu)
+            elif config.reg_lmi == 'dd':
+                crition = Mixed_LOSS_LMI_DD(lmi, config.mu, config.bReqGradDD)
+            else:
+                raise(NotImplementedError("Please specify a regterm"))
+        else:
+            crition = MSELoss()
+    else:
+        raise(NotImplementedError("Only mse loss is implemented so far"))
+
+    return crition
+
+def is_legal(v):
+    legal = not torch.isnan(v).any() and not torch.isinf(v)
+    return legal
+    
 class Mixed_MSELOSS(torch.nn.Module):
     """
         Introduced a convex mixed mse on the state and the ouput
@@ -39,18 +69,19 @@ class Mixed_MSELOSS_LMI(torch.nn.Module):
         self.mu = self.mu*scale
 
 
-class Mixed_MSELOSS_LMI_DD(torch.nn.Module):
-    def __init__(self, lmi, alpha= 0.5, mu = 1) -> None:
-        super(Mixed_MSELOSS_LMI, self).__init__()
-        self.crit = MSELoss()
+class Mixed_MSE_LOSS_LMI_DD(torch.nn.Module):
+    def __init__(self, lmi, crit = MSELoss(), alpha= 0.5, mu = 1, bRequireGrad = False) -> None:
+        super(Mixed_MSE_LOSS_LMI_DD, self).__init__()
+        self.crit = crit
         self.lmi = lmi
         self.mu = mu
         self.alpha = alpha
         M = lmi()
         Ui = torch.eye(M.shape[0]) # Shape of the LMI
-        self.layer = DDLayer(Ui)
+        self.layer = DDLayer(Ui, bRequires_grad=bRequireGrad)
+            
 
-    def forward(self, y_true, y_sim, x_true, x_sim):
+    def forward(self, y_true, Mixed_LOSS_LMI_DDy_sim, x_true, x_sim):
         x_mse = self.crit(x_true, x_sim)
         y_mse = self.crit(y_true, y_sim)
         L1 = self.alpha*x_mse + (1- self.alpha)*y_mse
@@ -66,6 +97,51 @@ class Mixed_MSELOSS_LMI_DD(torch.nn.Module):
     def update_basis_(self, M):
         self.layer.updateU_(M) #The basis update for basis pursuit.
 
+
+class Mixed_LOSS_LMI_DD(torch.nn.Module):
+    def __init__(self, lmi, mu = 1,bRequires_grad=False) -> None:
+        super(Mixed_LOSS_LMI_DD, self).__init__()
+        self.crit = MSELoss()
+        self.lmi = lmi
+        self.mu = mu
+        lmis = lmi()
+        self.ddLayers = nn.ModuleList([DDLayer(torch.eye(lmi.shape[0]),bRequires_grad=bRequires_grad) for lmi in lmis])
+
+    def forward(self, pred, true):
+
+        L1 = self.crit(pred, true)
+        lmis = self.lmi()
+        # DD+ approximation
+        dQ = []
+        for i, lmi in enumerate(lmis):
+            dQ.append(self.ddLayers[i](lmi))
+
+        return L1, dQ, lmis #objective, dQ, M M being always the first item
+
+    def update_basis_(self, lmis):
+        for i, lmi in enumerate(lmis):
+            self.ddLayers[i].updateU_(lmi) #The basis update for basis pursuit.
+
+
+class Mixed_LOSS_LMI(torch.nn.Module):
+    def __init__(self, lmi, mu = 1) -> None:
+        super(Mixed_LOSS_LMI, self).__init__()
+        self.crit = MSELoss()
+        self.lmi = lmi
+        self.mu = mu
+
+    def forward(self, pred, true):
+
+        L1 = self.crit(pred, true)
+        lmis = self.lmi()
+        #assert torch.all(torch.real(eig_val)>0)
+        L2 = 0.0
+        for lmi in lmis:
+            L2 = L2 -torch.logdet(lmi)
+        return L1, L2
+
+    def update_mu_(self, scale):
+        self.mu = self.mu*scale
 class Mix_MSE_DistAtt(torch.nn.Module):
     def __init__(self, model, alpha=0, gamma = 1) -> None:
         super(Mix_MSE_DistAtt, self).__init__()

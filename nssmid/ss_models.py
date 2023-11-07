@@ -4,6 +4,19 @@ from  nssmid.linalg_utils import *
 from collections import OrderedDict
 from nssmid.layers import *
 
+
+def getModel(config):
+    models = {
+        'Toy': ToySmall,
+        'Dummy' : DummyModel,
+        'Dummy2' : DummyModel,
+        'Dummy3' : DummyModel,
+        'FLNSSM' : FLNSSM_Elman,
+        'GRNSSM' : GRNSSM
+    }[config.model]
+    return models(config)
+
+
 class NNLinear(nn.Module):
     """
         neural network module corresponding to a linear state-space model
@@ -157,7 +170,6 @@ class GRNSSM(nn.Module):
         copy.load_state_dict(self.state_dict())
         return copy
 
-
 class GRNSSM_dist(nn.Module):
     def __init__(self, input_dim : int , hidden_dim : int , state_dim : int,  output_dim : int, 
                 n_hid_layers : int, dist_dim :int, actF = nn.Tanh()):
@@ -274,7 +286,7 @@ class GRNSSM_dist(nn.Module):
         # Nonlinear part
     def clone(self): # Method called by the simulator 
         copy = type(self)(self.input_dim, self.hidden_dim, self.state_dim, 
-                          self.output_dim, self.n_hid_layers, self.actF)
+                          self.output_dim, self.n_hid_layers, self.dist_dim, self.actF)
         copy.load_state_dict(self.state_dict())
         return copy
 
@@ -646,48 +658,6 @@ class FLNSSM_Elman_Dist(nn.Module):
         return copy
 
 
-class PINN(nn.Module):
-    def __init__(self, nq, nx, nh, nu, ny, actF= nn.Tanh()) -> None:
-        super(PINN, self).__init__()
-
-        self.nq = nq
-        self.nh = nh
-        self.nx = nx
-        self.nu = nu
-        self.ny = ny
-        
-        # Intertia Matrix
-        self.m = InertiaMatrix(nq, nh) # m(x_1, x_2)
-
-        # Coriolis term c(x) = c(x_1, x_2, x_3, x_4)
-        self.c_in = nn.Linear(nx, nh, bias = False)
-        self.actF = actF
-        self.c_out  = nn.Linear(nh, nq, bias = False)
-
-        # Gravity term
-        self.g_in = nn.Linear(nq, nh, bias = False)
-        self.g_out = nn.Linear(nh, nq, bias = False)
-
-    def forward(self, u, x):
-
-        q = x[:,:2]
-        q_dot = x[:,2:]
-        cx = self.c_in(x)
-        cx = self.actF(cx)
-        cx = self.c_out(cx)
-
-        gx = self.g_in(q)
-        gx = self.actF(gx)
-        gx = self.g_out(gx)
-
-        m = self.m(q)
-
-        dqq = torch.bmm(m, -cx -gx + u)
-        dx = torch.cat((q_dot, dqq), dim=1)
-        y = q
-        return dx, y
-
-
 class DoublePendulum(nn.Module):
     def __init__(self, l1 =1, l2 = 0.9, m1 = 5, m2 = 4.9, f =2) -> None:
         super(DoublePendulum, self).__init__()
@@ -773,3 +743,229 @@ class SDP_problem(torch.nn.Module):
         obj = self.c @ self.x.T
         return obj, dQ, M
 
+    
+class Toy(nn.Module):
+
+    def __init__(self, config):
+        super().__init__()
+        self.in_channels = config.in_channels
+        self.img_size = config.img_size
+        self.num_classes = config.num_classes
+        self.gamma = config.gamma 
+        self.layer = config.layer
+        g = self.gamma ** 0.5
+
+        if self.layer == 'Plain':
+            self.gamma = None
+            w = 128
+            self.model = nn.Sequential(
+                nn.Linear(self.in_channels, w), nn.ReLU(),
+                nn.Linear(w, w), nn.ReLU(),
+                nn.Linear(w, w), nn.ReLU(),
+                nn.Linear(w, w), nn.ReLU(),
+                nn.Linear(w, w), nn.ReLU(),
+                nn.Linear(w, w), nn.ReLU(),
+                nn.Linear(w, w), nn.ReLU(),
+                nn.Linear(w, w), nn.ReLU(),
+                nn.Linear(w, w), nn.ReLU(),
+                nn.Linear(w, self.num_classes)
+            )
+        elif self.layer == 'Sandwich':
+            w = 86
+            self.model = nn.Sequential(
+                SandwichFc(self.in_channels, w, scale=g),
+                SandwichFc(w, w),
+                SandwichFc(w, w),
+                SandwichFc(w, w),
+                SandwichFc(w, w),
+                SandwichFc(w, w),
+                SandwichFc(w, w),
+                SandwichFc(w, w),
+                SandwichFc(w, w),
+                SandwichLin(w, self.num_classes, scale=g)
+            )
+        elif self.layer == 'Orthogon':
+            w = 128
+            self.model = nn.Sequential(
+                OrthogonFc(self.in_channels, w, scale=g),
+                OrthogonFc(w, w),
+                OrthogonFc(w, w),
+                OrthogonFc(w, w),
+                OrthogonFc(w, w),
+                OrthogonFc(w, w),
+                OrthogonFc(w, w),
+                OrthogonFc(w, w),
+                OrthogonFc(w, w),
+                OrthogonLin(w, self.num_classes, scale=g)
+            )
+        elif self.layer == 'Aol':
+            w = 128
+            self.model = nn.Sequential(
+                AolFc(self.in_channels, w, scale=g),
+                AolFc(w, w),
+                AolFc(w, w),
+                AolFc(w, w),
+                AolFc(w, w),
+                AolFc(w, w),
+                AolFc(w, w),
+                AolFc(w, w),
+                AolFc(w, w),
+                AolLin(w, self.num_classes, scale=g)
+            )
+        elif self.layer == 'SLL':
+            w = 128
+            self.model = nn.Sequential(
+                PaddingFeatures(self.in_channels, w, scale=g),
+                SLLBlockFc(w, w),
+                SLLBlockFc(w, w),
+                SLLBlockFc(w, w),
+                SLLBlockFc(w, w),
+                SLLBlockFc(w, w),
+                SLLBlockFc(w, w),
+                SLLBlockFc(w, w),
+                SLLBlockFc(w, w),
+                FirstChannel(self.num_classes, scale=g)
+            )
+
+    def forward(self, x):
+        return self.model(x)
+
+
+class ToySmall(nn.Module):
+    def __init__(self, config):
+        super().__init__()
+        self.in_channels = config.in_channels
+        self.img_size = config.img_size
+        self.num_classes = config.num_classes
+        self.gamma = config.gamma 
+        self.layer = config.layer
+        self.config = config
+        self.dims = config.dims
+        w = config.nh
+        g = self.gamma ** 0.5
+
+        if self.layer == 'Plain':
+            self.gamma = None
+            self.layers = nn.Sequential(
+                nn.Linear(self.in_channels, w), nn.ReLU(),
+                nn.Linear(w, self.num_classes)
+            )
+        elif self.layer == 'Sandwich':
+            self.layers = nn.Sequential(
+                SandwichFc(self.in_channels, w, scale=g),
+                SandwichLin(w, self.num_classes, scale=g)
+            )
+    def forward(self, x):
+        return self.layers(x)
+
+    def clone(self):
+        copy = type(self)(self.config)
+        copy.load_state_dict(self.state_dict())
+
+        return copy
+    
+    def write_flat_params(self, x):
+        r""" Writes vector x to model parameters.."""
+        index = 0
+        theta = torch.Tensor(x)
+        for name, p in self.named_parameters():
+            p.data = theta[index:index + p.numel()].view_as(p.data)
+            index = index + p.numel()
+
+
+    def flatten_params(self):
+        views = []
+        for p in self.parameters():
+            if p is None:
+                view = p.new(p.numel()).zero_()
+            elif p.is_sparse:
+                view = p.to_dense().view(-1)
+            else:
+                view = p.view(-1)
+            views.append(view)
+        return torch.cat(views, 0)
+        
+    def extract_weights(self):
+        weights = []
+        biases = []
+        for param_tensor in self.state_dict():
+            tensor = self.state_dict()[param_tensor].detach().numpy()
+
+            if 'weight' in param_tensor:
+                weights.append(tensor)
+            if 'bias' in param_tensor:
+                biases.append(tensor)
+        weights = np.array(weights, dtype= object)
+        biases = np.array(biases, dtype = object)
+        return weights, biases
+
+
+from collections import OrderedDict
+
+class DummyModel(nn.Module):
+    def __init__(self, config) -> None:
+        super(DummyModel,self).__init__()
+        self.dims = config.dims # List of neurons to create the sequential
+        n_hid_layers = len(config.dims)
+        self.gamma = config.gamma 
+        self.layer = config.layer
+        self.config = config
+        paramsNLHidF = []
+        i = 0
+        for k in range(n_hid_layers-1):
+            layer = nn.Linear(config.dims[k], config.dims[k+1], bias = True)
+            #nn.init.eye_(layer.weight)
+            tup = ('{}'.format(i), layer)
+            paramsNLHidF.append(tup)
+            i = i+1
+            if k < n_hid_layers-2:
+                tupact = ('{}'.format(i), nn.ReLU())
+                paramsNLHidF.append(tupact)
+                i = i+1
+        self.layers = nn.Sequential(OrderedDict(paramsNLHidF))
+        #nn.init.eye_(self.layers[-1].weight)
+
+
+    def forward(self, x):
+        return self.layers(x)
+
+    def clone(self):
+        copy = type(self)(self.config)
+        copy.load_state_dict(self.state_dict())
+
+        return copy
+    
+    def write_flat_params(self, x):
+        r""" Writes vector x to model parameters.."""
+        index = 0
+        theta = torch.Tensor(x)
+        for name, p in self.named_parameters():
+            p.data = theta[index:index + p.numel()].view_as(p.data)
+            index = index + p.numel()
+
+
+    def flatten_params(self):
+        views = []
+        for p in self.parameters():
+            if p is None:
+                view = p.new(p.numel()).zero_()
+            elif p.is_sparse:
+                view = p.to_dense().view(-1)
+            else:
+                view = p.view(-1)
+            views.append(view)
+        return torch.cat(views, 0)
+
+    def extract_weights(self):
+        weights = []
+        biases = []
+        for param_tensor in self.state_dict():
+            tensor = self.state_dict()[param_tensor].detach().numpy()
+
+            if 'weight' in param_tensor:
+                weights.append(tensor)
+            if 'bias' in param_tensor:
+                biases.append(tensor)
+        weights = np.array(weights, dtype= object)
+        biases = np.array(biases, dtype = object)
+        return weights, biases
