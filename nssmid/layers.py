@@ -75,6 +75,7 @@ class DDLayer(nn.Module):
             print(self.Ui)
         else:
             self.Ui = Ui
+            print(self.Ui)
         self.act = nn.ReLU()
 
     def forward(self, M):

@@ -338,7 +338,7 @@ class Lipschitz(Module):
         self.beta = upper_slope
         self.dims = model.dims
         self.layers = model.layers # Model must be pure feedforward
-        T, L = self.solve_lmi()
+        T, L = self.solve_lmi(epsilon = epsilon)
         # Implementation to do with n independent variables it won't be necessary to re diag the tensor at each step
         self.T = Parameter(T.requires_grad_(True)) 
         if L< L_presc:

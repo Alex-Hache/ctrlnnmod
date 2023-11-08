@@ -83,14 +83,16 @@ def train_logdet(model, criterion, trainLoader, testLoader, config):
     max_ls = config.max_ls # 1000
     alpha_ls = config.alpha_ls # 0.5
     bBacktrack = config.backtrack # False
+    print(bBacktrack)
     mu_dec = config.mu_dec
 
     n_u, no_decrease_counter = 0,0
-    best_obj = math.inf
+    best_obj = 1e7
     bls_reached = False
     vObj,vReg, vUpd, vTest = [], [], [], []
     mu0 = criterion.mu
     tot_backtrack = 0
+    best_model = model.clone()
     for epoch in range(Epochs):
         ## train_step
         n, Loss = 0, 0.0
@@ -122,22 +124,28 @@ def train_logdet(model, criterion, trainLoader, testLoader, config):
             # Perform a backtracking linesearch to avoid inf or NaNs
             MSE, barrier = criterion(model(x), y)
             ls = 0
-            while not is_legal(barrier) and bBacktrack:
-                tot_backtrack = tot_backtrack+1
+            if not is_legal(barrier):
+                if bBacktrack:
+                    while not is_legal(barrier) and bBacktrack:
+                        tot_backtrack = tot_backtrack+1
 
-                # step back by factor of alpha
-                new_theta = alpha_ls * old_theta + (1 - alpha_ls) * new_theta
-                model.write_flat_params(new_theta)
+                        # step back by factor of alpha
+                        new_theta = alpha_ls * old_theta + (1 - alpha_ls) * new_theta
+                        model.write_flat_params(new_theta)
 
-                #ls_eigval.append(getEigenvalues(NNODE.ss_model.P.detach()))
-                ls += 1
-                #print(ls)
-                if ls == max_ls:
-                    bls_reached = True
-                    print("maximum ls reached")
+                        #ls_eigval.append(getEigenvalues(NNODE.ss_model.P.detach()))
+                        ls += 1
+                        #print(ls)
+                        if ls == max_ls:
+                            bls_reached = True
+                            print("maximum ls reached")
+                            break
+
+                        MSE, barrier = criterion(model(x), y) 
+                else:
                     break
-
-                MSE, barrier = criterion(model(x), y) 
+        if not is_legal(barrier):
+            break
         train_loss = Loss/n 
 
         if bls_reached:
@@ -327,12 +335,13 @@ def train_dd(model, criterion, trainLoader, testLoader, config):
         vTest.append(test_loss)
         if epoch%print_freq ==0:
             lr = optim.param_groups[0]['lr']
-            print(f"Iter {epoch} : Loss  = {float(train_loss):.5f} -- Test loss {float(test_loss):5f} | Dist to DD+ : {r:.5f} | No dec count {no_decrease_counter} -- {tot_no_decrease} | lr: {lr:.3f}")
+            print(f"Iter {epoch} : Loss  = {float(train_loss):.5f} -- Test loss {float(test_loss):5f} | Dist to DD+ : {r:.5f} | No dec count {no_decrease_counter} | lr: {lr:.3f}")
             
         if epoch % config.save_freq == 0 or epoch + 1 == Epochs:
             torch.save(model.state_dict(), f"{config.train_dir}/model.ckpt")  
 
     print(f"Number of bases updates : {n_u}")
+    print(criterion.ddLayers[0].Ui)
 
 
     fig, ax = plt.subplots(2,1, sharex=True)
