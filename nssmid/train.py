@@ -622,6 +622,39 @@ def train_ff(model, criterion, trainLoader, testLoader, config):
                 'test_loss' : vTest}
     return best_model, dict_res  
 
+
+def train_recurrent(config):
+    seed_everything(config.seed)
+    trainLoader, testLoader = getDataLoader(config)
+    model = getModel(config)
+    criterion = getLoss(config, model)
+
+    if not os.path.exists(config.train_dir):
+        os.makedirs(config.train_dir)
+    # wanlog = WandbLogger(config)
+
+    print(f"Set global seed to {config.seed:d}")
+    nparams = np.sum([p.numel() for p in model.parameters() if p.requires_grad])
+
+    if nparams >= 1000000:
+        print(f"name: {config.model}-{config.layer}-{config.scale}, num_params: {1e-6*nparams:.1f}M")
+    else:
+        print(f"name: {config.model}-{config.layer}-{config.scale}, num_params: {1e-3*nparams:.1f}K")
+    best_model, dict_res = train_rnn(model, criterion, trainLoader, testLoader, config)
+
+    # Post-processing ?
+
+    # Saving config
+    savemat(config.train_dir + '/config.mat', config.__dict__)
+    print(config.train_dir + '/config.mat')
+    # Saving best model
+    weights, biases = best_model.extract_weights()
+    savemat(config.train_dir + '/model.mat', {'weights' : weights, 'biases' : biases})
+
+    savemat(config.train_dir + '/losses.mat', dict_res)
+    return best_model, dict_res
+
+
 def train_rnn(model, criterion, trainSet, testSet, config):
 
     u_train = trainSet.u
