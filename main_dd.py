@@ -67,9 +67,9 @@ if __name__=='__main__':
         model_sim = RK4Simulator(model, ts)
 
 
-        #criterion = Mixed_MSELOSS(alpha = 0)
+        # criterion = Mixed_MSELOSS(alpha = 0)
         # mu = 1e-5
-        criterion = Mixed_MSELOSS_RelaxedLMI(rel_lmi, eta= 0, kappa = 0)
+        criterion = Mixed_MSELOSS_RelaxedLMI(rel_lmi, eta=0, kappa=0)
 
         # Optimiser parameters
         strOptimizer = 'adam'
