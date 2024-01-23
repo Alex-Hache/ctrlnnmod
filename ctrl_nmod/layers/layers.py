@@ -14,6 +14,10 @@ class CustomSoftplus(nn.Softplus):
         return F.softplus(x, self.beta, self.threshold) + self.margin
 
 
+def softplus_epsilon(x, epsilon=1e-6):
+    return F.softplus(x) + epsilon
+
+
 class BetaLayer(nn.Module):
 
     def __init__(self, n_inputs, n_states, n_hidden,

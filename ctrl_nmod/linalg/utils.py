@@ -2,14 +2,14 @@ import numpy as np
 import scipy
 import torch
 from torch.autograd import Function
+from torch.linalg import eigvals
 
 
 def isSDP(L):
     '''
     L is tensor
     '''
-    eigval, _ = torch.linalg.eig(L)
-    isAllEigPos = torch.all(torch.real(eigval) > 0)
+    isAllEigPos = torch.all(torch.real(eigvals(L)) > 0)
     isSymetric = torch.all(L == L.T)
     if not isAllEigPos:
         print("Not all eigenvalues are positive \n")
@@ -25,6 +25,10 @@ def getEigenvalues(L):
             - L pytorch Tensor
     '''
     return torch.linalg.eigvals(L)
+
+
+def is_alpha_stable(A, alpha):
+    return torch.all(eigvals(A) < - alpha)
 
 
 # from https://github.com/locuslab/orthogonal-convolutions
