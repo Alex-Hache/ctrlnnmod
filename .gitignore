@@ -7,6 +7,9 @@ __pycache__/
 # Ignore C extensions
 *.so
 
+# Ignore zip files
+*.zip
+
 # Ignore distribution/packaging files
 dist/
 build/
@@ -23,3 +26,9 @@ build/
 
 # Ignore these specific files
 /results/*
+/figures/*
+
+/data/tiny-imagenet-200/
+
+# Ignore save pytorch models
+*.pt
