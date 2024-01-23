@@ -9,7 +9,7 @@ import torch
 from cvxpy.expressions.variable import Variable
 from cvxpy.problems.objective import Minimize
 from cvxpy.problems.problem import Problem
-from layers.layers import softplus_epsilon
+from layers.layers import softplus_epsilon, ScaledSoftmax
 from torch import Tensor
 from torch.linalg import matrix_exp
 from torch.nn import Module
@@ -239,3 +239,32 @@ class AlphaStable(Module):
         S = self.S.eval_()
         return (P_inv@(-0.5 * Q + S)
                 - self.alpha*torch.eye(self.n))
+
+
+class FixedTrace(Module):
+    '''
+        Fixed trace matrix
+    '''
+    def __init__(self, arg: Union[int, Tensor], trace=1.0) -> None:
+        super(FixedTrace, self).__init__()
+        self.trace = trace
+        self.scaler = ScaledSoftmax(self.trace)
+
+        if isinstance(arg, int):
+            self.n = arg
+            self.weight = Parameter(torch.rand((self.n, self.n))).requires_grad_(True)
+        elif isinstance(arg, Tensor):
+            self.n = arg.shape[0]
+            self.weight = Parameter(arg).requires_grad_(True)
+        else:
+            raise TypeError("Expected an integer or Tensor")
+
+        self.diag = torch.rand((self.n))
+
+    def forward(self, x):
+        w_diag = torch.diag(self.weight)
+        return x @ ((self.weight - w_diag + self.scaler(self.diag)).T)
+
+    def eval_(self):
+        w_diag = torch.diag(self.weight)
+        return (self.weight - w_diag + self.scaler(self.diag))

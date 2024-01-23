@@ -3,7 +3,7 @@ import torch.nn.functional as F
 import geotorch as geo
 import torch
 from torch.linalg import cholesky, inv
-
+from torch import Tensor
 
 class CustomSoftplus(nn.Softplus):
     def __init__(self, beta: int = 1, threshold: int = 20, margin: float = 1e-2) -> None:
@@ -16,6 +16,15 @@ class CustomSoftplus(nn.Softplus):
 
 def softplus_epsilon(x, epsilon=1e-6):
     return F.softplus(x) + epsilon
+
+
+class ScaledSoftmax(nn.Softmax):
+    def __init__(self, scale=1.0) -> None:
+        super(ScaledSoftmax, self).__init__()
+        self.scale = scale
+
+    def forward(self, input: Tensor) -> Tensor:
+        return self.scale * super().forward(input)
 
 
 class BetaLayer(nn.Module):
