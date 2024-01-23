@@ -471,10 +471,16 @@ class Lipschitz(Module):
 
         M = LMI_schur + part2 
         #torch.block_diag
+        if torch.any(torch.isnan(M)):
+            print(M)
+        if torch.any(torch.isnan(T)):
+            print(T)
         
         return -M, T 
 
     def diagT_(self):
+        if torch.any(torch.isnan(self.T)):
+            print(torch.diag(torch.diag(self.T)))
         return torch.diag(torch.diag(self.T))
     
 '''

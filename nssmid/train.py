@@ -1,4 +1,3 @@
-from torch.optim import *
 from alive_progress import alive_bar
 import time
 import torch
@@ -38,11 +37,12 @@ def train_feedforward(config):
     if hasattr(criterion, 'lmi'):
         if config.reg_lmi == 'logdet':
             best_model, dict_res = train_logdet(model, criterion, trainLoader, testLoader, config)
-        elif config.reg_lmi == 'dd':
+        elif config.reg_lmi == 'dd' or config.reg_lmi == 'dd2':
             if config.bReqGradDD == True:
                 best_model, dict_res = train_dd_no_bp(model, criterion, trainLoader, testLoader, config)
             else:
                 best_model, dict_res = train_dd(model, criterion, trainLoader, testLoader, config)
+
     else:
         best_model, dict_res = train_ff(model, criterion, trainLoader, testLoader, config)
 
@@ -267,7 +267,7 @@ def train_dd(model, criterion, trainLoader, testLoader, config):
 
             yh = model(x)
             MSE, dQ, lmis = criterion(yh, y)
-
+            
             reg = 0
             for delta in dQ:
                 r = r + torch.max(delta) # total distance to DD+
@@ -290,7 +290,7 @@ def train_dd(model, criterion, trainLoader, testLoader, config):
         #r = 10
         vObj.append(obj)
         vReg.append(deltas)
-        if r==0: # All Q are DD+
+        if r<=0: # All Q are DD+
             # Start counting
             if  (best_obj - obj)/best_obj > tol_change:
                 best_obj = obj
@@ -365,7 +365,7 @@ def train_dd(model, criterion, trainLoader, testLoader, config):
     plt.title(f"Dummy model mu = {criterion.mu}")
     plt.show()
 
-    strSaveName = str(config.model) + '_dd' + str(criterion.mu) + f'lr_{Lr}' + f'_{Epochs}epch'
+    strSaveName = str(config.model) + '_' +config.reg_lmi + str(criterion.mu) + f'lr_{Lr}' + f'_{Epochs}epch'
     if update_lmi_cert:
         strSaveName = strSaveName + '_updtCert'
         

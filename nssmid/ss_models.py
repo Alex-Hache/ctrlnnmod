@@ -3,6 +3,7 @@ import torch
 from  nssmid.linalg_utils import *
 from collections import OrderedDict
 from nssmid.layers import *
+import scipy as sp
 
 
 def getModel(config):
@@ -169,6 +170,7 @@ class GRNSSM(nn.Module):
                           self.output_dim, self.n_hid_layers, self.actF)
         copy.load_state_dict(self.state_dict())
         return copy
+
 
 class GRNSSM_dist(nn.Module):
     def __init__(self, input_dim : int , hidden_dim : int , state_dim : int,  output_dim : int, 

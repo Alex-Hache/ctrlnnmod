@@ -1,0 +1,25 @@
+# Ignore compiled Python files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Ignore C extensions
+*.so
+
+# Ignore distribution/packaging files
+dist/
+build/
+*.egg-info/
+
+# Ignore Jupyter Notebook metadata
+.ipynb_checkpoints/
+
+# Ignore VS Code settings
+.vscode/
+
+# Ignore environment variables
+.env
+
+# Ignore these specific files
+/results/*

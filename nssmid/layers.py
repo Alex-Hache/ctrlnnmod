@@ -6,6 +6,8 @@ import torch
 from torch.linalg import cholesky, inv
 import numpy as np
 import einops
+import math
+from nssmid.linalg_utils import * 
 class CustomSoftplus(nn.Softplus):
     def __init__(self, beta: int = 1, threshold: int = 20, margin : float = 1e-2) -> None:
         super(CustomSoftplus, self).__init__(beta, threshold)
@@ -13,6 +15,18 @@ class CustomSoftplus(nn.Softplus):
 
     def forward(self, x):
         return F.softplus(x, self.beta, self.threshold) + self.margin
+
+class customSigmoid(nn.Module):
+    '''
+        Apply element wise : y = \frac{2}{1+ exp^{2*k*x}}
+    
+    '''
+    def __init__(self, k = 1) -> None:
+        super(customSigmoid, self).__init__()
+        self.k = k
+
+    def forward(self,x):
+        return 2/(1 + torch.exp(-2*self.k*x))
 
 class BetaLayer(nn.Module):
 
@@ -33,11 +47,11 @@ class BetaLayer(nn.Module):
         self.nx = n_states
         self.nh = n_hidden
         self.actF = actF
-        self.U  = nn.Linear(self.nu, self.nx, bias = None)
+        self.U  = nn.Linear(self.nu, self.nx, bias = False)
         nn.init.eye_(self.U.weight)
         geotorch.orthogonal(self.U, "weight")
 
-        self.V = nn.Linear(self.nx, self.nu, bias = None)
+        self.V = nn.Linear(self.nx, self.nu, bias = False)
         nn.init.eye_(self.V.weight)
         geotorch.orthogonal(self.V, "weight")
 
@@ -99,7 +113,55 @@ class DDLayer(nn.Module):
         #Q = self(M)
         #M_next = inv(self.Ui.T) @ Q @ inv(self.Ui)
         #assert torch.all(M_next == M)
-        self.Ui = inv(cholesky(M).mH)
+        U = torch.linalg.cholesky(M, upper = True)
+        if not isSDP(U):
+            raise ValueError("Matrix is not SDP")
+        self.Ui = inv(U)
+
+
+class DDLayerv2(nn.Module):
+    def __init__(self, Ui : torch.Tensor, k = 50) -> None:
+        super(DDLayerv2, self).__init__()
+        '''
+            Ui : inverse of the upper Cholesky decomposition associated to the DD problem
+        '''
+        self.Ui = Ui
+        self.act = customSigmoid(k=k)
+        self.eps = 1e-5
+        self.act2 = torch.nn.ReLU()
+
+    def forward(self, M):
+        '''
+            M : linear matrix inequality in Sn+
+        '''
+
+        Q = self.Ui.T @ M @ self.Ui
+        W = Q - torch.diag(torch.diag(Q))
+        Z = (self.act(W)-1)*W + self.eps # act(q) = 2/(1+exp(2*k*q)) ~~ |m|
+        if torch.any(torch.isnan(M)):
+            print(W)
+            print(Q)
+            print(M)
+            raise ValueError("Test")
+        #Z = torch.abs(W) + self.eps
+        delta_Q = torch.sum(Z, dim = 1) - torch.diag(Q)# Une 2ème condition suffisante pour DD+
+
+        return self.act2(delta_Q)
+
+    def updateU_(self,M):
+        '''
+            From the current M value we update U to update search region in DD+
+            If correct : DDLayer(updateU_(M)) = I
+        '''
+        #Q = self(M)
+        #M_next = inv(self.Ui.T) @ Q @ inv(self.Ui)
+        #assert torch.all(M_next == M)
+        U = torch.linalg.cholesky(M, upper = True)
+        if torch.any(torch.isnan(U)):
+            raise ValueError("Cholesky do not work")
+        if not isSDP(U):
+            raise ValueError("Matrix is not SDP")
+        self.Ui = inv(U)
 
 
 ## from https://github.com/locuslab/orthogonal-convolutions
