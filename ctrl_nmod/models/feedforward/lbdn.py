@@ -132,6 +132,9 @@ class LipFxu(LBDN):
                          torch.tensor([scalex]*state_dim + [scaleu]*input_dim), actF, n_hidden)
 
         self.nx = state_dim
+        self.Wfx = self.Win.weight[:, :self.nx]
+        self.Wfu = self.Win.weight[:, self.nx:]
+        self.Wf = self.Wout.weight
 
     def forward(self, x, u):
         z = torch.cat((x, u), 1)
@@ -143,6 +146,8 @@ class LipHx(LBDN):
                  actF=Tanh(), n_hidden=1) -> None:
         super().__init__(state_dim, hidden_dim, output_dim,
                          torch.tensor([scalex]*state_dim), actF, n_hidden)
+        self.Wh = self.Wout.weight
+        self.Whx = self.Win.weight
 
     def forward(self, x):
         return self.layers(x)
