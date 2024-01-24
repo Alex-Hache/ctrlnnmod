@@ -566,9 +566,11 @@ class _System_robust_L2_bound(nn.Module):
         self.device = device
         self.alpha = alpha
         std = 0.02
+
         #Initialization of the Free Matrices:
         self.Pstar = nn.Parameter(torch.randn(nx,nx,device=device)*std)
         self.Chi = nn.Parameter(torch.randn(nx,nq,device=device)*std)
+
         #Initialization of the Weights:
         self.DD12 = nn.Parameter(torch.randn(nq,nu,device=device)*std)
         self.X3 = nn.Parameter(torch.randn(self.s,self.s,device=device)*std)
@@ -586,6 +588,7 @@ class _System_robust_L2_bound(nn.Module):
             self.bx= torch.zeros(nx,1,device=device)
             self.bv= torch.zeros(nq,1,device=device)
             self.by= torch.zeros(ny,1,device=device)
+            
         self.X = nn.Parameter(torch.randn(nx+nq,nx+nq,device=device)*std)    
         #Initialization of the last Parameters:
         self.A = torch.zeros(nx,nx,device=device)
