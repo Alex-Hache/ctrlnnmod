@@ -67,7 +67,7 @@ class _System_robust_L2_bound(nn.Module):
             self.bv = torch.zeros(nq, 1, device=device)
             self.by = torch.zeros(ny, 1, device=device)
 
-        self.X = Parameter(torch.randn(nx+nq, nx+nq, device=device)*std)  
+        self.X = Parameter(torch.randn(nx+nq, nx+nq, device=device)*std)
 
         # Initialization of the last Parameters:
         self.A = torch.zeros(nx, nx, device=device)
@@ -135,7 +135,7 @@ class _System_robust_L2_bound(nn.Module):
 
         # # Check the LMI for robustness is verified.
         # pr11 = -Y -Y.T
-        # pr12 = -Z - self.Chi  
+        # pr12 = -Z - self.Chi
         # pr13 = -F.linear(P,self.B2.T)
         # pr21= pr12.T
         # pr22=H4
@@ -252,7 +252,7 @@ class _System_general(nn.Module):
         # Initialization of the last Parameters:
         # self.Y= torch.zeros(nx,nx)
         # self.P = torch.zeros(nx,nx,device=device)
-        # self.alpha= alpha 
+        # self.alpha= alpha
         # self.updateParameters()             #Update of: A, B1, C1, D11
         # Choosing the activation function:
         if (sigma == "tanh"):
@@ -347,10 +347,10 @@ class NODE_REN(nn.Module):
             ni is the weight coefficient that characterizes the (input passive) supply rate function.
             -rho (float, optional): If the model is output passive (i.e., mode == 'output_p'),
             rho is the weight coefficient that characterizes the (output passive) supply rate function.
-            -alpha (float, optional): Lower bound of the Contraction rate. 
-            If alpha is set to 0, the system continues to be contractive, 
-            but with a generic (small) rate. Defaults to 0. 
-            -linear_output (bool, optional): choose if the output is linear, 
+            -alpha (float, optional): Lower bound of the Contraction rate.
+            If alpha is set to 0, the system continues to be contractive,
+            but with a generic (small) rate. Defaults to 0.
+            -linear_output (bool, optional): choose if the output is linear,
             i.e., choose to force (or not) the matrix D21 to be null. Defaults to False.
         """
         super().__init__()
@@ -358,7 +358,7 @@ class NODE_REN(nn.Module):
         self.nfe = 0
         if (self.mode == "general"):
             self.sys = _System_general(nx, ny, nu, nq,
-                                       sigma, epsilon, device=device, bias=bias, 
+                                       sigma, epsilon, device=device, bias=bias,
                                        linear_output=linear_output)
         elif (self.mode == "rl2"):
             Q = -(1./gamma)*torch.eye(ny, device=device)

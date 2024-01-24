@@ -1,5 +1,4 @@
 
-from torch import Tensor
 from torch.nn import Module, Tanh, Linear
 from torch.nn.parameter import Parameter
 from models.feedforward.lbdn import Fxu, LipFxu, LipHx, Hx
@@ -156,6 +155,3 @@ class LipGrnssm(Grnssm):
 
     def init_weights_(self, A0, B0, C0, isLinTrainable=True):
         super().init_weights_(A0, B0, C0, isLinTrainable)
-
-
-class Ren(Module):
