@@ -5,17 +5,20 @@ from torch.autograd import Function
 from torch.linalg import eigvals
 
 
-def isSDP(L):
+def isSDP(L, tol=1e-9) -> bool:
     '''
     L is tensor
     '''
     isAllEigPos = torch.all(torch.real(eigvals(L)) > 0)
-    isSymetric = torch.all(L == L.T)
+    isSymetric = torch.all(torch.abs(L - L.T) < tol)
     if not isAllEigPos:
         print("Not all eigenvalues are positive \n")
     if not isSymetric:
         print("Matrix is not symmetric \n")
-    bSDP = isSymetric and isAllEigPos
+
+    bSDP = bool(isSymetric and isAllEigPos)
+    if bSDP:
+        print("Matix is SDP \n")
     return bSDP
 
 
