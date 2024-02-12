@@ -6,7 +6,7 @@ from torch.nn.parameter import Parameter
 from ctrl_nmod.linalg.utils import isSDP
 from torch.nn import Module
 from torch.linalg import cholesky
-
+import os
 
 class _ImplicitQSRNetwork(Module):
     def __init__(self, nx, ny, nu, nq, sigma, epsilon, S, Q, R,
@@ -288,7 +288,7 @@ class NODE_REN(nn.Module):
     def __init__(self, nx=5, ny=5, nu=5, nq=5,
                  sigma="tanh", epsilon=1.0e-2, mode="c", gamma=1.,
                  device="cpu", bias=False, ni=1., rho=1., alpha=0.0,
-                 linear_output=False, feedthrough=True):
+                 linear_output=False, feedthrough=True, str_save = None):
         """Base class for Neural Ordinary Differential Equation Recurrent Equilbrium Networks (NODE_RENs).
 
         Args:
@@ -323,7 +323,12 @@ class NODE_REN(nn.Module):
         """
         super().__init__()
         self.mode = mode.lower()
-        self.nfe = 0
+
+        if str_save is None:
+            self.str_savepath = os.path.join(os.getcwd(), 'model' + self.mode + '.pkl')
+        else:
+            self.str_savepath = str_save
+
         if (self.mode == "general"):
             self.sys = _System_general(nx, ny, nu, nq,
                                        sigma, epsilon, device=device, bias=bias,
@@ -346,6 +351,11 @@ class NODE_REN(nn.Module):
                 S = torch.eye(nu, ny, device=device)
             else:
                 raise NameError("The inserted mode is not valid. Please write 'c', 'rl2', 'input_p' or 'output_p'. :(")
+            self.nx = nx
+            self.nu = nu
+            self.ny = ny
+            self.nq = nq
+
             self.sys = _ImplicitQSRNetwork(nx, ny, nu, nq, sigma, epsilon,
                                            S=S, Q=Q, R=R, gamma=gamma, device=device,
                                            bias=bias, alpha=alpha, feedthrough=feedthrough)
@@ -354,17 +364,14 @@ class NODE_REN(nn.Module):
         self.sys._frame()  # type: ignore
 
     def forward(self, u, x):
-        self.nfe += 1
         dx, y = self.sys(x, u)
         return dx, y
 
     def check(self):
         self.sys._check()  # type: ignore
 
-    @property
-    def nfe(self):
-        return self._nfe
+    def save(self) -> None:
+        torch.save(self.state_dict(), self.str_savepath[:-4] + '.ckpt')
 
-    @nfe.setter
-    def nfe(self, value):
-        self._nfe = value
+    def load(self, path):
+        self.load_state_dict(torch.load(path))

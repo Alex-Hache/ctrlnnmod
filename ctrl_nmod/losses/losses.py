@@ -5,7 +5,7 @@ class Mixed_MSELOSS(torch.nn.Module):
     """
         Introduced a convex mixed mse on the state and the ouput
     """
-    def __init__(self, alpha =0.5) -> None:
+    def __init__(self, alpha=0.5) -> None:
         super(Mixed_MSELOSS, self).__init__()
 
         self.crit = MSELoss()
