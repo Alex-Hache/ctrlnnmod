@@ -193,8 +193,8 @@ class Simulator(nn.Module):
             batch_y = y_train[exp_indices[:, None], np.arange(seq_len)[None, :] + sample_indices[:, None], :]
 
             return batch_x0_hidden, batch_u, batch_y, batch_x_hidden
-        x_sim_train, _ = self.forecast(train_dataset)
-        x_train = torch.Tensor(x_sim_train[0].unsqueeze(0))
+        # x_sim_train, _ = self.forecast(train_dataset)
+        # x_train = torch.Tensor(x_sim_train[0].unsqueeze(0))
         # Setup optimizer
         lr = lr
         params_net = list(self.parameters())
@@ -303,7 +303,7 @@ class Simulator(nn.Module):
 
         # Evaluate constraints
         self.check()
-        strSaveName = str(self) + f'lr_{lr}' + f'_{epochs}epch'
+        strSaveName = os.path.join(os.getcwd(), 'results', 'sim_discrete_node_ren' + f'lr_{lr}' + f'_{epochs}epch')
 
         for k, y_exp in enumerate(y_train):
             fig = plt.figure()
@@ -312,7 +312,7 @@ class Simulator(nn.Module):
             plt.legend()
             plt.show()
 
-            fig.savefig(f"{train_dir}/{strSaveName}_sim_exp_{k}.png")
+            fig.savefig(f"{strSaveName}_sim_exp_{k}.png")
 
         fig = plt.figure()
 
@@ -326,7 +326,7 @@ class Simulator(nn.Module):
         plt.title(f"{str(self)}")
         plt.show()
 
-        fig.savefig(f"{train_dir}/{strSaveName}.png")
+        fig.savefig(f"{strSaveName}.png")
 
         dict_res = {'train_loss': vLoss,
                     'test_loss': vVal_mse,
@@ -335,7 +335,7 @@ class Simulator(nn.Module):
                     'train_mse': train_mse.detach().numpy(),
                     'val_mse': val_mse.detach().numpy()}
 
-        savemat(f"{train_dir}/results.mat", dict_res)
+        savemat(f"{strSaveName}" + " results.mat", dict_res)
 
         '''
         fig = plt.figure()
