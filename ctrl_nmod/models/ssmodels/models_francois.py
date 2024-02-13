@@ -331,8 +331,8 @@ class Simulator(nn.Module):
 
         dict_res = {'train_loss': vLoss,
                     'test_loss': vVal_mse,
-                    'y_sim': [y_exp.squeeze(0).numpy() for y_exp in y_sim_val],
-                    'y_sim_train': [y_exp.squeeze(0).numpy() for y_exp in y_sim_train],
+                    'y_sim': np.array([y_exp.squeeze(0).numpy() for y_exp in y_sim_val], dtype=object),
+                    'y_sim_train': np.array([y_exp.squeeze(0).numpy() for y_exp in y_sim_train], dtype=object),
                     'train_mse': train_mse.detach().numpy(),
                     'val_mse': val_mse.detach().numpy()}
 

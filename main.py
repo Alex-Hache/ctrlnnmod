@@ -77,7 +77,7 @@ for u, y in train_set.iter_exp():
 batch_size = 512
 criterion = Mixed_MSELOSS(alpha=0.0)
 lr = 1e-3
-epochs = 10000
+epochs = 5
 
 # Model parameters
 gamma = 100
@@ -87,7 +87,8 @@ str_save_dir = os.path.join(res_dir, 'ren_rl2', f'lr_{lr}_epc_{epochs}_batch_siz
 os.makedirs(str_save_dir, exist_ok=True)
 
 model = NODE_REN(
-    nx=nx, ny=ny, nu=nu, nq=nq, mode="rl2", alpha=alpha, gamma=gamma, feedthrough=False,
+    nx=nx, ny=ny, nu=nu, nq=nq, mode="rl2", alpha=alpha, gamma=gamma, 
+    bias=True, feedthrough=False,
     str_save=str_save_dir + '/model.pkl'
 )
 
