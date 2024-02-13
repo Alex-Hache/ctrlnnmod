@@ -210,7 +210,7 @@ class Simulator(nn.Module):
             val_mse = float(torch.inf)
         print("Initial val_MSE = {:.9f} \n".format(float(val_mse)))
         torch.save(self.state_dict(), f"{train_dir}/model.ckpt")
-
+        self.save()
         vLoss = []
         vVal_mse = []
         '''
@@ -265,7 +265,8 @@ class Simulator(nn.Module):
                     '''
                     if (best_loss - val_mse)/best_loss > tol_change:
                         no_decrease_counter, best_loss = 0, float(val_mse.clone())
-                        torch.save(self.state_dict(), f"{train_dir}/model.ckpt")  
+                        torch.save(self.state_dict(), f"{train_dir}/model.ckpt")
+                        self.save()
                     else:
                         no_decrease_counter += 1
 

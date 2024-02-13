@@ -1,24 +1,42 @@
 import torch
 import torch.nn as nn
+from torch import Tensor
 import time
 import numpy as np
 
 
 class Simulator(nn.Module):
-    def __init__(self, ss_model, ts) -> None:
+    def __init__(self, ss_model, ts, nb: int = 1) -> None:
         super(Simulator, self).__init__()
 
         self.ss_model = ss_model
         self.ts = ts
         self.nx = self.ss_model.nx
+        self.nb = nb  # Number of past inputs to estimate current state
+        self.str_save_path = ss_model.str_savepath
 
     def clone(self):
         copy_ss = self.ss_model.clone()  # State-space model module must have a clone function
-        copy = type(self)(copy_ss, self.ts)
+        copy = type(self)(copy_ss, self.ts, self.nb)
         copy.load_state_dict(self.state_dict())
         return copy
 
-    def simulate(self, u, x0):
+    def save(self) -> None:
+        torch.save(self, self.str_save_path)
+
+    @staticmethod
+    def load(path):
+        return torch.load(path, weights_only=False)
+
+    def get_obs_size(self):
+        return self.nb  # Number of observations need for state estimation
+
+    def simulate(self, u: Tensor, x0):
+        '''
+            Inputs :
+                * u : Input tensor of shape (n_exp, n_samples, nu)
+                * x0 : initial condition of shape (nx)
+        '''
         start_time = time.time()
         with torch.no_grad():
             x_sim, y_sim = self(u[None, :, :], x0[None, :])  # Appel à forward
@@ -62,7 +80,6 @@ class Simulator(nn.Module):
             views.append(view)
         return torch.cat(views, 0)
 
-    
 
 class RK4Simulator(Simulator):
     def __init__(self, ss_model, ts):

@@ -5,8 +5,11 @@ import torch
 from torch.linalg import cholesky, inv
 from torch import Tensor
 
+
 class CustomSoftplus(nn.Softplus):
-    def __init__(self, beta: int = 1, threshold: int = 20, margin: float = 1e-2) -> None:
+    def __init__(
+        self, beta: int = 1, threshold: int = 20, margin: float = 1e-2
+    ) -> None:
         super(CustomSoftplus, self).__init__(beta, threshold)
         self.margin = margin
 
@@ -28,11 +31,11 @@ class ScaledSoftmax(nn.Softmax):
 
 
 class BetaLayer(nn.Module):
+    def __init__(
+        self, n_inputs, n_states, n_hidden, actF=nn.Tanh(), func="softplus", tol=0.01
+    ) -> None:
 
-    def __init__(self, n_inputs, n_states, n_hidden,
-                 actF=nn.Tanh(), func='softplus', tol=0.01) -> None:
-
-        '''
+        """
         This function initiates a "beta layer" whiches produce a matrix valued function
         beta(x) where beta(x) is invertible and of size n_inputsx n_inputs :
             * beta(x) = U sigma(x) V
@@ -40,7 +43,7 @@ class BetaLayer(nn.Module):
             sigma(x) a one-layer feedforward neural network  :
                 pos_func(W_out \sigma(W_in x + b_in)+b_out)
             It is initialized to be Identity matrix
-        '''
+        """
         super(BetaLayer, self).__init__()
 
         self.nu = n_inputs
@@ -60,9 +63,9 @@ class BetaLayer(nn.Module):
         nn.init.zeros_(self.W_beta_out.weight)
         nn.init.zeros_(self.W_beta_out.bias)
 
-        if func == 'softplus':
+        if func == "softplus":
             self.pos_func = CustomSoftplus(beta=1, threshold=20, margin=tol)
-        elif func == 'relu':
+        elif func == "relu":
             self.pos_func = nn.ReLU()
         else:
             raise NotImplementedError("Not implemented yet")
@@ -76,13 +79,14 @@ class BetaLayer(nn.Module):
 
 
 class InertiaMatrix(nn.Module):
-    '''
-        Implement a SDP matrix function corresponding to an inertia matrix
-        depending on a variable q
-    '''
-    def __init__(self, nq, nh, actF=nn.Tanh(), func='softplus', tol=0.01) -> None:
+    """
+    Implement a SDP matrix function corresponding to an inertia matrix
+    depending on a variable q
+    """
 
-        '''
+    def __init__(self, nq, nh, actF=nn.Tanh(), func="softplus", tol=0.01) -> None:
+
+        """
         This function initiates a "beta layer" whiches produce a matrix valued function
         beta(x) where beta(x) is invertible and of size n_inputsx n_inputs :
             * beta(x) = U sigma(x) V
@@ -91,7 +95,7 @@ class InertiaMatrix(nn.Module):
             pos_func(W_out \sigma(W_in x + b_in)+b_out)
 
             It is initialized to be Identity matrix
-        '''
+        """
         super(InertiaMatrix, self).__init__()
 
         self.nu = nq
@@ -106,9 +110,9 @@ class InertiaMatrix(nn.Module):
         nn.init.zeros_(self.W_beta_out.weight)
         nn.init.zeros_(self.W_beta_out.bias)
 
-        if func == 'softplus':
+        if func == "softplus":
             self.pos_func = CustomSoftplus(beta=1, threshold=20, margin=tol)
-        elif func == 'relu':
+        elif func == "relu":
             self.pos_func = nn.ReLU()
         else:
             raise NotImplementedError("Not implemented yet")
@@ -122,10 +126,9 @@ class InertiaMatrix(nn.Module):
 
 
 class CoriolisMatrix(nn.Module):
+    def __init__(self, nq, nh, actF=nn.Tanh(), func="softplus", tol=0.01) -> None:
 
-    def __init__(self, nq, nh, actF=nn.Tanh(), func='softplus', tol=0.01) -> None:
-
-        '''
+        """
         This function initiates a "beta layer" whiches produce a matrix valued function
         beta(x) where beta(x) is invertible and of size n_inputsx n_inputs :
             * beta(x) = U sigma(x) V
@@ -134,7 +137,7 @@ class CoriolisMatrix(nn.Module):
             pos_func(W_out \sigma(W_in x + b_in)+b_out)
 
             It is initialized to be Identity matrix
-        '''
+        """
         super(CoriolisMatrix, self).__init__()
 
         self.nu = nq
@@ -149,9 +152,9 @@ class CoriolisMatrix(nn.Module):
         nn.init.zeros_(self.W_beta_out.weight)
         nn.init.zeros_(self.W_beta_out.bias)
 
-        if func == 'softplus':
+        if func == "softplus":
             self.pos_func = CustomSoftplus(beta=1, threshold=20, margin=tol)
-        elif func == 'relu':
+        elif func == "relu":
             self.pos_func = nn.ReLU()
         else:
             raise NotImplementedError("Not implemented yet")
@@ -167,16 +170,16 @@ class CoriolisMatrix(nn.Module):
 class DDLayer(nn.Module):
     def __init__(self, Ui: torch.Tensor) -> None:
         super(DDLayer, self).__init__()
-        '''
+        """
             Ui : inverse of the upper Cholesky decomposition associated to the DD problem
-        '''
+        """
         self.Ui = Ui
         self.act = nn.ReLU()
 
     def forward(self, M):
-        '''
-            M : linear matrix inequality in Sn+
-        '''
+        """
+        M : linear matrix inequality in Sn+
+        """
 
         Q = self.Ui.T @ M @ self.Ui
         dQ = torch.diag(Q)
@@ -187,10 +190,10 @@ class DDLayer(nn.Module):
         return DQ
 
     def updateU_(self, M):
-        '''
-            From the current M value we update U to update search region in DD+
-            If correct : DDLayer(updateU_(M)) = I
-        '''
+        """
+        From the current M value we update U to update search region in DD+
+        If correct : DDLayer(updateU_(M)) = I
+        """
         # Q = self(M)
         # M_next = inv(self.Ui.T) @ Q @ inv(self.Ui)
         # assert torch.all(M_next == M)
