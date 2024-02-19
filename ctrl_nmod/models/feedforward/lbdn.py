@@ -5,7 +5,7 @@
 import torch
 from torch.nn import Module, Linear, Sequential, Tanh
 from collections import OrderedDict
-from layers.liplayers import SandwichFc, SandwichFcScaled, SandwichLin
+from ctrl_nmod.layers.liplayers import SandwichFc, SandwichFcScaled, SandwichLin
 
 
 class FFNN(Module):

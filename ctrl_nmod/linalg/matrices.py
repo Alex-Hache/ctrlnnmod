@@ -9,13 +9,13 @@ import torch
 from cvxpy.expressions.variable import Variable
 from cvxpy.problems.objective import Minimize
 from cvxpy.problems.problem import Problem
-from layers.layers import softplus_epsilon, ScaledSoftmax
+from ctrl_nmod.layers.layers import softplus_epsilon, ScaledSoftmax
 from torch import Tensor
 from torch.linalg import matrix_exp
 from torch.nn import Module
 from torch.nn.parameter import Parameter
 
-from linalg.utils import cayley, isSDP, is_alpha_stable
+from ctrl_nmod.linalg.utils import cayley, isSDP, is_alpha_stable
 
 # TODO Implement a parent class parameterized matrix with the following methods
 #   __init__
@@ -127,7 +127,7 @@ class PositiveDefinite(Module):
             self.n = arg
             if param == 'svd':  # Parameterized using singular value decomposition
                 self.P = Orthogonal((self.n, self.n))
-                self.diag = Parameter(torch.rand((self.n, 1))).requires_grad_(True)
+                self.diag = Parameter(torch.rand((self.n))).requires_grad_(True)
                 self.weight = (self.P.eval_() @
                                (torch.diag(softplus_epsilon(self.diag, self.epsilon)) @
                                self.P.eval_().T))
@@ -154,7 +154,7 @@ class PositiveDefinite(Module):
 
     def eval_(self) -> Tensor:
         if self.param == 'svd':
-            return (self.Q @ torch.diag(softplus_epsilon(self.diag, self.epsilon)) @ self.Q.T)
+            return (self.P.eval_() @ torch.diag(softplus_epsilon(self.diag, self.epsilon)) @ self.P.eval_().T)
         elif self.param == 'square':
             return (self.weight @ self.weight.T + self.epsilon * torch.eye(self.n))
         else:

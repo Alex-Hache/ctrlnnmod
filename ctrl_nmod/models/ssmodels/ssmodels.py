@@ -1,32 +1,35 @@
-
 from torch.nn import Module, Tanh, Linear
 from torch.nn.parameter import Parameter
-from models.feedforward.lbdn import Fxu, LipFxu, LipHx, Hx
+from ctrl_nmod.models.feedforward.lbdn import Fxu, LipFxu, LipHx, Hx
 from torch.nn.init import zeros_
 from typing import Tuple
-from linalg.matrices import AlphaStable
+from ctrl_nmod.linalg.matrices import AlphaStable
+from ctrl_nmod.linalg.utils import sqrtm
+import torch.nn as nn
 
 
 class NnLinear(Module):
     """
-        neural network module corresponding to a linear state-space model
-            x^+ = Ax + Bu
-            y = Cx
+    neural network module corresponding to a linear state-space model
+        x^+ = Ax + Bu
+        y = Cx
     """
-    def __init__(self, input_dim: int, output_dim: int, state_dim: int,
-                 alpha=None) -> None:
+
+    def __init__(
+        self, input_dim: int, output_dim: int, state_dim: int, alpha=None
+    ) -> None:
         super(NnLinear, self).__init__()
 
         self.nu = input_dim
         self.nx = state_dim
         self.ny = output_dim
-
+        self.str_savepath = './results'
         # Is A alpha stable ?
         if alpha is not None:
             self.A = AlphaStable(self.nx, alpha=alpha)
         else:
             self.A = Linear(self.nx, self.nx, bias=False)
-        self.B = Linear(self.nu, self.nu, bias=False)
+        self.B = Linear(self.nu, self.nx, bias=False)
         self.C = Linear(self.nx, self.ny, bias=False)
 
     def forward(self, u, x):
@@ -50,10 +53,54 @@ class NnLinear(Module):
         return copy
 
 
+
+class HinfNN(Module):
+    def __init__(self, input_dim : int, output_dim: int, config) -> None:
+        super(HinfNN, self).__init__()
+        self.nu = input_dim
+        self.nx = config.nx
+        self.ny = output_dim
+        self.gamma = config.gamma
+        self.config = config
+
+        
+        self.Q = Parameter(nn.init.normal_(torch.empty(self.nx, self.nx)))
+        self.P =  Parameter(nn.init.normal_(torch.empty(self.nx, self.nx)))
+        self.S =  Parameter(nn.init.normal_(torch.empty(self.nx, self.nx)))
+        self.G = Parameter(nn.init.normal_(torch.empty((self.ny, self.nx))))
+        self.H = Parameter(nn.init.normal_(torch.empty((self.nx, self.nu)))) # H is restriction to input space
+        self.eps = torch.Tensor([1e-4])
+        # register P,Q,S variables to be on specified manifolds
+        geo.positive_definite(self, 'P')
+        geo.positive_definite(self, 'Q')
+        geo.skew(self, 'S')
+
+    def forward(self, u, x):
+
+        # Building linear matrix system
+        Htilde = self.H/(1.01*torch.sqrt(torch.norm(self.H@self.H.T, 2)))
+        Asym =  -0.5*(self.Q + self.G.T@ self.G + self.eps* torch.eye(self.nx))
+        A = (Asym + self.S)@self.P
+        B = self.gamma*sqrtm(self.Q)@Htilde
+        C = self.G@ self.P
+
+        dx = x@A.T + u@B.T
+        y = x@C.T
+        return dx, y
+
+
 class Grnssm(Module):
-    def __init__(self, input_dim: int, output_dim: int, state_dim: int,
-                 hidden_dim: int, n_hidden_layers: int = 1, actF=Tanh(),
-                 out_eq_nl=False, alpha=None) -> None:
+    def __init__(
+        self,
+        input_dim: int,
+        output_dim: int,
+        state_dim: int,
+        hidden_dim: int,
+        n_hidden_layers: int = 1,
+        actF=Tanh(),
+        out_eq_nl=False,
+        alpha=None,
+    ) -> None:
         """
         Constructor Grnssm u is a generalized input ex : [control, distrubance]:
             x^+ = Ax + Bu + f(x,u)
@@ -123,20 +170,40 @@ class Grnssm(Module):
                 zeros_(self.hx.Wout.bias)
 
     def clone(self):  # Method called by the simulator
-        copy = type(self)(self.nu, self.ny, self.nx,
-                          self.nh, self.n_hid_layers, self.actF,
-                          self.out_eq_nl)
+        copy = type(self)(
+            self.nu,
+            self.ny,
+            self.nx,
+            self.nh,
+            self.n_hid_layers,
+            self.actF,
+            self.out_eq_nl,
+        )
         copy.load_state_dict(self.state_dict())
         return copy
 
 
 class LipGrnssm(Grnssm):
-    def __init__(self, input_dim: int, output_dim: int, state_dim: int,
-                 hidden_dim: int, n_hidden_layers: int = 1, actF=Tanh(),
-                 out_eq_nl=False, lip: Tuple[int, int] = (1, 1)) -> None:
-        super(LipGrnssm, self).__init__(input_dim, output_dim, state_dim,
-                                        hidden_dim, n_hidden_layers,
-                                        actF, out_eq_nl)
+    def __init__(
+        self,
+        input_dim: int,
+        output_dim: int,
+        state_dim: int,
+        hidden_dim: int,
+        n_hidden_layers: int = 1,
+        actF=Tanh(),
+        out_eq_nl=False,
+        lip: Tuple[int, int] = (1, 1),
+    ) -> None:
+        super(LipGrnssm, self).__init__(
+            input_dim,
+            output_dim,
+            state_dim,
+            hidden_dim,
+            n_hidden_layers,
+            actF,
+            out_eq_nl,
+        )
 
         # We override the definition of the nonlinear parts of the network
         # and replace them with LBDN networks
@@ -145,7 +212,9 @@ class LipGrnssm(Grnssm):
         self.lip_x = lip[0]
         self.lip_u = lip[1]
 
-        self.fx = LipFxu(self.nu, self.nh, self.nx, scalex=self.lip_x, scaleu=self.lip_u)
+        self.fx = LipFxu(
+            self.nu, self.nh, self.nx, scalex=self.lip_x, scaleu=self.lip_u
+        )
         # Nonlinear output part
         if self.out_eq_nl:
             self.hx = LipHx(self.nx, self.nh, self.ny, scalex=self.lip_x)
@@ -155,3 +224,27 @@ class LipGrnssm(Grnssm):
 
     def init_weights_(self, A0, B0, C0, isLinTrainable=True):
         super().init_weights_(A0, B0, C0, isLinTrainable)
+
+
+class L2IncGrnssm(Grnssm):
+    def __init__(
+        self,
+        input_dim: int,
+        output_dim: int,
+        state_dim: int,
+        hidden_dim: int,
+        n_hidden_layers: int = 1,
+        actF=Tanh(),
+        out_eq_nl=False,
+        alpha=None,
+    ) -> None:
+        super().__init__(
+            input_dim,
+            output_dim,
+            state_dim,
+            hidden_dim,
+            n_hidden_layers,
+            actF,
+            out_eq_nl,
+            alpha,
+        )

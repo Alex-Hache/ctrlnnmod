@@ -5,7 +5,7 @@
 import torch
 from torch.nn import Linear, ReLU
 from torch.nn.parameter import Parameter
-from linalg.utils import cayley
+from ctrl_nmod.linalg.utils import cayley
 import torch.nn.functional as F
 
 
