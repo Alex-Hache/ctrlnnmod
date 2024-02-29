@@ -6,6 +6,7 @@ from typing import Tuple
 from ctrl_nmod.linalg.matrices import AlphaStable
 from ctrl_nmod.linalg.utils import sqrtm
 import torch.nn as nn
+import torch
 
 
 class NnLinear(Module):
@@ -23,7 +24,7 @@ class NnLinear(Module):
         self.nu = input_dim
         self.nx = state_dim
         self.ny = output_dim
-        self.str_savepath = './results'
+        self.str_savepath = "./results"
         # Is A alpha stable ?
         if alpha is not None:
             self.A = AlphaStable(self.nx, alpha=alpha)
@@ -53,9 +54,8 @@ class NnLinear(Module):
         return copy
 
 
-
 class HinfNN(Module):
-    def __init__(self, input_dim : int, output_dim: int, config) -> None:
+    def __init__(self, input_dim: int, output_dim: int, config) -> None:
         super(HinfNN, self).__init__()
         self.nu = input_dim
         self.nx = config.nx
@@ -63,29 +63,30 @@ class HinfNN(Module):
         self.gamma = config.gamma
         self.config = config
 
-        
         self.Q = Parameter(nn.init.normal_(torch.empty(self.nx, self.nx)))
-        self.P =  Parameter(nn.init.normal_(torch.empty(self.nx, self.nx)))
-        self.S =  Parameter(nn.init.normal_(torch.empty(self.nx, self.nx)))
+        self.P = Parameter(nn.init.normal_(torch.empty(self.nx, self.nx)))
+        self.S = Parameter(nn.init.normal_(torch.empty(self.nx, self.nx)))
         self.G = Parameter(nn.init.normal_(torch.empty((self.ny, self.nx))))
-        self.H = Parameter(nn.init.normal_(torch.empty((self.nx, self.nu)))) # H is restriction to input space
+        self.H = Parameter(
+            nn.init.normal_(torch.empty((self.nx, self.nu)))
+        )  # H is restriction to input space
         self.eps = torch.Tensor([1e-4])
         # register P,Q,S variables to be on specified manifolds
-        geo.positive_definite(self, 'P')
-        geo.positive_definite(self, 'Q')
-        geo.skew(self, 'S')
+        geo.positive_definite(self, "P")
+        geo.positive_definite(self, "Q")
+        geo.skew(self, "S")
 
     def forward(self, u, x):
 
         # Building linear matrix system
-        Htilde = self.H/(1.01*torch.sqrt(torch.norm(self.H@self.H.T, 2)))
-        Asym =  -0.5*(self.Q + self.G.T@ self.G + self.eps* torch.eye(self.nx))
-        A = (Asym + self.S)@self.P
-        B = self.gamma*sqrtm(self.Q)@Htilde
-        C = self.G@ self.P
+        Htilde = self.H / (1.01 * torch.sqrt(torch.norm(self.H @ self.H.T, 2)))
+        Asym = -0.5 * (self.Q + self.G.T @ self.G + self.eps * torch.eye(self.nx))
+        A = (Asym + self.S) @ self.P
+        B = self.gamma * sqrtm(self.Q) @ Htilde
+        C = self.G @ self.P
 
-        dx = x@A.T + u@B.T
-        y = x@C.T
+        dx = x @ A.T + u @ B.T
+        y = x @ C.T
         return dx, y
 
 
