@@ -1,22 +1,85 @@
 import torch
-from torch.nn import MSELoss
+from torch.nn import MSELoss, Module
+from .regularizations import RegularizationsList
+from typing import Union
 
 
-class Mixed_MSELOSS(torch.nn.Module):
+class Mixed_MSELoss(Module):
+    r"""
+        This loss computes a convex combination between x (state) and y(output)
+        \mathcal{L} = \alpha*(y- \hat{y})^2 + (1 - \alpha)*(x - \hat{x})
     """
-    Introduced a convex mixed mse on the state and the ouput
-    """
-
-    def __init__(self, alpha=0.5) -> None:
-        super(Mixed_MSELOSS, self).__init__()
-
-        self.crit = MSELoss()
+    def __init__(self, alpha: float = 1) -> None:
+        super().__init__()
+        self.mse_y = MSELoss()
+        self.mse_x = MSELoss()
         self.alpha = alpha
+
+    def forward(self, y_true, y_sim, x_true, x_sim):
+        x_mse = self.mse_x(x_true, x_sim)
+        y_mse = self.mse_y(y_true, y_sim)
+        return self.alpha * y_mse + (1 - self.alpha) * x_mse
+
+
+class RegularizedLoss(Module):
+    '''
+        This is base class of regularized loss
+    '''
+    def __init__(self, regs: Union[RegularizationsList, None]) -> None:
+        super().__init__()
+        self.regs = regs
+
+    def update(self):
+        if self.regs is not None:
+            for reg in self.regs.regularizations:
+                if hasattr(reg, 'update'):
+                    reg.update()  # type: ignore
+
+
+class MixedMSEReg(RegularizedLoss):
+    '''
+    '''
+    def __init__(self, nu: float, regs: RegularizationsList) -> None:
+        super().__init__(regs)
+        self.nu = nu
+        self.crit = MSELoss()
 
     def forward(self, y_true, y_sim, x_true, x_sim):
         x_mse = self.crit(x_true, x_sim)
         y_mse = self.crit(y_true, y_sim)
-        return self.alpha * x_mse + (1 - self.alpha) * y_mse
+        if self.regs is not None:
+            reg = self.regs()
+            return self.nu*y_mse + (1-self.nu)*x_mse + reg
+        else:
+            return self.nu*y_mse + (1-self.nu)*x_mse
+
+    def __repr__(self):
+        return f"Mixed MSE : nu = {self.nu}"
+
+
+class Mixed_MSE_LMI(MixedMSEReg):
+    r"""
+        This Loss is a regular mse loss added with a logdet barrier term
+        \mathcal{L} = MixedMSE - \mu logdet(lmi)
+        where lmi is a Module producing a positive definite matrix
+    """
+    def __init__(self, lmi: Module, mu: float, alpha: float = 1) -> None:
+        super().__init__(alpha)
+        self.lmi = lmi
+        self.mu = mu
+
+    def forward(self, y_true, y_sim, x_true, x_sim):
+        mse_loss = super().forward(y_true, y_sim, x_true, x_sim)
+        barrier = torch.logdet(self.lmi())
+
+        return mse_loss - self.mu*barrier
+
+    def update(self, scale) -> None:
+        r'''
+            This function updates barrier term ponderation term if called
+            self.mu = self.mu * scale
+        '''
+        self.mu = self.mu*scale
 
 
 class Mixed_MSELOSS_LMI(torch.nn.Module):

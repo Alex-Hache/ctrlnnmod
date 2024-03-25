@@ -3,9 +3,15 @@ import torch.nn as nn
 from torch import Tensor
 import time
 import numpy as np
+import os
 
 
 class Simulator(nn.Module):
+    '''
+    This class implements the base class on which simulation model is built
+    depending on the integration method only the forward method changes.
+    '''
+
     def __init__(self, ss_model, ts, nb: int = 1) -> None:
         super(Simulator, self).__init__()
 
@@ -13,7 +19,10 @@ class Simulator(nn.Module):
         self.ts = ts
         self.nx = self.ss_model.nx
         self.nb = nb  # Number of past inputs to estimate current state
-        self.str_save_path = ss_model.str_savepath
+        self.save_path = os.getcwd()
+
+    def set_save_path(self, path):
+        self.save_path = path
 
     def clone(self):
         copy_ss = self.ss_model.clone()  # State-space model module must have a clone function
@@ -22,7 +31,7 @@ class Simulator(nn.Module):
         return copy
 
     def save(self) -> None:
-        torch.save(self, self.str_save_path)
+        torch.save(self.state_dict(), self.save_path + '/model.pkl')
 
     @staticmethod
     def load(path):

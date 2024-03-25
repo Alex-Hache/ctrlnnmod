@@ -16,6 +16,7 @@ from geotorch.exceptions import (
 )
 from geotorch.utils import _extra_repr
 
+# A metrre dans geotorch
 
 class AlphaStable(ProductManifold):
     def __init__(self, size, alpha: float, triv="expm"):
