@@ -35,7 +35,7 @@ class BetaLayer(nn.Module):
         self, n_inputs, n_states, n_hidden, actF=nn.Tanh(), func="softplus", tol=0.01
     ) -> None:
 
-        """
+        r"""
         This function initiates a "beta layer" whiches produce a matrix valued function
         beta(x) where beta(x) is invertible and of size n_inputsx n_inputs :
             * beta(x) = U sigma(x) V
@@ -86,7 +86,7 @@ class InertiaMatrix(nn.Module):
 
     def __init__(self, nq, nh, actF=nn.Tanh(), func="softplus", tol=0.01) -> None:
 
-        """
+        r"""
         This function initiates a "beta layer" whiches produce a matrix valued function
         beta(x) where beta(x) is invertible and of size n_inputsx n_inputs :
             * beta(x) = U sigma(x) V
@@ -128,7 +128,7 @@ class InertiaMatrix(nn.Module):
 class CoriolisMatrix(nn.Module):
     def __init__(self, nq, nh, actF=nn.Tanh(), func="softplus", tol=0.01) -> None:
 
-        """
+        r"""
         This function initiates a "beta layer" whiches produce a matrix valued function
         beta(x) where beta(x) is invertible and of size n_inputsx n_inputs :
             * beta(x) = U sigma(x) V

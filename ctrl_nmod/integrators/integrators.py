@@ -89,6 +89,8 @@ class Simulator(nn.Module):
             views.append(view)
         return torch.cat(views, 0)
 
+    # TODO Adding check_/eval_ method
+
 
 class RK4Simulator(Simulator):
     def __init__(self, ss_model, ts):
