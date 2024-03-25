@@ -57,7 +57,7 @@ class AlphaStable(ProductManifold):
             nx = A.shape[0]
             P = Variable((nx, nx), "P", PSD=True)
             Q = (
-                A.T @ P + P @ A + 2 * self.alpha * P
+                A.T @ P + P @ A + 2 * self.alpha * P  # type: ignore
             )  # solve the negative definite version
             constraints = [Q << -epsilon * np.eye(nx), P - (epsilon) * np.eye(nx) >> 0]  # type: ignore
             objective = Minimize(0)  # Feasibility problem
