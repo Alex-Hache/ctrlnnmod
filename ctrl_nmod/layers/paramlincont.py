@@ -96,6 +96,15 @@ class NnLinear(Module):
         copy.load_state_dict(self.state_dict())
         return copy
 
+    def init_model_(self, A0, B0, C0, is_grad=True):
+        self.A.weight = nn.parameter.Parameter(A0)
+        self.B.weight = nn.parameter.Parameter(B0)
+        self.C.weight = nn.parameter.Parameter(C0)
+        if is_grad is False:
+            self.A.requires_grad_(False)
+            self.B.requires_grad_(False)
+            self.C.requires_grad_(False)
+
 
 class L2BoundedLinear(Module):
     def __init__(self, nu: int, ny: int, nx: int, gamma: float, alpha: float = 0.0,

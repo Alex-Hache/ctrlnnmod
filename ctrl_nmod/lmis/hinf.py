@@ -110,6 +110,9 @@ class HInfDisc(LMI):
         nu, nx, ny = B.shape[1], A.shape[0], C.shape[0]
         self.nu, self.ny, self.nx = nu, ny, nx
 
+        self.register_buffer('Inu', torch.eye(nu))
+        self.register_buffer('Iny', torch.eye(ny))
+
         if D is not None:
             self.D = D
         else:
@@ -180,10 +183,9 @@ class HInfDisc(LMI):
         M11 = torch.matmul(torch.matmul(self.A.T, self.P), self.A) - self.P
         M12 = torch.matmul(torch.matmul(self.A.T, self.P), self.B)
         M13 = self.C.T
-        M22 = torch.matmul(torch.matmul(self.B.T, self.P), self.B) - self.gamma*torch.eye(nu)
-        ny = self.C.shape[0]
+        M22 = torch.matmul(torch.matmul(self.B.T, self.P), self.B) - self.gamma*self.Inu
         M23 = self.D.T
-        M33 = self.gamma*torch.eye(ny)
+        M33 = self.gamma*self.Iny
 
         M = torch.Tensor([[M11, M12, M13], [M12.T, M22, M23], [M13.T, M23.T, M33]])
         return -M

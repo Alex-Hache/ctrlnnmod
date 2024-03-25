@@ -6,6 +6,7 @@ import torch
 from torch.nn import Module, Linear, Sequential, Tanh
 from collections import OrderedDict
 from ctrl_nmod.layers.liplayers import SandwichFc, SandwichFcScaled, SandwichLin
+from linalg.utils import solveLipschitz
 
 
 class FFNN(Module):
@@ -106,6 +107,63 @@ class Fxu(FFNN):
     def forward(self, x, u):
         z = torch.cat((x, u), 1)
         return self.fnn(z)
+
+    def check_(self):
+        weights = self.extractWeightsSandwich()
+        Wfx = weights[0][:, :self.nx]
+        Wfu = weights[0][:, self.nx:]
+
+        weights_x = [Wfx, weights[1]]
+        weights_u = [Wfu, weights[1]]
+
+        _, lx, _ = solveLipschitz(weights_x)
+        _, lu, _ = solveLipschitz(weights_u)
+
+        lip = torch.Tensor([lx]*self.nx + [lu]*self.nu)
+        if torch.all(self.scale - lip > 0):
+            return True
+        else:
+            return False
+
+    def extractWeightsSandwich(self):
+        '''
+            Model must something similar to a sequential model 
+            with an attribute layers being an iterable containing the weights
+        '''
+        weights_in = []
+        weights_out = []
+        for i, layer in enumerate(self.layers):
+            if hasattr(layer, 'weight'):
+                if hasattr(layer, 'scale'):
+                    scle = layer.scale
+                else:
+                    scle = 1
+                if hasattr(layer, 'psi'):  # Sandwich fc class
+                    psi = layer.psi
+                    f = psi.shape[0]
+                    Q = layer.Q
+                    At, B = Q[:, :f].T, Q[:, f:]
+                    Win = (2**0.5) * torch.exp(-psi).diag() @ B * scle
+                    Wout = (2**0.5) * At @ torch.exp(psi).diag()
+                    weights_in.append(Win)
+                    weights_out.append(Wout)  # weights after activation
+                elif hasattr(layer, 'AB'):  # Sandwich lin class
+                    fout, _ = layer.weight.shape
+                    Q = layer.Q
+                    weights_in.append(Q[:, fout:] * scle)
+                    if layer.AB:
+                        weights_out.append(2*Q[:, :fout].T)  # Weights after activation
+                else:  # regular weights
+                    weights_in.append(layer.weight)
+
+        # Combine sandwich layers
+        weights = []
+        weights.append(weights_in[0])  # W0
+
+        for k in range(len(weights_in)-1):
+            weights.append(weights_in[k+1] @ weights_out[k])
+
+        return weights
 
 
 class Hx(FFNN):

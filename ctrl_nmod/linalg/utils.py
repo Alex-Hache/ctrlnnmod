@@ -3,19 +3,23 @@ import scipy
 import torch
 from torch.autograd import Function
 from torch.linalg import eigvals
-import cvxpy as cp
+from cvxpy.problems.problem import Problem
+from cvxpy.problems.objective import Minimize
+from cvxpy.expressions.variable import Variable
+from cvxpy.atoms.affine.bmat import bmat
+from cvxpy.atoms.affine.hstack import hstack
+from cvxpy.atoms.affine.vstack import vstack
 
 
 def block_diag(arr_list):
     '''create a block diagonal matrix from a list of cvxpy matrices'''
 
     # rows and cols of block diagonal matrix
-    m = np.sum([arr.shape[0] for arr in arr_list])
     n = np.sum([arr.shape[1] for arr in arr_list])
 
     # loop to create the list for the bmat function
     block_list = []  # list for bmat function
-    ind = np.array([0,0])
+    ind = np.array([0, 0])
     for arr in arr_list:
         # index of the end of arr in the block diagonal matrix
         ind += arr.shape
@@ -35,7 +39,7 @@ def block_diag(arr_list):
 
         block_list.append(horz_list)
 
-    B = cp.bmat(block_list)
+    B = bmat(block_list)
 
     return B
 
@@ -118,78 +122,78 @@ sqrtm = MatrixSquareRoot.apply
 
 
 def solveLipschitz(weights, beta=1, epsilon=1e-6, solver="MOSEK"):
-        '''
-            This function solve the Linear Matrix Inequality for
-            estimating an upper bound on the Lipschitz constant of 
-            a feedforward neural network.
-            https://arxiv.org/abs/2005.02929
-            params :
-                * weights : a list of neural network weights
-                * beta : the maximum slope of activation functions 
-        '''
-        n_in = weights[0].shape[1]
-        n_hidden = [w.shape[0] for w in weights[:-1]]
-        n_out = weights[-1].shape[0]
+    r'''
+        This function solve the Linear Matrix Inequality for
+        estimating an upper bound on the Lipschitz constant of
+        a feedforward neural network.
+        https://arxiv.org/abs/2005.02929
+        params :
+            * weights : a list of neural network weights
+            * beta : the maximum slope of activation functions
+    '''
+    n_in = weights[0].shape[1]
+    n_hidden = [w.shape[0] for w in weights[:-1]]
+    n_out = weights[-1].shape[0]
 
-        Ts = [cp.Variable((n_h, n_h), diag=True) for n_h in n_hidden]
-        T = block_diag(Ts)
-        Ft = cp.bmat([[np.zeros(T.shape), beta*T], [beta*T, -2*T]])
-        Ws = [weight.detach().numpy() for weight in weights[:-1]]
-        W = block_diag(Ws)
-        A = cp.hstack([W, np.zeros((W.shape[0], n_hidden[-1]))])
+    Ts = [Variable((n_h, n_h), diag=True) for n_h in n_hidden]
+    T = block_diag(Ts)
+    Ft = bmat([[np.zeros(T.shape), beta*T], [beta*T, -2*T]])  # type: ignore
+    Ws = [weight.detach().numpy() for weight in weights[:-1]]
+    W = block_diag(Ws)
+    A = hstack([W, np.zeros((W.shape[0], n_hidden[-1]))])
 
-        I_B = np.eye(sum(n_hidden))
-        B = cp.hstack([np.zeros((I_B.shape[0], n_in)), I_B])
-        AB = cp.vstack([A, B])
-        LMI = AB.T @ Ft @ AB
+    I_B = np.eye(sum(n_hidden))
+    B = hstack([np.zeros((I_B.shape[0], n_in)), I_B])
+    AB = vstack([A, B])
+    LMI = AB.T @ Ft @ AB
 
-        LMI_schur = block_diag([LMI, np.zeros((n_out, n_out))])
+    LMI_schur = block_diag([LMI, np.zeros((n_out, n_out))])
 
-        # 2eme partie LMI
-        lip = cp.Variable()
-        L = -lip*np.eye(n_in)
+    # 2eme partie LMI
+    lip = Variable()
+    L = -lip*np.eye(n_in)  # type: ignore
 
-        # Block schur last layer
-        b11 = np.zeros((n_hidden[-1], n_hidden[-1]))
-        b12 = weights[-1].T.detach().numpy()
-        b21 = weights[-1].detach().numpy()
-        b22 = -np.eye(n_out)
-        bf = cp.bmat([[b11, b12], [b21, b22]])
+    # Block schur last layer
+    b11 = np.zeros((n_hidden[-1], n_hidden[-1]))
+    b12 = weights[-1].T.detach().numpy()
+    b21 = weights[-1].detach().numpy()
+    b22 = -np.eye(n_out)
+    bf = bmat([[b11, b12], [b21, b22]])
 
-        dim_inter = sum(n_hidden[:-1])
-        if dim_inter > 0:
-            inter = np.zeros((dim_inter, dim_inter))
-            part2 = block_diag([L, inter, bf])
-        else:
-            part2 = block_diag([L, bf])
+    dim_inter = sum(n_hidden[:-1])
+    if dim_inter > 0:
+        inter = np.zeros((dim_inter, dim_inter))
+        part2 = block_diag([L, inter, bf])
+    else:
+        part2 = block_diag([L, bf])
 
-        M = LMI_schur+part2
+    M = LMI_schur+part2
 
-        nM = M.shape[0]
-        nT = T.shape[0]
-        constraints = [M << -np.eye(nM)*epsilon, T - (epsilon)*np.eye(nT) >> 0, lip - epsilon >= 0]
-        objective = cp.Minimize(lip)  # Find lowest lipschitz constant
+    nM = M.shape[0]
+    nT = T.shape[0]
+    constraints = [M << -np.eye(nM)*epsilon, T - (epsilon)*np.eye(nT) >> 0, lip - epsilon >= 0]  # type: ignore
+    objective = Minimize(lip)  # Find lowest lipschitz constant
 
-        prob = cp.Problem(objective, constraints=constraints)
-        prob.solve(solver)
-        if prob.status not in ["infeasible", "unbounded"]:
-            # Otherwise, problem.value is inf or -inf, respectively.
-            print(" Lipschitz Constant upper bound (All layer versions): \n")
-            print(np.sqrt(lip.value))
+    prob = Problem(objective, constraints=constraints)
+    prob.solve(solver)
+    if prob.status not in ["infeasible", "unbounded"]:
+        # Otherwise, problem.value is inf or -inf, respectively.
+        print(" Lipschitz Constant upper bound (All layer versions): \n")
+        print(np.sqrt(lip.value))
 
-        else:
-            raise ValueError("SDP problem is infeasible or unbounded")
+    else:
+        raise ValueError("SDP problem is infeasible or unbounded")
 
-        lip = torch.Tensor(np.array(np.sqrt(lip.value))).to(dtype=torch.float32)
-        # Evaluate if it closed to the boundary of the LMI
-        # X = np.linalg.inv(np.matmul(A.T ,P.value) + np.matmul(P.value,A))
-        # t = np.matmul(-A, X) -np.matmul(X,A.T) + 2*alpha*X
-        # If it is close to zero it is at the center
-        # Ts = [torch.Tensor(tens.value.todense()).to(dtype=torch.float32) for tens in Ts]
-        # T = torch.block_diag()
-        T = torch.Tensor(T.value).to(dtype=torch.float32)
-        M = torch.Tensor(M.value).to(dtype=torch.float32)
-        return T, lip, M
+    lip = torch.Tensor(np.array(np.sqrt(lip.value))).to(dtype=torch.float32)
+    # Evaluate if it closed to the boundary of the LMI
+    # X = np.linalg.inv(np.matmul(A.T ,P.value) + np.matmul(P.value,A))
+    # t = np.matmul(-A, X) -np.matmul(X,A.T) + 2*alpha*X
+    # If it is close to zero it is at the center
+    # Ts = [torch.Tensor(tens.value.todense()).to(dtype=torch.float32) for tens in Ts]
+    # T = torch.block_diag()
+    T = torch.Tensor(T.value).to(dtype=torch.float32)
+    M = torch.Tensor(M.value).to(dtype=torch.float32)
+    return T, lip, M
 
 
 # Thanks Lezcano again !

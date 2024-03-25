@@ -89,7 +89,7 @@ class Grnssm(Module):
     def init_weights_(self, A0, B0, C0, isLinTrainable=True) -> None:
         # TODO Enforce specific distribution ton inner (and outer) weights
         # Initializing linear weights
-        self.linmod.init_weights_(A0, B0, C0, is_grad=isLinTrainable)
+        self.linmod.init_model_(A0, B0, C0, is_grad=isLinTrainable)
 
         # Initializing nonlinear output weights to 0
         zeros_(self.fx.Wout.weight)
@@ -128,7 +128,7 @@ class LipGrnssm(Grnssm):
         n_hidden_layers: int = 1,
         actF=Tanh(),
         out_eq_nl=False,
-        lip: Tuple[int, int] = (1, 1),
+        lip: Tuple[Tensor, Tensor] = (Tensor([1]), Tensor([1])),
         alpha=None
     ) -> None:
         super(LipGrnssm, self).__init__(
@@ -166,7 +166,7 @@ class LipGrnssm(Grnssm):
 class L2IncGrNSSM(LipGrnssm):
     def __init__(self, nu: int, ny: int, nx: int,
                  nh: int, n_hidden_layers: int = 1, actF=Tanh(),
-                 out_eq_nl=False, l2i=1.0, alpha=None) -> None:
+                 out_eq_nl=False, l2i=1.0, alpha=1.0) -> None:
         # Compute necessary bound for L2i according to Lipschitz upper bound for nl part
         # epsilon_u = torch.sqrt([1.0])
         # epsilon_x = torch.sqrt([1.0])
@@ -182,7 +182,7 @@ class L2IncGrNSSM(LipGrnssm):
         return f"Incr L2 bounded GRNSSM : eta={float(self.gamma)} -- nh={self.nh}"
 
     def frame_(self):
-        self.alpha = (self.lip_x**2)/(2*min(real(eigvals(self.linmod.P)))) 
+        self.alpha = (self.lip_x**2)/(2*min(real(eigvals(self.linmod.P))))
         self.linmod.alpha = self.alpha
 
     def forward(self, u, x):
