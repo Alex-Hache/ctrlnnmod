@@ -3,7 +3,7 @@ from typing import Tuple
 from torch.nn import Module
 from torch import Tensor
 from typeguard import typechecked
-from linalg.utils import isSDP
+from ctrl_nmod.linalg.utils import isSDP
 
 
 @typechecked
@@ -28,8 +28,8 @@ class LMI(ABC, Module):
         '''
         pass
 
-    @abstractmethod
     @classmethod
+    @abstractmethod
     def solve(cls, *tensors: Tuple[Tensor], solver: str, tol: float) -> Tuple[Tensor, Tensor]:
         r'''
             This method returns the LMI and the corresponding bounds and certificates

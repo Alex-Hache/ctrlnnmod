@@ -3,7 +3,7 @@ from typing import List
 from torch.nn import Module, ModuleList
 import torch
 from typeguard import typechecked
-from lmis.base import LMI
+from ctrl_nmod.lmis.base import LMI
 
 
 @typechecked

@@ -21,14 +21,11 @@ class Simulator(nn.Module):
         self.nb = nb  # Number of past inputs to estimate current state
         self.save_path = os.getcwd()
 
+    def __str__(self) -> str:
+        return f"{str(self.ss_model)}"
+
     def set_save_path(self, path):
         self.save_path = path
-
-    def clone(self):
-        copy_ss = self.ss_model.clone()  # State-space model module must have a clone function
-        copy = type(self)(copy_ss, self.ts, self.nb)
-        copy.load_state_dict(self.state_dict())
-        return copy
 
     def save(self) -> None:
         torch.save(self.state_dict(), self.save_path + '/model.pkl')
@@ -96,6 +93,12 @@ class RK4Simulator(Simulator):
     def __init__(self, ss_model, ts):
         super(RK4Simulator, self).__init__(ss_model=ss_model, ts=ts)
 
+    def __repr__(self):
+        return f"RK4 integrator : ts={self.ts}"
+
+    def __str__(self) -> str:
+        return f"RK4_{str(self.ss_model)}"
+
     def forward(self, u_batch, x0_batch=torch.zeros(1)):
         """ Multi-step simulation over (mini)batches
 
@@ -145,6 +148,12 @@ class RK4Simulator(Simulator):
 class Sim_discrete(Simulator):
     def __init__(self, ss_model, ts=1):
         super(Sim_discrete, self).__init__(ss_model=ss_model, ts=ts)
+
+    def clone(self):
+        copy_ss = self.ss_model.clone()  # State-space model module must have a clone function
+        copy = type(self)(copy_ss, self.ts)
+        copy.load_state_dict(self.state_dict())
+        return copy
 
     def forward(self, u_batch, x0_batch=torch.Tensor(1)):
         """ Multi-step simulation over (mini)batches

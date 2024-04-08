@@ -12,6 +12,7 @@ from torch.utils.data import DataLoader
 from torch.optim import Adam, SGD
 from typing import Union, Tuple
 from ..losses.losses import RegularizedLoss
+import os
 
 
 class Trainer(ABC):
@@ -42,7 +43,7 @@ class SSTrainer(Trainer):
         This class is a used for training state-space models
     """
 
-    def __init__(self, sim_model: Simulator, loss: RegularizedLoss, val_loss=Module, **kwargs) -> None:
+    def __init__(self, sim_model: Simulator, loss: RegularizedLoss, val_loss: RegularizedLoss) -> None:
         super(SSTrainer, self).__init__(sim_model=sim_model, loss=loss, val_loss=val_loss)
 
     def fit_(self, train_set: ExperimentsDataset, test_set: ExperimentsDataset, **kwargs):
@@ -53,7 +54,7 @@ class SSTrainer(Trainer):
             train_set.set_seq_len(seq_len=kwargs['seq_len'])
 
         if 'batch_size' in keys:
-            batch_size = kwargs['keys']
+            batch_size = kwargs['batch_size']
         else:
             batch_size = 256
 
@@ -95,6 +96,7 @@ class SSTrainer(Trainer):
             max_val_points = kwargs['max_val_points']
         else:
             max_val_points = 3000
+
         # Consider making x a training parameter or not
         trainable_xs = [exp.x for exp in train_set.experiments if exp.x_trainable]
         params_model = self.sim_model.parameters()
@@ -112,6 +114,27 @@ class SSTrainer(Trainer):
         else:
             optimizer = Adam(list_params, lr=lr)
 
+        # Learning rate scheduleur
+        if 'scheduled' in keys:
+            scheduled = kwargs['scheduled']
+            if scheduled:
+                if 'step_sched' in keys:
+                    step_sched = kwargs['step_sched']
+                else:
+                    step_sched = 0.1
+                if 'patience_sched' in keys:
+                    patience_sched = kwargs['patience_sched']
+                else:
+                    patience_sched = patience//2
+                if 'min_lr' in keys:
+                    min_lr = kwargs['min_lr']
+                else:
+                    min_lr = 1e-5
+                scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min',
+                                                                       step_sched, patience_sched, min_lr=min_lr)
+
+        else:
+            scheduled = False
         train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True)
         # test_loader = DataLoader(test_set, batch_size=1, shuffle=False)
 
@@ -131,11 +154,11 @@ class SSTrainer(Trainer):
                 epoch_loss = 0.0
                 for idx_batch, batch in enumerate(train_loader):
                     optimizer.zero_grad()
-                    batch_x0_hidden, batch_u, batch_y, batch_x_hidden = batch
-                    x_sim_torch_fit, y_sim_torch_fit = self.sim_model(batch_u, batch_x0_hidden)
+                    batch_u, batch_y, batch_x, batch_x0 = batch
+                    x_sim_torch_fit, y_sim_torch_fit = self.sim_model(batch_u, batch_x0)
 
                     # Compute fit loss
-                    loss = self.criterion(batch_y, y_sim_torch_fit, batch_x_hidden, x_sim_torch_fit)
+                    loss = self.criterion(batch_y, y_sim_torch_fit, batch_x, x_sim_torch_fit)
 
                     # Optimize
                     loss.backward()
@@ -156,12 +179,13 @@ class SSTrainer(Trainer):
                         best_model = self.clone()
                     else:
                         no_decrease_counter += 1
-
+                    if scheduled:
+                        scheduler.step(val_crit)
                     print("Epoch loss = {:.7f} || Val_MSE = {:.7f} || Best loss = {:.7f} \n".format(float(epoch_loss),
                           float(val_crit), float(best_loss)))
                 if no_decrease_counter > patience:  # early stopping
                     break
-
+                
                 if hasattr(self.criterion, 'update'):
                     self.criterion.update()
                 if (math.isnan(epoch_loss)):
@@ -179,7 +203,7 @@ class SSTrainer(Trainer):
 
         # Final simulation on test data
         final_val_mse, bcheck_val, y_sim_list_val = self.eval_(test_set)
-        print(" Final MSE = {:.7f} || Val_MSE = {:.7f} \n".format(float(final_train_mse), float(final_val_mse)))
+        print(" Final MSE = {:.10f} || Val_MSE = {:.10f} \n".format(float(final_train_mse), float(final_val_mse)))
 
         # Saving Mat-file training results
         weights, biases = self.sim_model.extract_weights()
@@ -201,14 +225,13 @@ class SSTrainer(Trainer):
             if val_set.experiments:
                 for num_exp, exp in enumerate(val_set.experiments):
                     u, y_true, x_true = exp.get_data(idx=max_idx)
-                    x_sim, y_sim = self.sim_model.simulate(u, x_true[:, 0])
+                    x_sim, y_sim = self.sim_model.simulate(u, x_true[0, :])
                     y_sim_list.append(y_sim.detach().numpy())
                     val_loss += self.val_criterion(y_true, y_sim, x_true, x_sim)
                 val_crit = val_loss/(len(val_set.experiments))
         else:
             val_crit = 0
             y_sim_list = []
-        self.criterion
         # Now if training_loss has an eval method compute bounds and interesting metrics
         if self.criterion.regs is not None:
             # regularizations = self.criterion.regs.regularizations
@@ -226,8 +249,12 @@ class SSTrainer(Trainer):
     def save(self):
         self.sim_model.save()
 
-    
-def train_network_opt(trial, model, u_train : torch.Tensor, y_train : torch.Tensor, nx : int, 
+    def __str__(self) -> str:
+        return f"{str(self.sim_model)}"
+
+
+r'''
+def train_network_opt(trial, model, u_train : torch.Tensor, y_train : torch.Tensor, nx : int,
             u_test : torch.Tensor, y_test : torch.Tensor, batch_size, seq_len,
             lr, num_iter, test_freq = 100, patience = 70, tol_change = 0.05):
 
@@ -246,7 +273,7 @@ def train_network_opt(trial, model, u_train : torch.Tensor, y_train : torch.Tens
         batch_idx = batch_start[:, np.newaxis] + np.arange(seq_len) # batch samples indices
 
         # Extract batch data
-        
+
         batch_x0_hidden = x_hidden_fit[batch_start, :]
         batch_x_hidden = x_hidden_fit[[batch_idx]]
         batch_u = u_train[[batch_idx]]
@@ -270,7 +297,7 @@ def train_network_opt(trial, model, u_train : torch.Tensor, y_train : torch.Tens
     x0_val = torch.zeros((nx), dtype=torch.float32)
     u_torch_val = u_test.to(dtype= torch.float32)
     y_true_torch_val = y_test.to(dtype= torch.float32)
-    
+
     x_sim_val, y_sim_init = model.simulate(u_torch_val, x0_val)
     val_mse =  torch.mean((y_true_torch_val-y_sim_init)**2)
     print("Initial val_MSE = {:.7f} \n".format(float(val_mse)))
@@ -297,10 +324,10 @@ def train_network_opt(trial, model, u_train : torch.Tensor, y_train : torch.Tens
 
             # Compute fit loss
             err_fit = y_sim_torch_fit - batch_y.squeeze()
-            err_fit_scaled = err_fit 
+            err_fit_scaled = err_fit
             loss = torch.mean(err_fit_scaled**2)
 
-            
+
             # Statistics
             vLoss.append(loss.item())
             if itr % test_freq == 0:
@@ -309,7 +336,7 @@ def train_network_opt(trial, model, u_train : torch.Tensor, y_train : torch.Tens
                     x_sim_val, y_sim_val = model.simulate(u_torch_val, x0_val)
                     val_mse =  torch.mean((y_true_torch_val-y_sim_val)**2)
                     vVal_mse.append(val_mse)
-                    
+
                 if (best_loss - val_mse)/best_loss > tol_change:
                         no_decrease_counter = 0
                         best_loss = val_mse
@@ -324,13 +351,13 @@ def train_network_opt(trial, model, u_train : torch.Tensor, y_train : torch.Tens
                 # Handle pruning based on the intermediate value
                 if trial.should_prune():
                     raise opt.exceptions.TrialPruned()
-            if (math.isnan(loss) or loss<1e-7): 
+            if (math.isnan(loss) or loss<1e-7):
                 break
             # Optimize
             loss.backward()
             optimizer.step()
 
-            
+
             bar()
 
     train_time = time.time() - start_time
@@ -350,10 +377,10 @@ def train_network_opt(trial, model, u_train : torch.Tensor, y_train : torch.Tens
 
     return best_model, dictRes
 
-'''
+
 How to save a model
 
-# Saving best model 
+# Saving best model
         torch.save({
             'epoch': epoch,
             'model_state_dict': best_model.state_dict(),

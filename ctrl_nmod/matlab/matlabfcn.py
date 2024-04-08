@@ -3,9 +3,10 @@ import matlab.engine
 import numpy as np
 from scipy.io import savemat
 
-def findBLA(u : np.ndarray, y : np.ndarray, nx : int,
-            ts : float, model_type : str = 'discrete',
-            save : bool = False, strNameSave : str = "BLA.mat"):
+
+def findBLA(u: np.ndarray, y: np.ndarray, nx: int,
+            ts: float, model_type: str = 'discrete',
+            save: bool = False, strNameSave: str = "BLA.mat"):
     """
         Perform linear identification using scriptName Matlab function
 
@@ -20,8 +21,8 @@ def findBLA(u : np.ndarray, y : np.ndarray, nx : int,
     """
     eng = matlab.engine.start_matlab()
     eng.addpath(eng.genpath(eng.pwd()))
-    data_InMat = matlab.double(u.tolist()) # N_samples x N_channels matlab double
-    data_OutMat = matlab.double(y.tolist()) # N_samples x N_channels matlab double
+    data_InMat = matlab.double(u.tolist())  # N_samples x N_channels matlab double
+    data_OutMat = matlab.double(y.tolist())  # N_samples x N_channels matlab double
     nx = matlab.double([nx])
     mTs = matlab.double([ts])
     linMod = eng.initLin(data_InMat, data_OutMat, nx, mTs, model_type) # Call the initLin.m script  

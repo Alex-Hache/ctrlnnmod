@@ -11,10 +11,10 @@ from cvxpy.problems.problem import Problem
 from cvxpy.problems.objective import Minimize
 from cvxpy.atoms.affine.bmat import bmat
 import numpy as np
-from ctrl_nmod.linalg.utils import solveLipschitz
 import matplotlib.pyplot as plt
 from math import sqrt
 from scipy.io import savemat
+import torch.nn as nn
 
 
 class Grnssm(Module):
@@ -71,6 +71,9 @@ class Grnssm(Module):
     def __repr__(self):
         return f"GRNSSM : nh={self.nh}"
 
+    def __str__(self) -> str:
+        return f"GRNSSM_act_{str(self.actF)}_nh{self.nh}"
+
     def forward(self, u, x):
         # Forward pass -- prediction of the output at time k : y_k
         x_lin, y_lin = self.linmod(u, x)  # Linear part
@@ -100,6 +103,9 @@ class Grnssm(Module):
             zeros_(self.hx.Wout.weight)
             if self.hx.Wout.bias is not None:
                 zeros_(self.hx.Wout.bias)
+
+        nn.init.xavier_uniform_(self.fx.Wfu, gain=nn.init.calculate_gain('tanh'))
+        nn.init.xavier_uniform_(self.fx.Wfx, gain=nn.init.calculate_gain('tanh'))
 
     def clone(self):  # Method called by the simulator
         copy = type(self)(

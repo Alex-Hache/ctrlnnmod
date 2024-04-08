@@ -25,7 +25,7 @@ class RegularizedLoss(Module):
     '''
         This is base class of regularized loss
     '''
-    def __init__(self, regs: Union[RegularizationsList, None]) -> None:
+    def __init__(self, regs: Union[RegularizationsList, None] = None) -> None:
         super().__init__()
         self.regs = regs
 
@@ -39,7 +39,7 @@ class RegularizedLoss(Module):
 class MixedMSEReg(RegularizedLoss):
     '''
     '''
-    def __init__(self, nu: float, regs: RegularizationsList) -> None:
+    def __init__(self, nu: float, regs: Union[RegularizationsList, None] = None) -> None:
         super().__init__(regs)
         self.nu = nu
         self.crit = MSELoss()
@@ -55,6 +55,26 @@ class MixedMSEReg(RegularizedLoss):
 
     def __repr__(self):
         return f"Mixed MSE : nu = {self.nu}"
+
+
+class MixedNMSEReg(RegularizedLoss):
+    '''
+    '''
+    def __init__(self, regs: Union[RegularizationsList, None] = None) -> None:
+        super().__init__(regs)
+        self.crit = MSELoss()
+
+    def forward(self, y_true, y_sim, x_true, x_sim):
+        y_mse = self.crit(y_true, y_sim)
+        y_nmse = y_mse/(torch.mean(y_true**2))
+        if self.regs is not None:
+            reg = self.regs()
+            return y_nmse + reg
+        else:
+            return y_nmse
+
+    def __repr__(self):
+        return "Mixed NMSE"
 
 
 class Mixed_MSE_LMI(MixedMSEReg):

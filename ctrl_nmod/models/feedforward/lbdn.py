@@ -6,7 +6,7 @@ import torch
 from torch.nn import Module, Linear, Sequential, Tanh
 from collections import OrderedDict
 from ctrl_nmod.layers.liplayers import SandwichFc, SandwichFcScaled, SandwichLin
-from linalg.utils import solveLipschitz
+from ctrl_nmod.linalg.utils import solveLipschitz
 
 
 class FFNN(Module):
