@@ -130,8 +130,8 @@ class SSTrainer(Trainer):
                     min_lr = kwargs['min_lr']
                 else:
                     min_lr = 1e-5
-                scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min',
-                                                                       step_sched, patience_sched, min_lr=min_lr)
+                scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', step_sched,
+                                                                       patience_sched, verbose=True, min_lr=min_lr)
 
         else:
             scheduled = False

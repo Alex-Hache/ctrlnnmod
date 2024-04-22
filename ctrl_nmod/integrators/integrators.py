@@ -144,6 +144,11 @@ class RK4Simulator(Simulator):
         Y_sim = torch.stack(Y_sim_list, 1)
         return X_sim, Y_sim
 
+    def clone(self):
+        copy_ss = self.ss_model.clone()  # State-space model module must have a clone function
+        copy = type(self)(copy_ss, self.ts)
+        copy.load_state_dict(self.state_dict())
+        return copy
 
 class Sim_discrete(Simulator):
     def __init__(self, ss_model, ts=1):
