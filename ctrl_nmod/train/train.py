@@ -1,8 +1,6 @@
 from alive_progress import alive_bar
 import time
 import torch
-from torch.nn import Module
-from torch.optim import Optimizer
 import math
 import optuna as opt
 from ..integrators.integrators import Simulator
@@ -11,8 +9,7 @@ from ..utils.data import ExperimentsDataset
 from torch.utils.data import DataLoader
 from torch.optim import Adam, SGD
 from typing import Union, Tuple
-from ..losses.losses import RegularizedLoss
-import os
+from ..losses.losses import _RegularizedLoss
 
 
 class Trainer(ABC):
@@ -23,7 +20,7 @@ class Trainer(ABC):
         metrics = rnn_trainer.eval_(test_data, **kwargs)
     """
 
-    def __init__(self, sim_model: Simulator, loss: RegularizedLoss, val_loss: Union[RegularizedLoss, None], **kwargs) -> None:
+    def __init__(self, sim_model: Simulator, loss: _RegularizedLoss, val_loss: Union[_RegularizedLoss, None], **kwargs) -> None:
         super(Trainer, self).__init__()
         self.sim_model = sim_model
         self.criterion = loss
@@ -43,7 +40,7 @@ class SSTrainer(Trainer):
         This class is a used for training state-space models
     """
 
-    def __init__(self, sim_model: Simulator, loss: RegularizedLoss, val_loss: RegularizedLoss) -> None:
+    def __init__(self, sim_model: Simulator, loss: _RegularizedLoss, val_loss: _RegularizedLoss) -> None:
         super(SSTrainer, self).__init__(sim_model=sim_model, loss=loss, val_loss=val_loss)
 
     def fit_(self, train_set: ExperimentsDataset, test_set: ExperimentsDataset, **kwargs):
@@ -101,7 +98,7 @@ class SSTrainer(Trainer):
         trainable_xs = [exp.x for exp in train_set.experiments if exp.x_trainable]
         params_model = self.sim_model.parameters()
 
-        list_params = [{'params': params_model,    'lr': lr},
+        list_params = [{'params': params_model, 'lr': lr},
                        {'params': trainable_xs, 'lr': lr}]
         # Choice of the optimizer
         if 'optimizer' in keys:
@@ -125,7 +122,7 @@ class SSTrainer(Trainer):
                 if 'patience_sched' in keys:
                     patience_sched = kwargs['patience_sched']
                 else:
-                    patience_sched = patience//2
+                    patience_sched = patience // 2
                 if 'min_lr' in keys:
                     min_lr = kwargs['min_lr']
                 else:
@@ -165,7 +162,7 @@ class SSTrainer(Trainer):
                     optimizer.step()
                     epoch_loss += float(loss.item())
 
-                epoch_loss = epoch_loss/(len(train_loader))
+                epoch_loss = epoch_loss / (len(train_loader))
                 # Statistics
                 vLoss.append(epoch_loss)
                 if itr % test_freq == 0:
@@ -173,7 +170,7 @@ class SSTrainer(Trainer):
                         # Simulation perf on test data
                         val_crit, bcheck, _ = self.eval_(val_set=test_set, idxMax=max_val_points)
                         vVal_loss.append(float(val_crit))
-                    if (best_loss - val_crit)/best_loss > tol_change:
+                    if (best_loss - val_crit) / best_loss > tol_change:
                         no_decrease_counter = 0
                         best_loss = val_crit
                         best_model = self.clone()
@@ -185,7 +182,7 @@ class SSTrainer(Trainer):
                           float(val_crit), float(best_loss)))
                 if no_decrease_counter > patience:  # early stopping
                     break
-                
+
                 if hasattr(self.criterion, 'update'):
                     self.criterion.update()
                 if (math.isnan(epoch_loss)):
@@ -228,7 +225,7 @@ class SSTrainer(Trainer):
                     x_sim, y_sim = self.sim_model.simulate(u, x_true[0, :])
                     y_sim_list.append(y_sim.detach().numpy())
                     val_loss += self.val_criterion(y_true, y_sim, x_true, x_sim)
-                val_crit = val_loss/(len(val_set.experiments))
+                val_crit = val_loss / (len(val_set.experiments))
         else:
             val_crit = 0
             y_sim_list = []

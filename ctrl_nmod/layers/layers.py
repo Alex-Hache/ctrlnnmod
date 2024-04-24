@@ -1,6 +1,6 @@
 import torch.nn as nn
 import torch.nn.functional as F
-import geotorch as geo
+import geotorch_custom as geo
 import torch
 from torch.linalg import cholesky, inv
 from torch import Tensor

@@ -1,11 +1,7 @@
-from torch.nn import Module, Tanh, Linear
+from torch.nn import Module, Linear
 from torch.nn.parameter import Parameter
-from ctrl_nmod.models.feedforward.lbdn import Fxu, LipFxu, LipHx, Hx
-from torch.nn.init import zeros_
-from typing import Tuple
-from ctrl_nmod.linalg.matrices import AlphaStable
-from ctrl_nmod.linalg.utils import sqrtm
-import torch.nn as nn
+import geotorch_custom as geo
+from geotorch_custom.parametrize import is_parametrized
 import torch
 
 
@@ -25,13 +21,20 @@ class NnLinear(Module):
         self.nx = state_dim
         self.ny = output_dim
         self.str_savepath = "./results"
-        # Is A alpha stable ?
-        if alpha is not None:
-            self.A = AlphaStable(self.nx, alpha=alpha)
-        else:
-            self.A = Linear(self.nx, self.nx, bias=False)
+        self.A = Linear(self.nx, self.nx, bias=False)
         self.B = Linear(self.nu, self.nx, bias=False)
         self.C = Linear(self.nx, self.ny, bias=False)
+        self.alpha = alpha
+
+        # Is A alpha stable ?
+        if alpha is not None:
+            geo.alpha_stable(self.A, 'weight', alpha=alpha)
+
+    def __repr__(self):
+        if is_parametrized(self.A):
+            return "Stable_Linear_ss" + f"_{self.alpha}"
+        else:
+            return "Linear_ss"
 
     def forward(self, u, x):
         dx = self.A(x) + self.B(u)
@@ -39,20 +42,43 @@ class NnLinear(Module):
 
         return dx, y
 
-    def init_weights_(self, A0, B0, C0, is_grad=True):
-        self.A.weight = Parameter(A0)
+    def eval_(self):
+        return self.A.weight, self.B.weight, self.C.weight
+
+    def right_inverse_(self, A0, B0, C0, requires_grad=True):
+        if is_parametrized(self.A):
+            self.A.weight = A0
+        else:
+            self.A.weight = Parameter(A0)
         self.B.weight = Parameter(B0)
         self.C.weight = Parameter(C0)
-        if is_grad is False:
-            self.A.requires_grad_(False)
+        if not requires_grad:
+            if is_parametrized(self.A):
+                for parameters in self.A.parameters():
+                    parameters.requires_grad_(False)
+            else:
+                self.A.requires_grad_(False)
             self.B.requires_grad_(False)
             self.C.requires_grad_(False)
+
+    def check_(self):
+        if self.alpha is None:
+            alpha = 0.0
+        else:
+            alpha = self.alpha
+        eig_vals = torch.real(torch.linalg.eigvals(self.A.weight))
+        return torch.all(eig_vals <= alpha), torch.max(eig_vals)
 
     def clone(self):  # Method called by the simulator
         copy = type(self)(self.nu, self.ny, self.nx)
         copy.load_state_dict(self.state_dict())
         return copy
 
+    def init_model_(self, A0, B0, C0, requires_grad=True):
+        self.right_inverse_(A0, B0, C0, requires_grad=requires_grad)
+
+
+'''
 
 class HinfNN(Module):
     def __init__(self, input_dim: int, output_dim: int, config) -> None:
@@ -74,7 +100,7 @@ class HinfNN(Module):
         # register P,Q,S variables to be on specified manifolds
         geo.positive_definite(self, "P")
         geo.positive_definite(self, "Q")
-        geo.skew(self, "S")
+        geo.skew_symmetric(self, "S")
 
     def forward(self, u, x):
 
@@ -249,3 +275,5 @@ class L2IncGrnssm(Grnssm):
             out_eq_nl,
             alpha,
         )
+
+'''

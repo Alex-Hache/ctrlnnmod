@@ -29,7 +29,7 @@ from cvxpy.atoms.affine.trace import trace
 
 class NnLinear(Module):
     """
-    neural network module corresponding to a linear state-space model
+    Neural network module corresponding to a linear state-space model
         x^+ = Ax + Bu
         y = Cx
     """
@@ -54,7 +54,7 @@ class NnLinear(Module):
 
     def __repr__(self):
         if is_parametrized(self.A):
-            return "Param_Linear_ss" + f"_{self.alpha}"
+            return "Stable_Linear_ss" + f"_{self.alpha}"
         else:
             return "Linear_ss"
 
@@ -128,7 +128,7 @@ class L2BoundedLinear(Module):
         # Register relevant manifolds
         geo.positive_definite(self, 'P')
         geo.positive_definite(self, 'Q')
-        geo.skew(self, 'S')
+        geo.skew_symmetric(self, 'S')
         geo.orthogonal(self, 'H')  # TODO relax constraint taking alpha * P into account
 
     def __repr__(self):
@@ -142,8 +142,8 @@ class L2BoundedLinear(Module):
         return dx, y
 
     def eval_(self):
-        A = (-0.5*(self.Q + self.G.T @ self.G + self.eps*self.Ix) + self.S) @ self.P - self.alpha*self.Ix
-        B = self.gamma*sqrtm(self.Q) @ (self.scaleH*self.H)
+        A = (-0.5 * (self.Q + self.G.T @ self.G + self.eps * self.Ix) + self.S) @ self.P - self.alpha * self.Ix
+        B = self.gamma * sqrtm(self.Q) @ (self.scaleH * self.H)
         C = self.G @ self.P
         return A, B, C
 
@@ -179,7 +179,7 @@ class L2BoundedLinear(Module):
             constraints = [
                 M << -epsilon * np.eye(nx + nu + ny),  # type: ignore
                 P - (epsilon) * np.eye(nx) >> 0,  # type: ignore
-                A.T @ P + P @ A + 2*alpha*P << -(epsilon*np.eye(nx)),  # type: ignore
+                A.T @ P + P @ A + 2 * alpha * P << -(epsilon * np.eye(nx)),  # type: ignore
                 gam - epsilon >= 0,  # type: ignore
             ]
             objective = Minimize(gam)  # Feasibility problem
@@ -210,7 +210,7 @@ class L2BoundedLinear(Module):
             S = Tensor(P.value) @ Tensor(A) + 0.5 * Q
             G = Tensor(C) @ torch.inverse(P_torch)
             H = Tensor(1 / self.gamma * (sqrtm(Q) @ B))
-            H = H/torch.sqrt(torch.linalg.norm(H@H.T, 2))  # We project onto Stiefeld Manifold
+            H = H / torch.sqrt(torch.linalg.norm(H @ H.T, 2))  # We project onto Stiefeld Manifold
             alph = Tensor([alpha])
         return Q, P_torch, S, G, H, alph, gmma_lmi
 
@@ -239,7 +239,7 @@ class H2BoundedLinear(Module):
 
         # Register relevant manifolds
         geo.positive_definite(self, 'Wo_inv')
-        geo.skew(self, 'S')
+        geo.skew_symmetric(self, 'S')
         geo.positive_semidefinite_fixed_rank_fixed_trace(self, 'M', self.gamma2**2, self.nu)
 
     def __repr__(self):
@@ -273,7 +273,7 @@ class H2BoundedLinear(Module):
 
     def eval_(self):
         Q = self.C.T @ self.C
-        A = self.Wo_inv @ (-0.5*Q + self.S)
+        A = self.Wo_inv @ (-0.5 * Q + self.S)
         B = self.frame('M')
         C = self.C
         return A, B, C

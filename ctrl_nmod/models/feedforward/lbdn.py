@@ -78,7 +78,7 @@ class LBDN(Module):
         self.Win = SandwichFcScaled(self.nu, self.nh,
                                     scale=self.scale, actF=self.actF)  # type: ignore
         layers.append(('input_layer', self.Win))
-        for k in range(self.n_hid-1):
+        for k in range(self.n_hid - 1):
             layer = SandwichFc(self.nh, self.nh, actF=actF)  # type: ignore
             layers.append((f'hidden_layer_{k}', layer))
         self.Wout = SandwichLin(self.nh, self.ny)
@@ -119,7 +119,7 @@ class Fxu(FFNN):
         _, lx, _ = solveLipschitz(weights_x)
         _, lu, _ = solveLipschitz(weights_u)
 
-        lip = torch.Tensor([lx]*self.nx + [lu]*self.nu)
+        lip = torch.Tensor([lx] * self.nx + [lu] * self.nu)
         if torch.all(self.scale - lip > 0):
             return True
         else:
@@ -127,7 +127,7 @@ class Fxu(FFNN):
 
     def extractWeightsSandwich(self):
         '''
-            Model must something similar to a sequential model 
+            Model must something similar to a sequential model
             with an attribute layers being an iterable containing the weights
         '''
         weights_in = []

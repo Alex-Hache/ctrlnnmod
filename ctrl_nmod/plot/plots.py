@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.io import savemat
 
+
 def plot_yTrue_vs_ySim(yTrue, ySim):
     """
         params : 
@@ -14,6 +15,7 @@ def plot_yTrue_vs_ySim(yTrue, ySim):
     ax.plot(ySim)
     plt.show()
     return fig
+
 
 def plot_yTrue_vs_error(yTrue, ySim):
     """

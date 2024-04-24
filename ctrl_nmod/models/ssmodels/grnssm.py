@@ -4,7 +4,8 @@ from torch.nn.init import zeros_
 from torch.linalg import eigvals
 from torch import Tensor, real, min
 from typing import Tuple
-from ctrl_nmod.layers.paramlincont import NnLinear, L2BoundedLinear
+from ctrl_nmod.models.ssmodels.linear import NnLinear
+from ctrl_nmod.models.ssmodels.hinf import L2BoundedLinear
 import torch
 from cvxpy.expressions.variable import Variable
 from cvxpy.problems.problem import Problem
@@ -30,7 +31,7 @@ class Grnssm(Module):
         alpha=None,
     ) -> None:
         """
-        Constructor Grnssm u is a generalized input ex : [control, distrubance]:
+        u is a generalized input ex : [control, distrubance]:
             x^+ = Ax + Bu + f(x,u)
             y = Cx + h(x)
 
@@ -92,7 +93,7 @@ class Grnssm(Module):
     def init_weights_(self, A0, B0, C0, isLinTrainable=True) -> None:
         # TODO Enforce specific distribution ton inner (and outer) weights
         # Initializing linear weights
-        self.linmod.init_model_(A0, B0, C0, is_grad=isLinTrainable)
+        self.linmod.init_model_(A0, B0, C0, requires_grad=isLinTrainable)
 
         # Initializing nonlinear output weights to 0
         zeros_(self.fx.Wout.weight)
@@ -177,10 +178,10 @@ class L2IncGrNSSM(LipGrnssm):
         # epsilon_u = torch.sqrt([1.0])
         # epsilon_x = torch.sqrt([1.0])
         self.gamma = l2i
-        lipx = torch.sqrt(torch.Tensor([2*alpha]))  # Dummy init
-        lip = (lipx, l2i/torch.sqrt(torch.Tensor([2])))
+        lipx = torch.sqrt(torch.Tensor([2 * alpha]))  # Dummy init
+        lip = (lipx, l2i / torch.sqrt(torch.Tensor([2])))
         super().__init__(nu, ny, nx, nh, n_hidden_layers, actF, out_eq_nl, lip, alpha)
-        scaleH = 1/sqrt(2) - 0.1
+        scaleH = 1 / sqrt(2) - 0.1
         self.linmod = L2BoundedLinear(nu, ny, nx, gamma=l2i, alpha=alpha, scaleH=scaleH, epsilon=2.0)
         self.frame_()
 
@@ -188,7 +189,7 @@ class L2IncGrNSSM(LipGrnssm):
         return f"Incr L2 bounded GRNSSM : eta={float(self.gamma)} -- nh={self.nh}"
 
     def frame_(self):
-        self.alpha = (self.lip_x**2)/(2*min(real(eigvals(self.linmod.P))))
+        self.alpha = (self.lip_x**2) / (2 * min(real(eigvals(self.linmod.P))))
         self.linmod.alpha = self.alpha
 
     def forward(self, u, x):
@@ -214,10 +215,10 @@ class L2IncGrNSSM(LipGrnssm):
 
         b_lin_bounded, _ = self.linmod.check_()
         if not b_lin_bounded:
-            print(f"Prescribed L2 gain for linear part not okay")
+            print("Prescribed L2 gain for linear part not okay")
         bLipschitz = self.fx.check_()
         if not bLipschitz:
-            print(f"Prescribed Lipschitz constant for nonlinear part not okay")
+            print("Prescribed Lipschitz constant for nonlinear part not okay")
         if any(np.array(gammas) > self.gamma) or not b_lin_bounded or not bLipschitz:
             fig = plt.figure()
             plt.plot(gammas)

@@ -9,6 +9,7 @@ from cvxpy.expressions.variable import Variable
 from cvxpy.atoms.affine.bmat import bmat
 from cvxpy.atoms.affine.hstack import hstack
 from cvxpy.atoms.affine.vstack import vstack
+from typing import Union
 
 
 def block_diag(arr_list):
@@ -28,12 +29,12 @@ def block_diag(arr_list):
         horz_list = [arr]
 
         # block of zeros to the left of arr
-        zblock_l = np.zeros((arr.shape[0], ind[1]-arr.shape[1]))
+        zblock_l = np.zeros((arr.shape[0], ind[1] - arr.shape[1]))
         if zblock_l.shape[1] > 0:
             horz_list.insert(0, zblock_l)
 
         # block of zeros to the right of arr
-        zblock_r = np.zeros((arr.shape[0], n-ind[1]))
+        zblock_r = np.zeros((arr.shape[0], n - ind[1]))
         if zblock_r.shape[1] > 0:
             horz_list.append(zblock_r)
 
@@ -94,14 +95,14 @@ class MatrixSquareRoot(Function):
           zero eigenvalues.
     """
     @staticmethod
-    def forward(ctx, input):
+    def forward(ctx, input) -> torch.Tensor:
         m = input.detach().cpu().numpy().astype(np.float_)
         sqrtm = torch.from_numpy(scipy.linalg.sqrtm(m).real).to(input)
         ctx.save_for_backward(sqrtm)
         return sqrtm
 
     @staticmethod
-    def backward(ctx, grad_output):
+    def backward(ctx, grad_output) -> Union[torch.Tensor, None]:
         grad_input = None
         if ctx.needs_input_grad[0]:
             sqrtm, = ctx.saved_tensors
@@ -125,7 +126,7 @@ def solveLipschitz(weights, beta=1, epsilon=1e-6, solver="MOSEK"):
     r'''
         This function solve the Linear Matrix Inequality for
         estimating an upper bound on the Lipschitz constant of
-        a feedforward neural network.
+        a feedforward neural network without skip connections.
         https://arxiv.org/abs/2005.02929
         params :
             * weights : a list of neural network weights
@@ -137,7 +138,7 @@ def solveLipschitz(weights, beta=1, epsilon=1e-6, solver="MOSEK"):
 
     Ts = [Variable((n_h, n_h), diag=True) for n_h in n_hidden]
     T = block_diag(Ts)
-    Ft = bmat([[np.zeros(T.shape), beta*T], [beta*T, -2*T]])  # type: ignore
+    Ft = bmat([[np.zeros(T.shape), beta * T], [beta * T, -2 * T]])  # type: ignore
     Ws = [weight.detach().numpy() for weight in weights[:-1]]
     W = block_diag(Ws)
     A = hstack([W, np.zeros((W.shape[0], n_hidden[-1]))])
@@ -151,7 +152,7 @@ def solveLipschitz(weights, beta=1, epsilon=1e-6, solver="MOSEK"):
 
     # 2eme partie LMI
     lip = Variable()
-    L = -lip*np.eye(n_in)  # type: ignore
+    L = -lip * np.eye(n_in)  # type: ignore
 
     # Block schur last layer
     b11 = np.zeros((n_hidden[-1], n_hidden[-1]))
@@ -167,11 +168,11 @@ def solveLipschitz(weights, beta=1, epsilon=1e-6, solver="MOSEK"):
     else:
         part2 = block_diag([L, bf])
 
-    M = LMI_schur+part2
+    M = LMI_schur + part2
 
     nM = M.shape[0]
     nT = T.shape[0]
-    constraints = [M << -np.eye(nM)*epsilon, T - (epsilon)*np.eye(nT) >> 0, lip - epsilon >= 0]  # type: ignore
+    constraints = [M << -np.eye(nM) * epsilon, T - (epsilon) * np.eye(nT) >> 0, lip - epsilon >= 0]  # type: ignore
     objective = Minimize(lip)  # Find lowest lipschitz constant
 
     prob = Problem(objective, constraints=constraints)
@@ -200,7 +201,7 @@ def solveLipschitz(weights, beta=1, epsilon=1e-6, solver="MOSEK"):
 def adjoint(A, E, f):
     A_H = A.T.conj().to(E.dtype)
     n = A.size(0)
-    M = torch.zeros(2*n, 2*n, dtype=E.dtype, device=E.device)
+    M = torch.zeros(2 * n, 2 * n, dtype=E.dtype, device=E.device)
     M[:n, :n] = A_H
     M[n:, n:] = A_H
     M[:n, n:] = E

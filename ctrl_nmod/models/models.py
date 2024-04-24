@@ -1,8 +1,6 @@
 import torch.nn as nn
 import torch
-from nssmid.linalg_utils import *
 from collections import OrderedDict
-from nssmid.layers import *
 
 
 class NNLinear(nn.Module):
@@ -158,13 +156,17 @@ class GRNSSM(nn.Module):
         self.linmod.init_model_(A0, B0, C0, True)
 
         # Nonlinear part
-        self.Wfu.weight = nn.parameter.Parameter(torch.Tensor(params_dict["Wfu"]))
+        self.Wfu.weight = nn.parameter.Parameter(
+            torch.Tensor(params_dict["Wfu"]))
         self.Wfu.bias = nn.parameter.Parameter(
             torch.Tensor(params_dict["bi"]).squeeze()
         )
-        self.Wfx.weight = nn.parameter.Parameter(torch.Tensor(params_dict["Wfx"]))
-        self.Wf.weight = nn.parameter.Parameter(torch.Tensor(params_dict["Wf"]))
-        self.Wf.bias = nn.parameter.Parameter(torch.Tensor(params_dict["bo"]).squeeze())
+        self.Wfx.weight = nn.parameter.Parameter(
+            torch.Tensor(params_dict["Wfx"]))
+        self.Wf.weight = nn.parameter.Parameter(
+            torch.Tensor(params_dict["Wf"]))
+        self.Wf.bias = nn.parameter.Parameter(
+            torch.Tensor(params_dict["bo"]).squeeze())
 
     def clone(self):  # Method called by the simulator
         copy = type(self)(
@@ -257,8 +259,8 @@ class GRNSSM_dist(nn.Module):
     def forward(self, input, x):
         # Forward pass -- prediction of the output at time k : y_k
 
-        u = input[:, 0 : self.input_dim]
-        d = input[:, self.input_dim : self.input_dim + self.dist_dim]
+        u = input[:, 0: self.input_dim]
+        d = input[:, self.input_dim: self.input_dim + self.dist_dim]
         x_lin, y_lin = self.linmod(input, x)  # Linear part
 
         # Nonlinear part fx
@@ -271,7 +273,6 @@ class GRNSSM_dist(nn.Module):
         dx = x_lin + fx
 
         """
-    
         # Nonlinear part hx
         hx = self.Whx(x)
         hx = self.actFinH(hx)
@@ -385,8 +386,8 @@ class FLNSSM_decoupling(nn.Module):
             - input = [u, x]
             - state =  state vector
         """
-        u = input[:, 0 : self.input_dim]
-        x = input[:, self.input_dim : self.input_dim + self.state_dim]
+        u = input[:, 0: self.input_dim]
+        x = input[:, self.input_dim: self.input_dim + self.state_dim]
         z = state
 
         alpha = self.alpha_in(x)
@@ -494,8 +495,8 @@ class QFLNSSM(nn.Module):
             - input = [u, x]
             - state =  state vector
         """
-        u = input[:, 0 : self.input_dim]
-        x = input[:, self.input_dim : self.input_dim + self.state_dim]
+        u = input[:, 0: self.input_dim]
+        x = input[:, self.input_dim: self.input_dim + self.state_dim]
         z = state
 
         alpha = self.alpha_in(x)
@@ -592,8 +593,8 @@ class FLNSSM_Elman(nn.Module):
             - input = [u, y]
             - state =  state vector
         """
-        u = input[:, 0 : self.input_dim]
-        y = input[:, self.input_dim : self.input_dim + self.output_dim]
+        u = input[:, 0: self.input_dim]
+        y = input[:, self.input_dim: self.input_dim + self.output_dim]
         z = state
 
         alpha = self.alpha_in()
@@ -663,7 +664,8 @@ class FLNSSM_Elman_Dist(nn.Module):
         # Nonlinear part for the state beta(x)(u+alpha(x))
 
         # Alpha layer
-        self.alpha_in_y = nn.Linear(self.output_dim, self.hidden_dim, bias=True)
+        self.alpha_in_y = nn.Linear(
+            self.output_dim, self.hidden_dim, bias=True)
         self.alpha_in_d = nn.Linear(self.dist_dim, self.hidden_dim, bias=False)
 
         if self.n_hid_layers > 1:
@@ -682,8 +684,8 @@ class FLNSSM_Elman_Dist(nn.Module):
             - input = [u, d]
             - state =  state vector
         """
-        u = input[:, 0 : self.input_dim]
-        d = input[:, self.input_dim : self.input_dim + self.dist_dim]
+        u = input[:, 0: self.input_dim]
+        d = input[:, self.input_dim: self.input_dim + self.dist_dim]
 
         z = state
         y = self.linmod.C(z)

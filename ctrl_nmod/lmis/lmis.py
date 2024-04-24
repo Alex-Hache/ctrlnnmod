@@ -5,6 +5,7 @@ import cvxpy as cp
 import numpy as np
 import torch
 
+
 class LMI_HInf_Dist_discrete(nn.Module):
     def __init__(self, A,B,C,gamma) -> None:
         super(LMI_HInf_Dist_discrete, self).__init__()
@@ -14,7 +15,6 @@ class LMI_HInf_Dist_discrete(nn.Module):
         self.P = nn.Linear(A.shape[0],A.shape[0])
         geo.PSD(self.P) # Positive semi definite
         self.gamma = gamma
-
 
     def forward(self):
         '''
