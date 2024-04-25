@@ -100,9 +100,9 @@ class MixedNMSEReg(MixedMSELoss):
         return f"Mixed NMSE : alpha = {self.alpha} \n" + f"Regs : {self.regs}"
 
 
-class Mix_MSE_DistAtt(torch.nn.Module):
+class MixMSEDistAtt(torch.nn.Module):
     def __init__(self, model, alpha=0, gamma=1) -> None:
-        super(Mix_MSE_DistAtt, self).__init__()
+        super(MixMSEDistAtt, self).__init__()
         self.crit = MSELoss()
         self.gamma = gamma
         self.alpha = alpha

@@ -42,7 +42,7 @@ def findBLA(u: np.ndarray, y: np.ndarray, nx: int,
     return A, B, C, D
 
 
-
+'''
 def sim_closed_loop(strMatFileWeights, net_dims, dt, strNameSaveFig : str ):
     dt = matlab.double([dt])
     eng = matlab.engine.start_matlab()
@@ -52,3 +52,4 @@ def sim_closed_loop(strMatFileWeights, net_dims, dt, strNameSaveFig : str ):
     eng.load_workspace(strMatFileWeights, net_dims, dt, strNameSaveFig, nargout=0)
     eng.closedLoopresults_pendulum(nargout=0)
     eng.quit()
+'''
