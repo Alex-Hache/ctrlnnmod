@@ -14,6 +14,34 @@ import numpy as np
 
 
 class H2Cont(LMI):
+    r"""
+    This LMI gives an upper bound on the H2 norm of continiuous-time linear system.
+
+    attributes
+    ------
+        * A : Tensor
+            state transition matrix
+        * B : Tensor
+            input matrix
+        * C : Tensor
+            output matrix
+        * gamma2 :
+            upper bound on L2 gain
+        * P :
+            Lyapunov certificate
+
+    methods
+    -------
+
+    solve : classmethod
+        solve the LMI for given (A,B,C) triplet
+
+    raises
+    ------
+        ValueError :
+            if the SDP problem problem is infeasible or unbounded
+
+    """
     def __init__(self, A: Tensor, B: Tensor, C: Tensor, gamma2: Union[Tensor, None] = None,
                  P: Union[Tensor, None] = None) -> None:
         super(H2Cont, self).__init__()
@@ -75,6 +103,34 @@ class H2Cont(LMI):
 
 
 class H2Disc(LMI):
+    r"""
+    This LMI gives an upper bound on the H2 norm of continiuous-time linear system.
+
+    attributes
+    ------
+        * A : Tensor
+            state transition matrix
+        * B : Tensor
+            input matrix
+        * C : Tensor
+            output matrix
+        * gamma2 :
+            upper bound on L2 gain
+        * P :
+            Lyapunov certificate
+
+    methods
+    -------
+
+    solve : classmethod
+        solve the LMI for given (A,B,C) triplet
+
+    raises
+    ------
+        ValueError :
+            if the SDP problem problem is infeasible or unbounded
+
+    """
 
     def __init__(self, A: Tensor, B: Tensor, C: Tensor, gamma2: Union[Tensor, None] = None,
                  P: Union[Tensor, None] = None) -> None:

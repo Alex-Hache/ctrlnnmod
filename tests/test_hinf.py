@@ -46,7 +46,7 @@ trainer = SSTrainer(sim_model, loss=loss, val_loss=val_loss)
 # Training options
 
 batch_size, lr, keep_best = 512, 1e-3, True
-epochs, optimizer = 1000, 'adam'
+epochs, optimizer = 10, 'adam'
 
 scheduled = True
 step_sched = 0.1

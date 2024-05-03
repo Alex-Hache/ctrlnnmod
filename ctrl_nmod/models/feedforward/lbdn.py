@@ -12,6 +12,22 @@ from ctrl_nmod.linalg.utils import solveLipschitz
 class FFNN(Module):
     '''
         A class to define a feedforward neural network
+
+    attributes
+    ----------
+
+        * nu : int
+            input dimension
+        * nh : int
+            hidden_dimension
+        * ny : int
+            output dimension
+        * actF : (default Tanh)
+            activation function
+        * n_hidden : int
+            number of hidden layers
+        * fnn : nn.Sequential
+            a simple sequential feedforward model
     '''
     def __init__(self, input_dim, hidden_dim, output_dim, actF=Tanh(), n_hidden=1) -> None:
         super(FFNN, self).__init__()
@@ -46,9 +62,11 @@ class FFNN(Module):
 
 
 class Fxu(FFNN):
-    '''
-        Create a feedforward neural network to be a nonlinear term in a state equation
-        x+ = Ax + Bu + f(x,u)
+    r'''
+        Create a feedforward neural network to be a nonlinear term in a state equation.
+
+        .. ::math
+            x^+ = Ax + Bu + f(x,u)
     '''
     def __init__(self, input_dim, hidden_dim, state_dim,
                  actF=Tanh(), n_hidden=1) -> None:
@@ -67,7 +85,9 @@ class Fxu(FFNN):
 class Hx(FFNN):
     '''
         Create a feedforward neural network h to be a nonlinear term in an output equation
-        y = Cx + h(x)
+
+        .. ::math
+            y = Cx + h(x)
     '''
     def __init__(self, state_dim, hidden_dim, output_dim,
                  actF=Tanh(), n_hidden=1) -> None:
@@ -83,20 +103,32 @@ class Hx(FFNN):
 
 class LBDN(Module):
     '''
-        Create a Lipschitz Bounded Deep Neural network from Pauli's LMI
-        so only the input layer is scaled and not the output one.*
+        Create a Lipschitz Bounded Deep Neural network with a specific Lipschitz constant regarding every input channel.
+
+        Taken from Pauli's LMI so only the input layer is scaled and not the output one
+        compared to Wang.
+
         This can have effects on gradient propagation but allows
         for simple scaling of the Lipschitz constants of each individual input
         signal.
-        See : LINK
 
-        params:
-            * input_dim : input dim
-            * hidden_dim : hidden layer dim (they all have the same)
-            * output_dim : output dim
-            * scale : the scaling (vector) to be used to scale the input
-            * actF : the activation function used
-            * n_hidden : number of hidden layers
+        See :     See https://github.com/acfr/LBDN for more details
+
+        attributes
+        ------
+            * input_dim : int
+                input dimension
+            * hidden_dim : int
+                hidden layer dim (they all have the same)
+            * output_dim : int
+                output dim
+            * scale : Tensor
+                the scaling to be used to scale the input in the Lipschitez layers
+                Must be of size nu + nx
+            * actF : nn.Module
+                the activation function used
+            * n_hidden : int
+                number of hidden layers
 
     '''
     def __init__(self, input_dim, hidden_dim, output_dim, scale,

@@ -13,6 +13,30 @@ from cvxpy.atoms.affine.trace import trace
 
 
 class H2BoundedLinear(Module):
+    """
+        Create a linear continuous-time state-space model with a prescribed H2 norm.
+
+        attributes
+        ----------
+
+            * nu : int
+                input dimension
+            * ny : int
+                output dimension
+            * nx : int
+                state dimension
+            * gamma_2 : float
+                precribed H2 norm
+            * Wo_inv : Tensor
+                inverse of observability grammian
+            * S : Tensor
+                skew-symmetric matrix
+            * M : Tensor
+                Fixed rank and trace matrix used to build norm
+            * C : Tensor
+                Output matrix
+
+    """
     def __init__(self, nu: int, ny: int, nx: int, gamma_2: float) -> None:
         super(H2BoundedLinear, self).__init__()
         self.nu = nu
@@ -42,6 +66,9 @@ class H2BoundedLinear(Module):
         return dx, y
 
     def frame(self, tol=1e-6):
+        """
+            This function is the framing function from Parameter space to weights space.
+        """
         # Assuming M is parametrized
         M = getattr(self, 'M')  # We access to the parameterized fixed trace and rank M
         L, Q = torch.linalg.eigh(M)
@@ -69,6 +96,7 @@ class H2BoundedLinear(Module):
     def copy(cls, model):
         '''
             This class method returns a copy of a given H2bounded model.
+
             We have to do this trick since self is not usable due to geotorch.
             Since when an object has parameterized attributes its class changes.
         '''
@@ -99,6 +127,10 @@ class H2BoundedLinear(Module):
         return (dLyap < epsilon) and (dTrace < epsilon), gamma_gram
 
     def right_inverse_(self, A, B, C, gamma2, check=False):
+        """
+            Method to initialize Parameter space from given weights
+
+        """
         Wo_inv, S, M, C = self.submersion_inv(A, B, C, gamma2=gamma2, check=check)
         self.Wo_inv = Wo_inv
         self.S = S
@@ -108,6 +140,10 @@ class H2BoundedLinear(Module):
         # A_eval, B_eval, C_eval = self.eval_()
 
     def submersion_inv(self, A, B, C, gamma2=None, epsilon=1e-7, solver="MOSEK", check=False):
+        """
+            Inverse function from Weights space to parameter space.
+
+        """
         with torch.no_grad():
             A = A.detach().numpy()
             B = B.detach().numpy()

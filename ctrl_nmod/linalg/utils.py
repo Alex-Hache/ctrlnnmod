@@ -45,9 +45,10 @@ def block_diag(arr_list):
     return B
 
 
-def isSDP(L, tol=1e-9) -> bool:
+def isSDP(L: torch.Tensor, tol=1e-9) -> bool:
     '''
-    L is tensor
+    Check if a Tensor is Positive definite up to a fixed tolerance.
+
     '''
     isAllEigPos = torch.all(torch.real(eigvals(L)) > 0)
     isSymetric = torch.all(torch.abs(L - L.T) < tol)
@@ -62,15 +63,21 @@ def isSDP(L, tol=1e-9) -> bool:
     return bSDP
 
 
-def getEigenvalues(L):
+def getEigenvalues(L: torch.Tensor):
     '''
+    Return the eigenvalues of a given Tensor
+
         params :
             - L pytorch Tensor
     '''
     return torch.linalg.eigvals(L)
 
 
-def is_alpha_stable(A, alpha):
+def is_alpha_stable(A: torch.Tensor, alpha: torch.Tensor):
+    """
+    Check if all eigenvalues of A are negative and lower than - alpha
+
+    """
     return torch.all(eigvals(A) < - alpha)
 
 
@@ -213,6 +220,9 @@ def logm_scipy(A):
 
 
 class Logm(torch.autograd.Function):
+    """
+    Computes the matrix logarithm of a given sqaure matrix.
+    """
     @staticmethod
     def forward(ctx, A):
         assert A.ndim == 2 and A.size(0) == A.size(1)  # Square matrix

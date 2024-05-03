@@ -10,6 +10,25 @@ import torch.nn.functional as F
 
 
 class SandwichLin(Linear):
+    r"""
+    A specific linear layer with Lipschitz constant equal to scale
+
+    .. math::
+        h_{out} = \sqrt{2} A^T \Psi \sigma \left( \sqrt{2} \Psi^{-1} B h_{in} + b \right)
+    '''
+
+    Attributes
+    ----------
+    alpha : Tensor
+        scaling parameter for computation
+    scale : float
+        scaling parameter to define Lipschitz constant
+    AB : bool
+        If true the product of A and B matrices is computed
+        instead of just B.
+    Q : Tensor
+        Q semi-orthogonal matrix obtained by Cayley transform
+    """
     def __init__(self, in_features, out_features, bias=True, scale=1.0, AB=False):
         super().__init__(in_features + out_features, out_features, bias)
         self.alpha = Parameter(torch.ones(1, dtype=torch.float32, requires_grad=True))
@@ -35,6 +54,26 @@ class SandwichLin(Linear):
 
 
 class SandwichFc(Linear):
+    r"""
+    A specific Sandwich layer with Lipschitz constant equal to scale**2
+
+    .. math::
+        h_{out} = \sqrt{2} A^T \Psi \sigma \left( \sqrt{2} \Psi^{-1} B h_{in} + b \right)
+    '''
+
+    Attributes
+    ----------
+    alpha : Tensor
+        scaling parameter for computation
+    scale : float
+        scaling parameter to define Lipschitz constant
+    AB : bool
+        If true the product of A and B matrices is computed
+        instead of just B.
+    Q : Tensor
+        Q semi-orthogonal matrix obtained by Cayley transform
+    """
+
     def __init__(self, in_features, out_features, bias=True, scale=1.0, actF=ReLU()):
         super().__init__(in_features + out_features, out_features, bias)
         self.alpha = Parameter(torch.ones(1, dtype=torch.float32, requires_grad=True))

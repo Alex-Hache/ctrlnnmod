@@ -29,10 +29,11 @@ class Grnssm(Module):
         out_eq_nl=False,
         alpha=None,
     ) -> None:
-        """
+        r"""
         u is a generalized input ex : [control, distrubance]:
-            x^+ = Ax + Bu + f(x,u)
-            y = Cx + h(x)
+            .. ::math
+                x^+ = Ax + Bu + f(x,u)
+                y = Cx + h(x)
 
         params :
             * input_dim : size of input layer
@@ -185,7 +186,7 @@ class L2IncGrNSSM(LipGrnssm):
         lip = (lipx, l2i / torch.sqrt(torch.Tensor([2])))
         super().__init__(nu, ny, nx, nh, n_hidden_layers, actF, out_eq_nl, lip, alpha)
         scaleH = 1 / sqrt(2) - 0.1
-        self.linmod = L2BoundedLinear(nu, ny, nx, gamma=Tensor(l2i), alpha=alpha, scaleH=scaleH, epsilon=2.0)
+        self.linmod = L2BoundedLinear(nu, ny, nx, gamma=l2i, alpha=alpha, scaleH=scaleH, epsilon=2.0)
         self.frame_()
 
     def __repr__(self):

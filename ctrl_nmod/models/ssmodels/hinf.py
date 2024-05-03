@@ -13,6 +13,31 @@ from cvxpy.atoms.affine.bmat import bmat
 
 
 class L2BoundedLinear(Module):
+    """
+        Create a linear continuous-time state-space model with a prescribed L2 gain and alpha stability.
+
+        attributes
+        ----------
+
+            * nu : int
+                input dimension
+            * ny : int
+                output dimension
+            * nx : int
+                state dimension
+            * gamma : Tensor
+                precribed H2 norm
+            * alpha : Tensor
+                inverse of observability grammian
+            * Q : Tensor
+                Positive definite matrix
+            * S : Tensor
+                skew-symmetric matrix
+            * G : Tensor
+                Output matrix
+            * H : Tensor
+                Semi-orthogonal matrix
+    """
     def __init__(self, nu: int, ny: int, nx: int, gamma: float, alpha: float = 0.0,
                  scaleH=1.0, epsilon=0.0) -> None:
         super(L2BoundedLinear, self).__init__()
@@ -63,7 +88,10 @@ class L2BoundedLinear(Module):
         self.alpha = alph
 
     def submersion_inv(self, A, B, C, gamma: float, alpha=0.0, epsilon=1e-8, solver="MOSEK", check=False):
+        """
+            Function from weights space to parameter space.
 
+        """
         with torch.no_grad():
             A = A.detach().numpy()
             B = B.detach().numpy()

@@ -7,7 +7,17 @@ from ctrl_nmod.utils.misc import find_module
 
 class _RegularizedLoss(Module):
     '''
-        This is base class of regularized loss
+        This is base class of regularized loss.
+
+        A regularized loss has a list of Regularizations.
+        Each regularization is an additional term in the loss function.
+        Each term has an associated weight and a scaler to update it during optimization.
+
+    attributes
+    ----------
+        regularizations : ModuleList
+            A ModuleList that register all the eventual regularizations in the loss (soft constraints)
+
     '''
 
     def __init__(self, regularizations: Union[ModuleList, None] = None) -> None:
@@ -47,6 +57,8 @@ class _RegularizedLoss(Module):
 class MixedMSELoss(_RegularizedLoss):
     r"""
         This loss computes a convex combination between x (state) and y(output)
+
+        .. math::
         \mathcal{L} = (y- \hat{y})^2 + alpha*(x - \hat{x})
     """
 
@@ -99,6 +111,8 @@ class MixedNMSEReg(MixedMSELoss):
         return f"Mixed NMSE : alpha = {self.alpha} \n" + f"Regs : {self.regs}"
 
 
+'''
+# TODO adding the the regularization for l0 semi-norm
 class MixMSEDistAtt(torch.nn.Module):
     def __init__(self, model, alpha=0, gamma=1) -> None:
         super(MixMSEDistAtt, self).__init__()
@@ -121,3 +135,4 @@ class MixMSEDistAtt(torch.nn.Module):
         reg = reg_d[nu:]  # + reg_u
 
         return L1 + self.gamma * reg
+'''

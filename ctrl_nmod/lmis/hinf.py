@@ -14,6 +14,38 @@ import numpy as np
 
 
 class HInfCont(LMI):
+    r"""
+    This LMI gives an upper bound on the L2 gain of continiuous-time linear system.
+
+    attributes
+    ------
+        * A : Tensor
+            state transition matrix
+        * B : Tensor
+            input matrix
+        * C : Tensor
+            output matrix
+        * D : Tensor
+            Direct feedthrough matrix
+        * alpha :
+            contraction metric i.e. largest lyapunov exponent
+        * gamma :
+            upper bound on L2 gain
+        * P :
+            Lyapunov certificate
+
+    methods
+    -------
+
+    solve : classmethod
+        solve the LMI for given (A,B,C,D) quadruplet
+
+    raises
+    ------
+        ValueError :
+            if the SDP problem problem is infeasible or unbounded
+
+    """
 
     def __init__(self, A: Tensor, B: Tensor, C: Tensor, D: Optional[Tensor] = None,
                  gamma: Union[Tensor, None] = None, P: Union[Tensor, None] = None,
@@ -101,6 +133,38 @@ class HInfCont(LMI):
 
 
 class HInfDisc(LMI):
+    r"""
+    This LMI gives an upper bound on the L2 gain of discrete-time linear system.
+
+    attributes
+    ------
+        * A : Tensor
+            state transition matrix
+        * B : Tensor
+            input matrix
+        * C : Tensor
+            output matrix
+        * D : Tensor
+            Direct feedthrough matrix
+        * alpha :
+            contraction metric i.e. largest lyapunov exponent
+        * gamma :
+            upper bound on L2 gain
+        * P :
+            Lyapunov certificate
+
+    methods
+    -------
+
+    solve : classmethod
+        solve the LMI for given (A,B,C,D) quadruplet
+
+    raises
+    ------
+        ValueError :
+            if the SDP problem problem is infeasible or unbounded
+
+    """
     def __init__(self, A: Tensor, B: Tensor, C: Tensor, D: Union[Tensor, None],
                  gamma: Union[Tensor, None], P: Union[Tensor, None],
                  alpha: Tensor = torch.zeros((1))) -> None:

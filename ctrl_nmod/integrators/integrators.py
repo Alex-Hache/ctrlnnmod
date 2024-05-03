@@ -6,19 +6,58 @@ import numpy as np
 import os
 import geotorch_custom.parametrize as P
 
+"""
+    This module implements a discrete-time simulator and RK4 Method as examples
+    Future developements will include compatibility with odeint and neural ODEs
+"""
+
 
 class Simulator(nn.Module):
-    '''
-    This class implements the base class on which simulation model is built
-    depending on the integration method only the forward method changes.
+    """
+    The Base class for simulating a model
+
     '''
 
-    def __init__(self, ss_model, ts, nb: int = 1) -> None:
+    Attributes
+    ----------
+    ss_model : nn.Module
+        state-space model to be simulated
+    ts : torch.Tensor
+        sampling time
+    nb : int
+        number of past inputs to compute current state
+    save_path : str
+        path where to save the model
+
+    Methods
+    -------
+
+    save
+    set_save_path
+    load
+    get_obs_size
+    simulate
+    extract_weights
+    check_
+    """
+
+    def __init__(self, ss_model: nn.Module, ts, nb: int = 1) -> None:
+        """
+            Constructor for Simulator base class.
+
+            params:
+                * ss_model : nn.Module
+                    state-space model to be simulated
+                * ts : Tensor
+                    sampling time
+                * nb : int
+                    number of pasts input to estimate current state
+        """
         super(Simulator, self).__init__()
 
         self.ss_model = ss_model
-        self.ts = ts
-        self.nx = self.ss_model.nx
+        self.ts = ts  # sampling time
+        self.nx = self.ss_model.nx  # State order
         self.nb = nb  # Number of past inputs to estimate current state
         self.save_path = os.getcwd()
 
@@ -39,15 +78,15 @@ class Simulator(nn.Module):
     def get_obs_size(self):
         return self.nb  # Number of observations need for state estimation
 
-    def simulate(self, u: Tensor, x0):
+    def simulate(self, u: Tensor, x0: Tensor):
         '''
             Inputs :
-                * u : Input tensor of shape (n_exp, n_samples, nu)
+                * u : Input tensor of shape (n_batch, n_samples, nu)
                 * x0 : initial condition of shape (nx)
         '''
         start_time = time.time()
         with torch.no_grad():
-            x_sim, y_sim = self(u[None, :, :], x0[None, :])  # Appel à forward
+            x_sim, y_sim = self(u[None, :, :], x0[None, :])  # Call to forward
             x_sim.squeeze_(0)
             y_sim.squeeze_(0)
             sim_time = time.time() - start_time
@@ -55,6 +94,9 @@ class Simulator(nn.Module):
         return x_sim, y_sim
 
     def extract_weights(self):
+        """
+            Returns Numpy arrays for model weights and biases.
+        """
         weights = []
         biases = []
         for param_tensor in self.state_dict():
@@ -69,10 +111,18 @@ class Simulator(nn.Module):
         return weights, biases
 
     def check_(self):
+        """
+            Check if the possible constraints enforced to a model are fullfiled.
+
+            Returns
+            -------
+            bool : True if constraints are fullfiled
+            info : diverse informations on constraints checked
+        """
         if hasattr(self.ss_model, 'check_'):
             return self.ss_model.check_()
         else:
-            return None
+            return None, None
 
 
 class RK4Simulator(Simulator):
