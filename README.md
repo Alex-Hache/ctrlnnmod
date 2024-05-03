@@ -24,7 +24,7 @@ From these LMIs one can obtain models with certified properties such as stabilit
 
 ## Geotorch backend
 Finally the parametrizations involving Positive (Semi-) Definite (PSD) matrices are built using the [geotorch](https://github.com/lezcano/geotorch) library.
-An extended version is included in this library since the right inverse methods requiring solving different LMIs cvxpy is now needed.
+Since the right inverse methods now involve solving a LMI, cvxpy is now needed, an extended version is then included in this library.
 
 
 ## Experiments framework
