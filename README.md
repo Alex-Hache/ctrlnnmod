@@ -11,7 +11,7 @@ Its main features include several models based on Linear Matrix Inequalities (LM
 
 ## Currently implemented LMIs
 * Lyapunov alpha stability for continuous and discrete time LTI models
-* $\mathcal{H}$ \infty norm for continuous and discrete time LTI models see [Real Bounded Lemma](https://en.wikibooks.org/wiki/LMIs_in_Control/KYP_Lemmas/KYP_Lemma_(Bounded_Real_Lemma))
+* $\mathcal{H}^\infty$  norm for continuous and discrete time LTI models see [Real Bounded Lemma](https://en.wikibooks.org/wiki/LMIs_in_Control/KYP_Lemmas/KYP_Lemma_(Bounded_Real_Lemma))
 * $\mathcal{H}^2$ norm for both continuous and discrete time LTI models see [System H2 norm](https://en.wikibooks.org/wiki/LMIs_in_Control/pages/LMI_for_System_H2_Norm)
 * Lipschitz constant estimation for feedfoward neural networks (with no skip connections) see [Pauli et al. 2021](https://arxiv.org/abs/2005.02929)
 
