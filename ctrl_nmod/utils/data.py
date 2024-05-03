@@ -94,7 +94,7 @@ class ExperimentsDataset(Dataset):
         return experiment.__getitem__(sample_index, self.seq_len)
 
     def __len__(self):
-        return self.n_exp_samples_avl - self.seq_len * self.n_exp
+        return self.n_exp_samples_avl
 
     def _set_index_map(self):
         index, n_exp_samples = 0, 0
@@ -138,3 +138,4 @@ class ExperimentsDataset(Dataset):
             raise ValueError(
                 f"Invalid sequence length : longest experiment is length {max_length} samples asked {seq_len}")
         self.seq_len = seq_len
+        self._set_index_map()  # Update index map

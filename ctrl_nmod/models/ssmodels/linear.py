@@ -46,6 +46,20 @@ class NnLinear(Module):
         return self.A.weight, self.B.weight, self.C.weight
 
     def right_inverse_(self, A0, B0, C0, requires_grad=True):
+
+        try:
+            assert self.nx, self.nx == A0.shape
+        except AssertionError:
+            raise ValueError(f"Given A matrix have incorrect size : nx = {self.nx} found {A0.shape}")
+        try:
+            assert self.nx, self.nu == B0.shape
+        except AssertionError:
+            raise ValueError(f"Given B matrix have incorrect size : nu = {self.nu} found {B0.shape}")
+        try:
+            assert self.ny, self.nx == C0.shape
+        except AssertionError:
+            raise ValueError(f"Given C matrix have incorrect size : ny = {self.ny} found {C0.shape}")
+
         if is_parametrized(self.A):
             self.A.weight = A0
         else:

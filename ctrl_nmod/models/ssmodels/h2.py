@@ -35,22 +35,23 @@ class H2BoundedLinear(Module):
         return "H2_Linear_ss" + f"_gamma2_{self.gamma2}"
 
     def forward(self, u, x):
-        A, B, C = self.eval_()
+        A, B, C = self.frame()
 
         dx = x @ A.T + u @ B.T
         y = x @ C.T
         return dx, y
 
-    def frame(self, tensor_name: str, tol=1e-6):
+    def frame(self, tol=1e-6):
         # Assuming M is parametrized
-        M = getattr(self, tensor_name)
+        M = getattr(self, 'M')  # We access to the parameterized fixed trace and rank M
         L, Q = torch.linalg.eigh(M)
-        L_corr = torch.where(L < tol, tol, L)
+        L_corr = torch.where(L < tol, tol, L)  # Potential negative values correction
 
         Wo_sqrt_inv = sqrtm(self.Wo_inv)
         # Wo_sqrt = sqrtm_inv(self.Wo_inv.unsqueeze(0)).squeeze(0)
 
         B_full = Wo_sqrt_inv @ Q @ torch.diag_embed(torch.sqrt(L_corr))
+
         # bbt = B_full @ B_full.T
         # 1 st check BBt = Wo -1/2 M Wo -1/2
         # print(torch.dist(bbt, Wo_sqrt_inv @ M @ Wo_sqrt_inv))
@@ -58,18 +59,34 @@ class H2BoundedLinear(Module):
         # 2nd check
         # print(torch.dist(Wo_sqrt @ bbt @ Wo_sqrt, M))
         # print(bbt)
-        return B_full[:, -self.nu:]
 
-    def eval_(self):
         Q = self.C.T @ self.C
         A = self.Wo_inv @ (-0.5 * Q + self.S)
-        B = self.frame('M')
         C = self.C
-        return A, B, C
+        return A, B_full[:, -self.nu:], C
+
+    @classmethod
+    def copy(cls, model):
+        '''
+            This class method returns a copy of a given H2bounded model.
+            We have to do this trick since self is not usable due to geotorch.
+            Since when an object has parameterized attributes its class changes.
+        '''
+        copy = __class__(
+            model.nu,
+            model.ny,
+            model.nx,
+            float(model.gamma2)
+        )
+        copy.load_state_dict(model.state_dict())
+        return copy
+
+    def clone(self):
+        return H2BoundedLinear.copy(self)
 
     def check_(self, epsilon=1e-6):
         Wo = torch.inverse(self.Wo_inv)
-        A, B, C = self.eval_()
+        A, B, C = self.frame()
 
         lyap = A.T @ Wo + Wo @ A
         dLyap = torch.dist(lyap, -C.T @ C)
@@ -119,13 +136,10 @@ class H2BoundedLinear(Module):
                                 gamma2, gamma2_lmi
                             )
                         )
-                    self.gamma2 = Tensor(
-                        [gamma2_lmi]
-                    )  # Assign lowest gamma found if it's higher than the one prescribed
-                    self.parametrizations.M[0].trace = self.gamma2**2   # type: ignore -- Reassign prescribed trace
-                    self.parametrizations.M[0].f.eta = self.gamma2**2  # type: ignore
-                    self.parametrizations.M[0].inv.eta = self.gamma2**2  # type: ignore
-
+                        self.gamma2 = Tensor([gamma2_lmi])  # Assign lowest gamma found if it's higher than the one prescribed
+                        self.parametrizations.M[0].trace = self.gamma2**2   # type: ignore -- Reassign prescribed trace
+                        self.parametrizations.M[0].f.eta = self.gamma2**2  # type: ignore
+                        self.parametrizations.M[0].inv.eta = self.gamma2**2  # type: ignore
             else:
                 raise ValueError("SDP problem is infeasible or unbounded")
 

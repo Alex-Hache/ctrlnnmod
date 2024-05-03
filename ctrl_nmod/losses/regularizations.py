@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List, Optional, Iterable
-from torch.nn import Module, ModuleList, MSELoss
+from torch.nn import Module, MSELoss
 import torch
 from typeguard import typechecked
 from ctrl_nmod.lmis.base import LMI
@@ -13,18 +12,16 @@ class _Regularization(ABC, Module):
         This is base class for all regularizations
     """
 
-    def __init__(self, module: Module, weight: float, scaler: float) -> None:
+    def __init__(self, module: Module, weight: float, scaler: float, updatable: bool) -> None:
         ABC.__init__(self)
         Module.__init__(self)
         self.module = module
         self._weight = weight
         self._scaler = scaler
-
-    def forward(self):
-        return self._compute() * self._weight
+        self.updatable = updatable
 
     @abstractmethod
-    def _compute(self) -> torch.Tensor:
+    def forward(self, *args) -> torch.Tensor:
         pass
 
     def get_weight(self) -> float:
@@ -42,14 +39,20 @@ class LMILogdet(_Regularization):
         Then the regularization is -logdet(M)
     """
 
-    def __init__(self, M: LMI, weight: float, scale: float = 1.0) -> None:
-        super(LMILogdet, self).__init__(M, weight, scaler=scale)
+    def __init__(self, M: LMI, weight: float, scale: float = 1.0, updatable: bool = True, min_weight=1e-6) -> None:
+        super(LMILogdet, self).__init__(M, weight, scaler=scale, updatable=updatable)
+        self.min_weight = min_weight
+        self.is_legal = True
 
-    def _compute(self) -> torch.Tensor:
+    def forward(self) -> torch.Tensor:
         return -torch.logdet(self.module())
 
     def _update(self) -> None:
-        self._weight *= self._scaler
+        if self.updatable and self._weight > self.min_weight:
+            print(f"Updating weight for barrier logdet function : from {self._weight} to {self._weight*self._scaler}")
+            self._weight *= self._scaler
+            if self._weight <= self.min_weight:
+                print("Minimum weight reached")
 
 
 @typechecked
@@ -60,31 +63,16 @@ class StateRegMSE(_Regularization):
         or if state is accessible from data.
     """
 
-    def __init__(self, alpha: float, scale: float = 1.0) -> None:
+    def __init__(self, alpha: float, scale: float = 1.0, updatable=False) -> None:
         loss = MSELoss()
-        super().__init__(loss, alpha, scaler=scale)
+        super().__init__(loss, alpha, scaler=scale, updatable=updatable)
 
-    def _compute(self, x_true, x_pred) -> Tensor:
+    def forward(self, x_true, x_pred) -> Tensor:
         return self.module(x_true, x_pred)
 
     def _update(self):
-        self._weight *= self._scaler
-
-
-@typechecked
-class RegularizationsList(ModuleList):
-
-    _regularizations: List[_Regularization]
-
-    def __init__(self, regularizations: Optional[Iterable[Module]] = None) -> None:
-        super().__init__()
-        if regularizations is not None:
-            self += regularizations
-
-    def update(self):
-        for reg in self:
-            if hasattr(reg, '_update'):
-                reg._update()
+        if self.updatable:
+            self._weight *= self._scaler
 
 
 '''

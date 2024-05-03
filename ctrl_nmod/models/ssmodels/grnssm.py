@@ -12,7 +12,6 @@ from cvxpy.problems.problem import Problem
 from cvxpy.problems.objective import Minimize
 from cvxpy.atoms.affine.bmat import bmat
 import numpy as np
-import matplotlib.pyplot as plt
 from math import sqrt
 from scipy.io import savemat
 import torch.nn as nn
@@ -93,6 +92,7 @@ class Grnssm(Module):
     def init_weights_(self, A0, B0, C0, isLinTrainable=True) -> None:
         # TODO Enforce specific distribution ton inner (and outer) weights
         # Initializing linear weights
+
         self.linmod.init_model_(A0, B0, C0, requires_grad=isLinTrainable)
 
         # Initializing nonlinear output weights to 0
@@ -166,8 +166,11 @@ class LipGrnssm(Grnssm):
     def forward(self, u, x):
         return super().forward(u, x)
 
-    def init_weights_(self, A0, B0, C0, isLinTrainable=True):
+    def right_inverse_(self, A0, B0, C0, isLinTrainable=True):
         super().init_weights_(A0, B0, C0, isLinTrainable)
+
+    def check_(self) -> bool:
+        return (self.fx.check_() and self.hx.check_()) if self.out_eq_nl else self.fx.check_()
 
 
 class L2IncGrNSSM(LipGrnssm):
@@ -182,7 +185,7 @@ class L2IncGrNSSM(LipGrnssm):
         lip = (lipx, l2i / torch.sqrt(torch.Tensor([2])))
         super().__init__(nu, ny, nx, nh, n_hidden_layers, actF, out_eq_nl, lip, alpha)
         scaleH = 1 / sqrt(2) - 0.1
-        self.linmod = L2BoundedLinear(nu, ny, nx, gamma=l2i, alpha=alpha, scaleH=scaleH, epsilon=2.0)
+        self.linmod = L2BoundedLinear(nu, ny, nx, gamma=Tensor(l2i), alpha=alpha, scaleH=scaleH, epsilon=2.0)
         self.frame_()
 
     def __repr__(self):
@@ -198,7 +201,7 @@ class L2IncGrNSSM(LipGrnssm):
     def right_inverse_(self, A, B, C, eta, alpha):
         self.linmod.right_inverse_(A, B, C, eta, alpha)
 
-    def check_(self, traj=None, N_trys=1000):
+    def check_(self, traj=None, N_trys=1000) -> Tuple[bool, np.ndarray]:
         self.frame_()
         gammas = []
         if traj is not None:
@@ -208,25 +211,19 @@ class L2IncGrNSSM(LipGrnssm):
                 gamma = self.compute_L2_taylor(u_eq.unsqueeze(0), x_eq.unsqueeze(0))
                 gammas.append(gamma)
         else:
-            for k in range(N_trys):
+            for k in range(N_trys):  # Compute around the origin
                 u_eq, x_eq = torch.rand((1, self.nu)), torch.rand((1, self.nx))
                 gamma = self.compute_L2_taylor(u_eq, x_eq)
                 gammas.append(gamma)
-
+        bl2i = all(np.array(gammas) <= gamma)
         b_lin_bounded, _ = self.linmod.check_()
         if not b_lin_bounded:
             print("Prescribed L2 gain for linear part not okay")
         bLipschitz = self.fx.check_()
         if not bLipschitz:
             print("Prescribed Lipschitz constant for nonlinear part not okay")
-        if any(np.array(gammas) > self.gamma) or not b_lin_bounded or not bLipschitz:
-            fig = plt.figure()
-            plt.plot(gammas)
-            fig.savefig('Gammas.png')
-            self.save_weights()
-            return False, np.max(np.array(gammas))
-        else:
-            return True, np.max(np.array(gammas))
+
+        return (bl2i and b_lin_bounded and bLipschitz), np.array(gammas)
 
     def compute_L2_taylor(self, u_eq, x_eq, epsilon=1e-7, solver="MOSEK"):
         inputs = (u_eq, x_eq)

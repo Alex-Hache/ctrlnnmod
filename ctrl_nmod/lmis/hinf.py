@@ -6,7 +6,7 @@ from cvxpy.expressions.variable import Variable
 from cvxpy.atoms.affine.bmat import bmat
 
 from .base import LMI
-from typing import Union
+from typing import Union, Tuple, Optional
 import numpy as np
 '''
     Every file in the submodule implement a continuous and a discrete version of the lmi
@@ -15,7 +15,7 @@ import numpy as np
 
 class HInfCont(LMI):
 
-    def __init__(self, A: Tensor, B: Tensor, C: Tensor, D: Union[Tensor, None] = None,
+    def __init__(self, A: Tensor, B: Tensor, C: Tensor, D: Optional[Tensor] = None,
                  gamma: Union[Tensor, None] = None, P: Union[Tensor, None] = None,
                  alpha: Tensor = torch.zeros((1))) -> None:
         super(HInfCont, self).__init__()
@@ -23,6 +23,9 @@ class HInfCont(LMI):
         self.B = B
         self.C = C
 
+        print(self.B.shape)
+        print(self.A.shape)
+        print(self.C.shape)
         # Shapes
         nu, nx, ny = B.shape[1], A.shape[0], C.shape[0]
         self.nu, self.ny, self.nx = nu, ny, nx
@@ -47,10 +50,10 @@ class HInfCont(LMI):
         else:
             _, gamma_lmi, P = HInfCont.solve(self.A, self.B, self.C, self.D, self.alpha)
             self.gamma = gamma_lmi
-            self.P = P
+            self.P = P.requires_grad_(True)
 
     @classmethod
-    def solve(cls, A: Tensor, B: Tensor, C: Tensor, D: Tensor, alpha: Tensor, solver="MOSEK", tol=1e-6):
+    def solve(cls, A: Tensor, B: Tensor, C: Tensor, D: Tensor, alpha: Tensor, solver="MOSEK", tol=1e-6) -> Tuple[Tensor, Tensor, Tensor]:
 
         A = A.detach().numpy()
         B = B.detach().numpy()

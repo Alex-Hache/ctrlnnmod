@@ -2,14 +2,15 @@ from alive_progress import alive_bar
 import time
 import torch
 import math
-import optuna as opt
+# import optuna as opt
 from ..integrators.integrators import Simulator
 from abc import ABC, abstractmethod
 from ..utils.data import ExperimentsDataset
 from torch.utils.data import DataLoader
 from torch.optim import Adam, SGD
-from typing import Union, Tuple
+from typing import Union, Optional
 from ..losses.losses import _RegularizedLoss
+from ..utils.misc import is_legal, flatten_params, write_flat_params
 
 
 class Trainer(ABC):
@@ -43,56 +44,15 @@ class SSTrainer(Trainer):
     def __init__(self, sim_model: Simulator, loss: _RegularizedLoss, val_loss: _RegularizedLoss) -> None:
         super(SSTrainer, self).__init__(sim_model=sim_model, loss=loss, val_loss=val_loss)
 
-    def fit_(self, train_set: ExperimentsDataset, test_set: ExperimentsDataset, **kwargs):
+    def fit_(self, train_set: ExperimentsDataset, test_set: ExperimentsDataset,
+             seq_len: int = 30, batch_size: int = 256, opt: str = 'adam', lr: float = 1e-2, min_lr: float = 1e-5, test_freq: int = 1,
+             patience: int = 10, tol_change: float = 0.01, epochs: int = 1000, save_path: Optional[str] = None,
+             keep_best: bool = True, max_val_samples: int = 3000, scheduled: bool = False, patience_soft: int = 5,
+             backtrack: bool = True):
 
-        keys = kwargs.keys()
+        train_set.set_seq_len(seq_len=seq_len)
 
-        if 'seq_len' in keys:
-            train_set.set_seq_len(seq_len=kwargs['seq_len'])
-
-        if 'batch_size' in keys:
-            batch_size = kwargs['batch_size']
-        else:
-            batch_size = 256
-
-        if 'lr' in keys:
-            lr = kwargs['lr']
-        else:
-            lr = 1e-2
-
-        if 'test_freq' in keys:
-            test_freq = kwargs['test_freq']
-        else:
-            test_freq = 1  # Test every epoch
-
-        if 'patience' in keys:
-            patience = kwargs['patience']
-        else:
-            patience = 10
-
-        if 'tol_change' in keys:
-            tol_change = kwargs['tol_change']
-        else:
-            tol_change = 0.01  # 1%
-
-        if 'epochs' in keys:
-            epochs = kwargs['epochs']
-        else:
-            epochs = 1000
-
-        if 'save_path' in keys:
-            save_path = kwargs['save_path']
-            self.sim_model.set_save_path(save_path)
-
-        if 'keep_bset' in keys:
-            keep_best = kwargs['keep_best']
-        else:
-            keep_best = True
-
-        if 'max_val_points' in keys:
-            max_val_points = kwargs['max_val_points']
-        else:
-            max_val_points = 3000
+        self.sim_model.set_save_path(save_path)
 
         # Consider making x a training parameter or not
         trainable_xs = [exp.x for exp in train_set.experiments if exp.x_trainable]
@@ -101,35 +61,19 @@ class SSTrainer(Trainer):
         list_params = [{'params': params_model, 'lr': lr},
                        {'params': trainable_xs, 'lr': lr}]
         # Choice of the optimizer
-        if 'optimizer' in keys:
-            if kwargs['optimizer'] == 'adam':
-                optimizer = Adam(list_params, lr=lr)
-            elif kwargs['optimizer'] == 'sgd':
-                optimizer = SGD(list_params, lr=lr)
-            else:
-                raise NotImplementedError("Please specify an optimizer among 'adam', 'SGD' \n")
-        else:
+        if opt == 'adam':
             optimizer = Adam(list_params, lr=lr)
+        elif opt == 'sgd':
+            optimizer = SGD(list_params, lr=lr)
+        else:
+            raise NotImplementedError("Please specify an optimizer among 'adam', 'SGD' \n")
 
-        # Learning rate scheduleur
-        if 'scheduled' in keys:
-            scheduled = kwargs['scheduled']
-            if scheduled:
-                if 'step_sched' in keys:
-                    step_sched = kwargs['step_sched']
-                else:
-                    step_sched = 0.1
-                if 'patience_sched' in keys:
-                    patience_sched = kwargs['patience_sched']
-                else:
-                    patience_sched = patience // 2
-                if 'min_lr' in keys:
-                    min_lr = kwargs['min_lr']
-                else:
-                    min_lr = 1e-5
-                scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', step_sched,
-                                                                       patience_sched, verbose=True, min_lr=min_lr)
+        # Learning rate and soft constraints scheduleur
 
+        if scheduled:
+            step_sched = 0.1
+            scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', step_sched,
+                                                                   patience_soft, verbose=True, min_lr=min_lr)
         else:
             scheduled = False
         train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True)
@@ -143,13 +87,13 @@ class SSTrainer(Trainer):
         print("Initial val_MSE = {:.7f} \n".format(float(init_val_loss)))
         best_loss, no_decrease_counter = init_val_loss, 0
         best_model = self.sim_model.clone()
-        start_time = time.time()
+        start_time = time.perf_counter()
 
-        with alive_bar(epochs) as bar:
+        with alive_bar(total=epochs) as bar:
             for itr in range(0, epochs):
 
                 epoch_loss = 0.0
-                for idx_batch, batch in enumerate(train_loader):
+                for _, batch in enumerate(train_loader):
                     optimizer.zero_grad()
                     batch_u, batch_y, batch_x, batch_x0 = batch
                     x_sim_torch_fit, y_sim_torch_fit = self.sim_model(batch_u, batch_x0)
@@ -160,15 +104,17 @@ class SSTrainer(Trainer):
                     # Optimize
                     loss.backward()
                     optimizer.step()
-                    epoch_loss += float(loss.item())
 
+                    if backtrack and not is_legal(loss):
+                        loss = self.backtrack(batch_y, y_sim_torch_fit, batch_x, x_sim_torch_fit)
+                    epoch_loss += float(loss.item())
                 epoch_loss = epoch_loss / (len(train_loader))
                 # Statistics
                 vLoss.append(epoch_loss)
                 if itr % test_freq == 0:
                     with torch.no_grad():
                         # Simulation perf on test data
-                        val_crit, bcheck, _ = self.eval_(val_set=test_set, idxMax=max_val_points)
+                        val_crit, bcheck, _ = self.eval_(val_set=test_set, max_idx=max_val_samples)
                         vVal_loss.append(float(val_crit))
                     if (best_loss - val_crit) / best_loss > tol_change:
                         no_decrease_counter = 0
@@ -178,17 +124,19 @@ class SSTrainer(Trainer):
                         no_decrease_counter += 1
                     if scheduled:
                         scheduler.step(val_crit)
+                    if no_decrease_counter >= patience_soft:
+                        print("Updating criterion wights")
+                        self.criterion.update()
                     print("Epoch loss = {:.7f} || Val_MSE = {:.7f} || Best loss = {:.7f} \n".format(float(epoch_loss),
                           float(val_crit), float(best_loss)))
                 if no_decrease_counter > patience:  # early stopping
                     break
 
-                if hasattr(self.criterion, 'update'):
-                    self.criterion.update()
                 if (math.isnan(epoch_loss)):
+                    print("Loss became nan -- training stopped")
                     break
                 bar()
-        train_time = time.time() - start_time
+        train_time = time.perf_counter() - start_time
 
         print("Total dentification runtime : {} \n Best loss : {} \n".format(train_time, best_loss))
 
@@ -209,38 +157,32 @@ class SSTrainer(Trainer):
                    'y_sim_val': y_sim_list_val, 'y_sim_train': y_sim_list_train}
         return best_model, dictRes
 
-    def eval_(self, val_set: ExperimentsDataset, **kwargs):
-        keys = kwargs.keys()
-        if 'max_idx' in keys:
-            max_idx = kwargs['max_idx']
-        else:
-            max_idx = None
-
+    def eval_(self, val_set: ExperimentsDataset, max_idx: Optional[int] = None):
+        '''
+            This method evaluates the validation metric if one is given.
+            It also checks all the potential constraints that a model has.
+            It is assumed each constraint that has to be checked at a submodule
+            level is checked at the parent module level.
+        '''
         if self.val_criterion is not None:
             val_loss = 0.0
             y_sim_list = []
             if val_set.experiments:
-                for num_exp, exp in enumerate(val_set.experiments):
+                for exp in val_set.experiments:
                     u, y_true, x_true = exp.get_data(idx=max_idx)
                     x_sim, y_sim = self.sim_model.simulate(u, x_true[0, :])
                     y_sim_list.append(y_sim.detach().numpy())
                     val_loss += self.val_criterion(y_true, y_sim, x_true, x_sim)
                 val_crit = val_loss / (len(val_set.experiments))
         else:
-            val_crit = 0
-            y_sim_list = []
-        # Now if training_loss has an eval method compute bounds and interesting metrics
-        if self.criterion.regs is not None:
-            # regularizations = self.criterion.regs.regularizations
-            # checks = [reg.module.eval_() for reg.module in regularizations if hasattr(reg.module, 'eval_')]
-            # b_check = all(checks)
-            vCheck = True
-        else:
-            vCheck = True
+            val_crit = math.inf
+            y_sim_list = None
 
-        return val_crit, vCheck, y_sim_list
+        # Now check if all constraints in the model are checked if there is any
+        const, _ = self.sim_model.check_() if hasattr(self.sim_model, 'check_') else True, None
+        return val_crit, const, y_sim_list
 
-    def clone(self):
+    def clone(self) -> Simulator:
         return self.sim_model.clone()
 
     def save(self):
@@ -248,6 +190,23 @@ class SSTrainer(Trainer):
 
     def __str__(self) -> str:
         return f"{str(self.sim_model)}"
+
+    def backtrack(self, *args, step_ratio=0.5, max_iter=100):
+        with torch.no_grad():
+            print(" Statrting backtracking")
+            theta0 = flatten_params(self.sim_model)
+            i = 0
+            while i <= max_iter:
+                crit = self.criterion(*args)
+                if not is_legal(crit):
+                    theta = theta0 * step_ratio + theta0 * (1 - step_ratio)
+                    write_flat_params(self.sim_model, theta)
+                    i += 1
+                else:
+                    break
+            if i > max_iter:
+                print("Maximum iterations reached")
+            return crit
 
 
 r'''

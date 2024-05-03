@@ -5,15 +5,15 @@ from cvxpy.problems.objective import Minimize
 from cvxpy.expressions.variable import Variable
 import numpy as np
 
-from geotorch.product import ProductManifold
-from geotorch.psd import PSD
-from geotorch.skew import Skew
-from geotorch.exceptions import (
+from geotorch_custom.product import ProductManifold
+from geotorch_custom.psd import PSD
+from geotorch_custom.skew import Skew
+from geotorch_custom.exceptions import (
     VectorError,
     NonSquareError,
     InManifoldError,
 )
-from geotorch.utils import _extra_repr
+from geotorch_custom.utils import _extra_repr
 
 
 class AlphaStable(ProductManifold):

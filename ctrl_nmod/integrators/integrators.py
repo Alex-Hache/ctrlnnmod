@@ -4,6 +4,7 @@ from torch import Tensor
 import time
 import numpy as np
 import os
+import geotorch_custom.parametrize as P
 
 
 class Simulator(nn.Module):
@@ -25,7 +26,8 @@ class Simulator(nn.Module):
         return f"{str(self.ss_model)}"
 
     def set_save_path(self, path):
-        self.save_path = path
+        if path is not None:
+            self.save_path = path
 
     def save(self) -> None:
         torch.save(self.state_dict(), self.save_path + '/model.pkl')
@@ -66,27 +68,11 @@ class Simulator(nn.Module):
         biases = np.array(biases, dtype=object)
         return weights, biases
 
-    def write_flat_params(self, x):
-        r""" Writes vector x to model parameters.."""
-        index = 0
-        theta = torch.Tensor(x)
-        for name, p in self.named_parameters():
-            p.data = theta[index:index + p.numel()].view_as(p.data)
-            index = index + p.numel()
-
-    def flatten_params(self):
-        views = []
-        for i, p in enumerate(self.parameters()):
-            if p is None:
-                view = p.new(p.numel()).zero_()
-            elif p.is_sparse:
-                view = p.to_dense().view(-1)
-            else:
-                view = p.view(-1)
-            views.append(view)
-        return torch.cat(views, 0)
-
-    # TODO Adding check_/eval_ method
+    def check_(self):
+        if hasattr(self.ss_model, 'check_'):
+            return self.ss_model.check_()
+        else:
+            return None
 
 
 class RK4Simulator(Simulator):
@@ -122,26 +108,27 @@ class RK4Simulator(Simulator):
         Y_sim_list = []
         x_step = x0_batch
 
-        for u_step in u_batch.split(1, dim=1):  # i in range(seq_len):
+        with P.cached():  # Useful if there is any parameterized models
+            for u_step in u_batch.split(1, dim=1):  # i in range(seq_len):
 
-            u_step = u_step.squeeze(1)
-            # x_step = x_step.squeeze(0)
+                u_step = u_step.squeeze(1)
+                # x_step = x_step.squeeze(0)
 
-            X_sim_list += [x_step]
+                X_sim_list += [x_step]
 
-            dt2 = self.ts / 2.0
-            k1, y_step = self.ss_model(u_step, x_step)
-            Y_sim_list += [y_step]
+                dt2 = self.ts / 2.0
+                k1, y_step = self.ss_model(u_step, x_step)
+                Y_sim_list += [y_step]
 
-            k2_dx, _ = self.ss_model(u_step, x_step + dt2*k1)
-            k3_dx, _ = self.ss_model(u_step, x_step + dt2*k2_dx)
-            k4_dx, _ = self.ss_model(u_step, x_step + self.ts*k3_dx)
+                k2_dx, _ = self.ss_model(u_step, x_step + dt2 * k1)
+                k3_dx, _ = self.ss_model(u_step, x_step + dt2 * k2_dx)
+                k4_dx, _ = self.ss_model(u_step, x_step + self.ts * k3_dx)
 
-            dx = self.ts / 6.0 * (k1 + 2.0 * k2_dx + 2.0 * k3_dx + k4_dx)
-            x_step = x_step + dx
+                dx = self.ts / 6.0 * (k1 + 2.0 * k2_dx + 2.0 * k3_dx + k4_dx)
+                x_step = x_step + dx
 
-        X_sim = torch.stack(X_sim_list, 1)
-        Y_sim = torch.stack(Y_sim_list, 1)
+            X_sim = torch.stack(X_sim_list, 1)
+            Y_sim = torch.stack(Y_sim_list, 1)
         return X_sim, Y_sim
 
     def clone(self):
@@ -149,6 +136,7 @@ class RK4Simulator(Simulator):
         copy = type(self)(copy_ss, self.ts)
         copy.load_state_dict(self.state_dict())
         return copy
+
 
 class Sim_discrete(Simulator):
     def __init__(self, ss_model, ts=1):

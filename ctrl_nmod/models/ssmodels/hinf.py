@@ -19,8 +19,8 @@ class L2BoundedLinear(Module):
         self.nu = nu
         self.ny = ny
         self.nx = nx
-        self.gamma = gamma
-        self.alpha = alpha
+        self.gamma = Tensor([gamma])
+        self.alpha = Tensor([alpha])
         self.Ix = torch.eye(nx)
         self.scaleH = scaleH
         self.eps = epsilon
@@ -41,20 +41,20 @@ class L2BoundedLinear(Module):
         return "Hinf_Linear_ss" + f"_alpha_{self.alpha}" + f"_gamma_{self.gamma}"
 
     def forward(self, u, x):
-        A, B, C = self.eval_()
+        A, B, C = self.frame()
 
         dx = x @ A.T + u @ B.T
         y = x @ C.T
         return dx, y
 
-    def eval_(self):
+    def frame(self):
         A = (-0.5 * (self.Q + self.G.T @ self.G + self.eps * self.Ix) + self.S) @ self.P - self.alpha * self.Ix
         B = self.gamma * sqrtm(self.Q) @ (self.scaleH * self.H)  # type: ignore
         C = self.G @ self.P
         return A, B, C
 
-    def right_inverse_(self, A, B, C, gamma, alpha):
-        Q, P_torch, S, G, H, alph, _ = self.submersion_inv(A, B, C, gamma, alpha)
+    def right_inverse_(self, A, B, C, gamma: float, alpha):
+        Q, P_torch, S, G, H, alph, _ = self.submersion_inv(A, B, C, float(gamma), alpha)
         self.P = P_torch
         self.Q = Q
         self.S = S
@@ -62,7 +62,7 @@ class L2BoundedLinear(Module):
         self.H = H
         self.alpha = alph
 
-    def submersion_inv(self, A, B, C, gamma, alpha=0.0, epsilon=1e-8, solver="MOSEK", check=False):
+    def submersion_inv(self, A, B, C, gamma: float, alpha=0.0, epsilon=1e-8, solver="MOSEK", check=False):
 
         with torch.no_grad():
             A = A.detach().numpy()
@@ -120,10 +120,26 @@ class L2BoundedLinear(Module):
             alph = Tensor([alpha])
         return Q, P_torch, S, G, H, alph, gmma_lmi
 
+    @classmethod
+    def copy(cls, model):
+
+        copy = __class__(
+            model.nu,
+            model.ny,
+            model.nx,
+            float(model.gamma),
+            float(model.alpha)
+        )
+        copy.load_state_dict(model.state_dict())
+        return copy
+
+    def clone(self):
+        return L2BoundedLinear.copy(self)
+
     def check_(self):
-        W = self.eval_()
+        W = self.frame()
         try:
-            _, _, _, _, _, _, gamma = self.submersion_inv(*W, self.gamma, check=True)
+            _, _, _, _, _, _, gamma = self.submersion_inv(*W, float(self.gamma), check=True)
             return True, gamma
         except ValueError:
             return False, np.inf

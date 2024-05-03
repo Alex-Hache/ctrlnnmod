@@ -1,6 +1,6 @@
 from .constraints import (
     sphere,
-    skew,
+    skew_symmetric,
     symmetric,
     orthogonal,
     grassmannian,
@@ -63,7 +63,7 @@ __all__ = [
     "PSSDFixedRank",
     "PSSDFixedRankTrace",
     "alpha_stable",
-    "skew",
+    "skew_symmetric",
     "symmetric",
     "sphere",
     "orthogonal",

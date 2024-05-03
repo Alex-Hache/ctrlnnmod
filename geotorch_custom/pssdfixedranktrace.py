@@ -12,7 +12,7 @@ class SoftmaxEta(torch.nn.Module):
         return f"SoftmaxEta : eta = {self.eta}"
 
     def forward(self, x):
-        return self.eta*torch.nn.functional.softmax(x, dim=0)
+        return self.eta * torch.nn.functional.softmax(x, dim=0)
 
 
 class InvSoftmaxEta(torch.nn.Module):
@@ -25,7 +25,7 @@ class InvSoftmaxEta(torch.nn.Module):
         return f"SoftmaxEtaInv : eta = {self.eta}"
 
     def forward(self, s):
-        x = torch.log(s/self.eta)
+        x = torch.log(s / self.eta)
         return x
 
 
@@ -41,8 +41,8 @@ class PSSDFixedRankTrace(SymF):
         if f == "softmax":
             func = SoftmaxEta(trace)
             inv = InvSoftmaxEta(trace)
-            f = (func, inv)
-        if f in PSSDFixedRankTrace.fs.keys():
+            return (func, inv)
+        elif f in PSSDFixedRankTrace.fs.keys():
             return PSSDFixedRankTrace.fs[f][0](trace), PSSDFixedRankTrace.fs[f][1](trace)
         elif callable(f):
             return f, None

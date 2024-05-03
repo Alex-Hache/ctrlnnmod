@@ -23,12 +23,12 @@ def load_pendulum(files: List[str], scaled: bool = False) -> Tuple:
     u_max = np.max(u_train, axis=0)
     y_max = np.max(y_train, axis=0)
 
-    ts = 1/fs[0][0]
+    ts = 1 / fs[0][0]
     if scaled:
-        u_train_scl = u_train/u_max
-        y_train_scl = y_train/y_max
-        u_test_scl = u_test/u_max
-        y_test_scl = y_test/y_max
+        u_train_scl = u_train / u_max
+        y_train_scl = y_train / y_max
+        u_test_scl = u_test / u_max
+        y_test_scl = y_test / y_max
 
         return (u_train_scl, y_train_scl, u_test_scl, y_test_scl), ts
     else:

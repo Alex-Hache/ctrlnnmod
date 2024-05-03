@@ -10,27 +10,27 @@ class _RegularizedLoss(Module):
         This is base class of regularized loss
     '''
 
-    def __init__(self, regs: Union[ModuleList, None] = None) -> None:
+    def __init__(self, regularizations: Union[ModuleList, None] = None) -> None:
         super().__init__()
-        if regs is not None:
-            self.regs = regs
+        if regularizations is not None:
+            self.regularizations = regularizations
         else:
-            self.regs = ModuleList([])
+            self.regularizations = ModuleList([])
 
     def update(self):
-        for reg in self.regs:
+        for reg in self.regularizations:
             if hasattr(reg, '_update'):
                 reg._update()
 
     def append(self, reg: _Regularization):
-        self.regs.append(reg)
+        self.regularizations.append(reg)
 
     def pop(self, idx: Union[int, slice]):
-        self.regs.pop(idx)
+        self.regularizations.pop(idx)
 
     def get_weights(self) -> List[float]:
         weights = []
-        for reg in self.regs:
+        for reg in self.regularizations:
             if hasattr(reg, 'get_weight'):
                 weights.append(reg.get_weight())
 
@@ -38,10 +38,9 @@ class _RegularizedLoss(Module):
 
     def get_scalers(self) -> List[float]:
         scalers = []
-        for reg in self.regs:
+        for reg in self.regularizations:
             if hasattr(reg, 'get_scaler'):
                 scalers.append(reg.get_scaler())
-
         return scalers
 
 
@@ -61,7 +60,7 @@ class MixedMSELoss(_RegularizedLoss):
     def forward(self, y_true, y_sim, x_true, x_sim):
         y_mse = self.crit(y_true, y_sim)
         reg_loss = torch.zeros((1))
-        for i, regularization in enumerate(self.regs):
+        for i, regularization in enumerate(self.regularizations):
             if i == 0:  # First index is for state_regularization
                 reg_loss += regularization(x_true, x_sim)
             else:
@@ -73,7 +72,7 @@ class MixedMSELoss(_RegularizedLoss):
 
     def update(self) -> None:
         super().update()
-        self.alpha = self.regs[0].get_weight()
+        self.alpha = self.regularizations[0].get_weight()
 
 
 class MixedNMSEReg(MixedMSELoss):

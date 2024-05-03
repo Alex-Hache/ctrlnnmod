@@ -1,5 +1,5 @@
 import torch
-import geotorch.parametrize as P
+import geotorch_custom.parametrize as P
 
 from .symmetric import Symmetric
 from .skew import Skew
@@ -63,7 +63,7 @@ def symmetric(module, tensor_name="weight", lower=True):
     return module
 
 
-def skew(module, tensor_name="weight", lower=True):
+def skew_symmetric(module, tensor_name="weight", lower=True):
     r"""Adds a skew-symmetric parametrization to the matrix ``module.tensor_name``.
 
     When accessing ``module.tensor_name``, the module will return the parametrized
