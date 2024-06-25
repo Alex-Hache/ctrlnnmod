@@ -55,9 +55,6 @@ class HInfCont(LMI):
         self.B = B
         self.C = C
 
-        print(self.B.shape)
-        print(self.A.shape)
-        print(self.C.shape)
         # Shapes
         nu, nx, ny = B.shape[1], A.shape[0], C.shape[0]
         self.nu, self.ny, self.nx = nu, ny, nx

@@ -38,7 +38,7 @@ class Trainer(ABC):
 
 class SSTrainer(Trainer):
     """
-        This class is a used for training state-space models
+        This class is a used for training state-space models.
     """
 
     def __init__(self, sim_model: Simulator, loss: _RegularizedLoss, val_loss: _RegularizedLoss) -> None:
@@ -125,8 +125,9 @@ class SSTrainer(Trainer):
                     if scheduled:
                         scheduler.step(val_crit)
                     if no_decrease_counter >= patience_soft:
-                        print("Updating criterion wights")
+                        print("Updating criterion weights")
                         self.criterion.update()
+                        patience_soft = 0
                     print("Epoch loss = {:.7f} || Val_MSE = {:.7f} || Best loss = {:.7f} \n".format(float(epoch_loss),
                           float(val_crit), float(best_loss)))
                 if no_decrease_counter > patience:  # early stopping

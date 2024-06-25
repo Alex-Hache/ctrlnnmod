@@ -22,7 +22,7 @@ classifiers = [
 ]
 
 # Get the long description from the README file
-with open("README.rst", "r", encoding="utf8") as fh:
+with open("README.md", "r", encoding="utf8") as fh:
     long_description = fh.read()
 
 
@@ -42,6 +42,6 @@ setup(
     keywords=["Neural networks", "Linear Matrix Inequalities", "Pytorch"],
     packages=find_packages(),
     python_requires=">=3.5",
-    install_requires=["torch>=1.9"],
+    install_requires=["torch>=1.9", "numpy", "cvxpy", "typeguard", "alive_progress"],
     extras_require={"dev": DEV_REQUIRES, "test": TEST_REQUIRES},
 )
