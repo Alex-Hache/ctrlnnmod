@@ -1,138 +1,132 @@
 import torch
-from torch.nn import MSELoss, Module, ModuleList
-from .regularizations import StateRegMSE, _Regularization
-from typing import Union, List
-from ctrl_nmod.utils.misc import find_module
+from torch import Tensor
+from typing import Sequence, Optional
+from abc import ABC, abstractmethod
+from regularizations import Regularization
 
 
-class _RegularizedLoss(Module):
-    '''
-        This is base class of regularized loss.
+class BaseLoss(ABC):
+    def __init__(self, regularizers: Optional[Sequence[Regularization]] = None):
+        """
+        Initializes the BaseLoss class with optional regularization terms.
 
-        A regularized loss has a list of Regularizations.
-        Each regularization is an additional term in the loss function.
-        Each term has an associated weight and a scaler to update it during optimization.
+        Args:
+            regularizers (List[Regularization], optional): A list of regularization terms to be added to the loss. Defaults to None.
+        """
+        self.regularizers = regularizers if regularizers else []
 
-    attributes
-    ----------
-        regularizations : ModuleList
-            A ModuleList that register all the eventual regularizations in the loss (soft constraints)
+    def add_regularization(self, loss: Tensor) -> Tensor:
+        """
+        Adds regularization terms to the given loss.
 
-    '''
+        Args:
+            loss (Tensor): The base loss.
 
-    def __init__(self, regularizations: Union[ModuleList, None] = None) -> None:
-        super().__init__()
-        if regularizations is not None:
-            self.regularizations = regularizations
-        else:
-            self.regularizations = ModuleList([])
+        Returns:
+            Tensor: The loss with regularization terms added.
+        """
+        if self.regularizers:
+            reg_loss = sum(reg() for reg in self.regularizers)
+            return loss + reg_loss
+        return loss
 
-    def update(self):
-        for reg in self.regularizations:
-            if hasattr(reg, '_update'):
-                reg._update()
+    @abstractmethod
+    def __call__(self, output: Tensor, target: Tensor) -> Tensor:
+        """
+        Computes the loss with optional regularization terms.
 
-    def append(self, reg: _Regularization):
-        self.regularizations.append(reg)
+        Args:
+            output (Tensor): The predicted output tensor.
+            target (Tensor): The ground truth target tensor.
 
-    def pop(self, idx: Union[int, slice]):
-        self.regularizations.pop(idx)
-
-    def get_weights(self) -> List[float]:
-        weights = []
-        for reg in self.regularizations:
-            if hasattr(reg, 'get_weight'):
-                weights.append(reg.get_weight())
-
-        return weights
-
-    def get_scalers(self) -> List[float]:
-        scalers = []
-        for reg in self.regularizations:
-            if hasattr(reg, 'get_scaler'):
-                scalers.append(reg.get_scaler())
-        return scalers
+        Returns:
+            Tensor: The computed loss with regularization terms added.
+        """
+        pass
 
 
-class MixedMSELoss(_RegularizedLoss):
-    r"""
-        This loss computes a convex combination between x (state) and y(output)
+class MSELoss(BaseLoss):
+    def __call__(self, output: Tensor, target: Tensor) -> Tensor:
+        """
+        Computes the MSE loss with optional regularization terms.
 
-        .. math::
-        \mathcal{L} = (y- \hat{y})^2 + alpha*(x - \hat{x})
-    """
+        Args:
+            output (Tensor): The predicted output tensor.
+            target (Tensor): The ground truth target tensor.
 
-    def __init__(self, alpha: float, scale=1.0) -> None:
-        regs = ModuleList([StateRegMSE(alpha=alpha, scale=scale)])
-        super().__init__(regs)
-        self.crit = MSELoss()
-        self.alpha = alpha
-        self.scale = scale
-
-    def forward(self, y_true, y_sim, x_true, x_sim):
-        y_mse = self.crit(y_true, y_sim)
-        reg_loss = torch.zeros((1))
-        for i, regularization in enumerate(self.regularizations):
-            if i == 0:  # First index is for state_regularization
-                reg_loss += regularization(x_true, x_sim)
-            else:
-                reg_loss += regularization()
-        return y_mse + reg_loss
-
-    def __repr__(self):
-        return f"Mixed MSE : alpha = {self.alpha}"
-
-    def update(self) -> None:
-        super().update()
-        self.alpha = self.regularizations[0].get_weight()
+        Returns:
+            Tensor: The computed MSE loss with regularization terms added.
+        """
+        loss = torch.mean((output - target) ** 2)
+        return self.add_regularization(loss)
 
 
-class MixedNMSEReg(MixedMSELoss):
-    '''
-        This is the same verion than the regular MSE but normalized by the
-        mean of y_true**2. This loss has values ranging form -Inf to 1
-    '''
+class NMSELoss(BaseLoss):
+    def __call__(self, output: Tensor, target: Tensor) -> Tensor:
+        """
+        Computes the NMSE loss with optional regularization terms.
 
-    def __init__(self, alpha: float, scale=1.0) -> None:
-        super().__init__(alpha=alpha, scale=scale)
+        Args:
+            output (Tensor): The predicted output tensor.
+            target (Tensor): The ground truth target tensor.
 
-    def forward(self, y_true, y_sim, x_true, x_sim):
-        y_mse = self.crit(y_true, y_sim)
-        y_nmse = y_mse / (torch.mean(y_true**2))
-        reg_x = find_module(self.regs, StateRegMSE)
-        if reg_x is not None:
-            x_mse = reg_x(x_true, x_sim)
-            x_nmse = x_mse / (torch.mean(x_true**2))
-        else:
-            raise ValueError("Module not found")
-        return 0.5 * (y_nmse + x_nmse)
-
-    def __repr__(self):
-        return f"Mixed NMSE : alpha = {self.alpha} \n" + f"Regs : {self.regs}"
+        Returns:
+            Tensor: The computed NMSE loss with regularization terms added.
+        """
+        loss = torch.mean((output - target) ** 2) / torch.mean(target ** 2)
+        return self.add_regularization(loss)
 
 
-'''
-# TODO adding the the regularization for l0 semi-norm
-class MixMSEDistAtt(torch.nn.Module):
-    def __init__(self, model, alpha=0, gamma=1) -> None:
-        super(MixMSEDistAtt, self).__init__()
-        self.crit = MSELoss()
-        self.gamma = gamma
-        self.alpha = alpha
-        self.model = model
+class FitPercentLoss(BaseLoss):
+    def __call__(self, output: Tensor, target: Tensor) -> Tensor:
+        """
+        Computes the fit percentage loss with optional regularization terms.
 
-    def forward(self, y_true, y_sim, x_true, x_sim):
-        x_mse = self.crit(x_true, x_sim)
-        y_mse = self.crit(y_true, y_sim)
-        L1 = self.alpha * x_mse + (1 - self.alpha) * y_mse
+        Args:
+            output (Tensor): The predicted output tensor.
+            target (Tensor): The ground truth target tensor.
 
-        # Add L-1 regularization on the distrubance indices
-        nu = self.model.input_dim
+        Returns:
+            Tensor: The computed fit percentage loss with regularization terms added.
+        """
+        loss = 1 - torch.norm(output - target) / torch.norm(target)
+        return self.add_regularization(loss)
 
-        # Bu = self.model.linmod.B.weight[:,:nu]
-        reg_d, _ = torch.max(torch.abs(self.model.linmod.B.weight), dim=1)
-        # reg_u = torch.max(torch.abs(Bu),dim=1)
-        reg = reg_d[nu:]  # + reg_u
 
-        return L1 + self.gamma * reg
-'''
+class RMSELoss(BaseLoss):
+    def __call__(self, output: Tensor, target: Tensor) -> Tensor:
+        """
+        Computes the RMSE loss with optional regularization terms.
+
+        Args:
+            output (Tensor): The predicted output tensor.
+            target (Tensor): The ground truth target tensor.
+
+        Returns:
+            Tensor: The computed RMSE loss with regularization terms added.
+        """
+        loss = torch.sqrt(torch.mean((output - target) ** 2))
+        return self.add_regularization(loss)
+
+
+class NRMSELoss(BaseLoss):
+    def __call__(self, output: Tensor, target: Tensor) -> Tensor:
+        """
+        Computes the NRMSE loss with optional regularization terms.
+
+        Args:
+            output (Tensor): The predicted output tensor.
+            target (Tensor): The ground truth target tensor.
+
+        Returns:
+            Tensor: The computed NRMSE loss with regularization terms added.
+        """
+        loss = torch.sqrt(torch.mean((output - target) ** 2)
+                          ) / torch.std(target)
+        return self.add_regularization(loss)
+
+# Example usage:
+# model = YourModel()  # Replace with your model
+# regularizers = [L1Regularization(model, lambda_l1=0.01, update_factor=0.1)]
+# mse_loss = MSELoss(regularizers)
+# loss = mse_loss(output, target)
