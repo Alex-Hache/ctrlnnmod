@@ -4,6 +4,7 @@ from torch.linalg import slogdet
 import torch.nn as nn
 from torch import Tensor
 from typing import List, Callable
+from ..lmis.base import LMI
 
 
 class Regularization(ABC):
@@ -70,7 +71,7 @@ class L1Regularization(Regularization):
             updatable (bool): Flag indicating if the regularization factor is updatable.
         """
         super().__init__(model, update_factor, updatable)
-        self.lambda_l1 = Tensor(lambda_l1)
+        self.lambda_l1 = Tensor([lambda_l1])
 
     def __call__(self) -> Tensor:
         """
@@ -115,7 +116,7 @@ class L2Regularization(Regularization):
             updatable (bool): Flag indicating if the regularization factor is updatable.
         """
         super().__init__(model, update_factor, updatable)
-        self.lambda_l2 = Tensor(lambda_l2)
+        self.lambda_l2 = Tensor([lambda_l2])
 
     def __call__(self) -> Tensor:
         """
@@ -150,7 +151,7 @@ class LogdetRegularization(Regularization):
         min_weight (float): Minimum weight for regularization.
     """
 
-    def __init__(self, lmi: nn.Module, lambda_logdet: float, update_factor: float, updatable: bool = True, min_weight: float = 1e-6) -> None:
+    def __init__(self, lmi: LMI, lambda_logdet: float, update_factor: float, updatable: bool = True, min_weight: float = 1e-6) -> None:
         """
         Initializes the LogdetRegularization class.
 
@@ -162,7 +163,7 @@ class LogdetRegularization(Regularization):
             min_weight (float): Minimum weight for regularization.
         """
         super().__init__(lmi, update_factor, updatable)
-        self.lambda_logdet = Tensor(lambda_logdet)
+        self.lambda_logdet = Tensor([lambda_logdet])
         self.min_weight = min_weight
 
     def __call__(self) -> Tensor:
@@ -214,7 +215,7 @@ class StateRegularization(Regularization):
             updatable (bool): Flag indicating if the regularization factor is updatable.
         """
         super().__init__(model, update_factor, updatable)
-        self.lambda_state = lambda_state
+        self.lambda_state = Tensor([lambda_state])
         self.criterion = nn.MSELoss()
 
     def __call__(self, x_pred: Tensor, x_true: Tensor) -> Tensor:

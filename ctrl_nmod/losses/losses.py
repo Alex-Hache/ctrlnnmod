@@ -2,7 +2,7 @@ import torch
 from torch import Tensor
 from typing import Sequence, Optional
 from abc import ABC, abstractmethod
-from regularizations import Regularization
+from ..regularizations import Regularization
 
 
 class BaseLoss(ABC):
