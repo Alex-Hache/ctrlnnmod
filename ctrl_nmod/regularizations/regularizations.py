@@ -188,6 +188,7 @@ class LogdetRegularization(Regularization):
 
         """
         if self.updatable and self.factor > self.min_weight:
+            print("Updating weight parameter")
             self.lambda_logdet *= self.factor
             if self.factor <= self.min_weight:
                 print("Minimum weight reached")
