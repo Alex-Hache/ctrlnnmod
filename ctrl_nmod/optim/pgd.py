@@ -4,7 +4,9 @@ from torch.optim import Optimizer
 
 def project_to_pos_def(matrix):
     """ Projects a symmetric matrix to the closest positive definite matrix """
-    eigenvalues, eigenvectors = torch.linalg.eigh(matrix)
+    # Step 1: Make the matrix symmetric
+    matrix_sym = (matrix + matrix.T) / 2
+    eigenvalues, eigenvectors = torch.linalg.eigh(matrix_sym)
     # Clip eigenvalues to a small positive number
     eigenvalues = torch.clip(eigenvalues, min=1e-6, max=None)
     return eigenvectors @ torch.diag(eigenvalues) @ eigenvectors.T

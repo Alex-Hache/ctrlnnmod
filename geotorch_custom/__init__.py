@@ -30,6 +30,7 @@ from .lowrank import LowRank
 from .fixedrank import FixedRank
 from .glp import GLp
 from .sl import SL
+from .parametrize import is_parametrized
 from .psd import PSD
 from .pssd import PSSD
 from .pssdfixedrank import PSSDFixedRank
@@ -72,6 +73,7 @@ __all__ = [
     "fixed_rank",
     "almost_orthogonal",
     "invertible",
+    "is_parametrized",
     "sln",
     "positive_definite",
     "positive_semidefinite",

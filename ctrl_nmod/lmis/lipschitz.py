@@ -5,7 +5,7 @@ import torch.nn as nn
 from cvxpy import Variable, bmat, hstack, vstack, Minimize, Problem
 from ..linalg.utils import block_diag
 import numpy as np
-from base import LMI  # Assuming base.py is in the same directory level
+from base import LMI
 
 
 class LipschitzLMI(LMI):
@@ -123,8 +123,7 @@ class LipschitzLMI(LMI):
 
         nM = M.shape[0]
         nT = T.shape[0]
-        constraints = [M << -np.eye(nM) * tol, T -
-                       (tol) * np.eye(nT) >> 0, lip - tol >= 0]
+        constraints = [M << -np.eye(nM) * tol, T - (tol) * np.eye(nT) >> 0, lip - tol >= 0]
         objective = Minimize(lip)
 
         prob = Problem(objective, constraints=constraints)

@@ -177,9 +177,7 @@ class LogdetRegularization(Regularization):
             ValueError: If the matrix is not positive definite.
         """
         matrix = self.model()
-        sign, logdet = slogdet(matrix)
-        if sign <= 0:
-            raise ValueError("Matrix is not positive definite.")
+        _, logdet = slogdet(matrix)
         return -self.lambda_logdet * logdet
 
     def update(self) -> None:

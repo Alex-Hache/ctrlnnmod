@@ -14,7 +14,7 @@ def is_positive_definite(lmi: LMI):
 
 
 class BackTrackOptimizer:
-    def __init__(self, optimizer: optim.Optimizer, module: nn.Module, condition_fn: Callable, beta=0.8, max_iter=20):
+    def __init__(self, optimizer: optim.Optimizer, module: nn.Module, condition_fn: Callable, beta=0.5, max_iter=20):
         """
         Initializes the BackTrackOptimizer.
 
@@ -30,6 +30,7 @@ class BackTrackOptimizer:
         self.condition_fn = condition_fn
         self.beta = beta
         self.max_iter = max_iter
+        self.n_backtrack_iter = 0
 
     def step(self, closure):
         """
@@ -40,8 +41,10 @@ class BackTrackOptimizer:
         """
 
         # Save the current state of parameters
-        state_dict = self.optimizer.state_dict()
-
+        state_dict_copy = {}
+        state_dict = self.module.state_dict()
+        for key, value in state_dict.items():
+            state_dict_copy[key] = value.clone()
         # Perform a single optimization step with the original optimizer
         self.optimizer.step(closure)
 
@@ -50,23 +53,19 @@ class BackTrackOptimizer:
 
         while not self.condition_fn(self.module()) and iter_count < self.max_iter:
             # Restore the previous state
-            self.optimizer.load_state_dict(state_dict)
+            self.module.load_state_dict(state_dict_copy)
+
+            self.n_backtrack_iter += 1  # Logging how many backtrack iter we did
 
             # Apply the backtracking step
             for param_group in self.optimizer.param_groups:
+                lr = param_group['lr']
                 for param in param_group['params']:
                     if param.grad is not None and param in self.module():
-                        param.data.add_(t * param.grad, alpha=-self.beta)
+                        param.data.add_(t * param.grad, alpha=-self.beta * lr)
 
             t *= self.beta
             iter_count += 1
-
-        # If max iterations reached, revert to the last best state
-        if iter_count == self.max_iter:
-            self.optimizer.load_state_dict(state_dict)
-        else:
-            # Update the optimizer's state to reflect the new parameters
-            self.optimizer.step(closure)
 
     def zero_grad(self):
         """

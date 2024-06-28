@@ -1,4 +1,5 @@
 import torch
+from functools import wraps
 
 
 def find_module(model: torch.nn.Module, target_class):
@@ -38,6 +39,39 @@ def flatten_params(module: torch.nn.Module) -> torch.Tensor:
             view = p.view(-1)
         views.append(view)
     return torch.cat(views, 0)
+
+
+# Définir le décorateur pour le suivi
+def monitor_training(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        log = {'loss': [], 'iterations': 0, 'gradients': []}
+
+        def monitor_step(model, loss, optimizer):
+            log['loss'].append(loss.item())
+            log['iterations'] += 1
+            gradients = []
+            for param in model.parameters():
+                if param.grad is not None:
+                    gradients.append(param.grad.norm().item())
+            log['gradients'].append(gradients)
+
+        result = func(*args, **kwargs, monitor_step=monitor_step)
+        result['log'] = log
+        return result
+    return wrapper
+
+
+def add_info_decorator(info_key, info_value):
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            result = func(*args, **kwargs)
+            if 'log' in result:
+                result['log'][info_key] = info_value
+            return result
+        return wrapper
+    return decorator
 
 
 def backtrack(module, criterion, step_ratio=0.5, max_iter=100):
