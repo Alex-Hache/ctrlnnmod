@@ -14,18 +14,17 @@ from typing import Optional
 """
 
 
-class REN(nn.Module):
+class RENODE(nn.Module):
     def __init__(self, nx: int, ny: int, nu: int, nq: int, sigma: str,
                  device: str, bias: bool = False,
                  feedthrough: bool = True) -> None:
-        super(REN, self).__init__()
+        super(RENODE, self).__init__()
 
         self.nx = nx
         self.ny = ny
         self.nu = nu
         self.nq = nq
         self.s = max(nu, ny)
-
         self.device = device
         self.feedthrough = feedthrough
 
@@ -36,11 +35,10 @@ class REN(nn.Module):
         self.D21 = Parameter(torch.randn(ny, nq, device=device))
 
         # Potentially constrained parameters in case of C or QSR REN
-        self.F = Parameter(torch.zeros(nx, nx, device=device))
+        self.A = Parameter(torch.zeros(nx, nx, device=device))
         self.D11 = Parameter(torch.zeros(nq, nq, device=device))
         self.C1 = Parameter(torch.zeros(nq, nx, device=device))
         self.B1 = Parameter(torch.zeros(nx, nq, device=device))
-        self.E = Parameter(torch.zeros(nx, nx, device=device))
         self.Lambda_vec = Parameter(torch.zeros(nq, 1, device=device))
         self.register_buffer('Lambda', torch.zeros(nq, nq, device=device))
 
@@ -86,9 +84,7 @@ class REN(nn.Module):
         """
         self._frame()
         w = self._solve_w(x, u)
-        E_inv = torch.inverse(self.E)
-        dx = x @ (E_inv @ self.F).T + w @ (E_inv @
-                                           self.B1).T + u @ (E_inv @ self.B2).T
+        dx = x @ self.A.T + w @ self.B1.T + u @ self.B2.T
         if self.feedthrough:
             y = x @ self.C2.T + w @ self.D21.T + u @ self.D22.T
         else:
@@ -109,6 +105,7 @@ class REN(nn.Module):
         nb = x.shape[0]
         w = torch.zeros(nb, self.nq, device=self.device)
         v = torch.zeros(nb, self.nq, device=self.device)
+
         for k in range(self.nq):
             v[:, k] = (1 / self.Lambda[k, k]) * (x @ self.C1[k, :] +
                                                  w.clone() @ self.D11[k, :] + u @ self.D12[k, :] + self.bv[k])
@@ -116,7 +113,7 @@ class REN(nn.Module):
         return w
 
 
-class ContractingREN(REN):
+class ContractingREN(RENODE):
     def __init__(self, nx: int, ny: int, nu: int, nq: int, sigma: str,
                  device: str, alpha: float, epsilon: float,
                  bias: bool = False, feedthrough: bool = True,
@@ -128,44 +125,45 @@ class ContractingREN(REN):
         self.alpha = alpha
         self.epsilon = epsilon
 
-        self.Y = Parameter(torch.randn(nx, nx, device=device))
-        # Additional parameter for Contracting REN
-        self.X = Parameter(torch.randn(
-            2 * nx + nq, 2 * nx + nq, device=device))
+        self.P_inv = Parameter(torch.randn(nx, nx, device=device))
+        self.S = Parameter(torch.randn(nx, nx, device=device))
+        self.X = Parameter(torch.randn(nx + nq, nx + nq, device=device))
+        self.U = Parameter(torch.randn(nx, nu, device=device))
 
         if param is not None:
             geo.positive_definite(self, 'X', triv=param)
+            geo.positive_definite(self, 'P_inv', triv=param)
+            geo.skew_symmetric(self, 'S')
 
         # Register identity matrix buffer
-        self.register_buffer('I', torch.eye(2 * nx + nq, device=device))
+        self.register_buffer('I', torch.eye(nx + nq, device=device))
+        self.register_buffer('Ix', torch.eye(nx, device=device))
 
     def _frame(self):
 
         # Check if X is already parameterized to be Positive Definite
         if not is_parametrized(self):
             H = self.X @ self.X.T + self.epsilon * self.I
+            S = self.S - self.S.T
+            self.P_inv = (self.P_inv @ self.P_inv.T).clone()
         else:
             H = self.X
+            S = self.S
+            self.P_inv = self.P_inv.clone()
 
         # Split H into appropriate blocks
-        h1, h2, h3 = torch.split(H, [self.nx, self.nq, self.nx], dim=0)
-        H11, _, _ = torch.split(h1, [self.nx, self.nq, self.nx], dim=1)
-        H21, H22, _ = torch.split(h2, [self.nx, self.nq, self.nx], dim=1)
-        H31, H32, H33 = torch.split(h3, [self.nx, self.nq, self.nx], dim=1)
+        h1, h2 = torch.split(H, [self.nx, self.nq], dim=0)
+        H11, H12 = torch.split(h1, [self.nx, self.nq], dim=1)
+        H21, H22 = torch.split(h2, [self.nx, self.nq], dim=1)
 
-        # Update buffers
-        self.F = H31
-        self.B1 = H32
-        self.P = H33
-        self.C1 = -H21
-
-        self.E = 0.5 * (H11 + 1 / self.alpha**2 * self.P + self.Y - self.Y.T)
-        Phi = torch.diag(torch.diag(H22))
+        self.A = -(self.P_inv @ (-0.5 * H11 - S) - self.alpha * self.Ix)
+        self.B1 = self.P_inv @ (-H12 @ - self.U)
+        self.Lambda = 0.5 * torch.diag(torch.diag(H22))
         L = -torch.tril(H22, -1)
-
+        Lambda_inv = torch.inverse(self.Lambda)
         # Update Lambda and D11
-        self.Lambda = 0.5 * Phi
-        self.D11 = L
+        self.D11 = Lambda_inv @ L
+        self.C1 = Lambda_inv @ self.U.T
 
     def check(self) -> bool:
         """
@@ -177,11 +175,15 @@ class ContractingREN(REN):
         self._frame()  # Update parameters before checking contraction
 
         # Construct H(theta_cvx)
-        H11 = self.E + self.E.T - 1 / self.alpha**2 * self.P
-        H_upper = torch.cat([H11, -self.C1.T, self.F.T], dim=1)
-        H_middle = torch.cat([-self.C1, self.W, self.B1.T], dim=1)
-        H_lower = torch.cat([self.F, self.B1, self.P], dim=1)
-        H_cvx = torch.cat([H_upper, H_middle, H_lower], dim=0)
+        P = torch.inverse(self.P_inv)
+        H11 = -(self.A.T @ P + P @ self.A + 2 * self.alpha * P)
+        H12 = -(self.C1.T @ self.Lambda + P @ self.B1)
+        H22 = 2 * self.Lambda - self.Lambda @ self.D11 - self.D11.T @ self.Lambda
+
+        H_upper = torch.cat([H11, H12], dim=1)
+        H_lower = torch.cat([H12.T, H22], dim=1)
+
+        H_cvx = torch.cat([H_upper, H_lower], dim=0)
 
         # Check if H_cvx is positive definite
         return isSDP(H_cvx)
