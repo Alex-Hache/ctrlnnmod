@@ -1,5 +1,6 @@
 import torch
 from torch.optim import Optimizer
+from typing import Optional, List, Union, Callable
 
 
 def project_to_pos_def(matrix):
@@ -13,21 +14,32 @@ def project_to_pos_def(matrix):
 
 
 class ProjectedOptimizer(Optimizer):
-    def __init__(self, optimizer, project=None):
+    def __init__(self, optimizer: Optimizer, project: Callable, model: torch.nn.Module,
+                 modules: Optional[List[Union[str, torch.nn.Module]]] = None):
         self.optimizer = optimizer
         self.project = project
+        self.model = model
+        self.modules = set()
+
+        if modules is not None:
+            for module in modules:
+                if isinstance(module, str):
+                    self.modules.add(module)
+                elif isinstance(module, torch.nn.Module):
+                    for name, _ in module.named_parameters():
+                        self.modules.add(name)
+                else:
+                    raise ValueError(f"Unsupported type in modules: {type(module)}")
 
     def step(self, closure=None):
         # Perform a single optimization step
         loss = self.optimizer.step(closure)
 
-        # Apply the projection to each parameter if provided
+        # Apply the projection to each specified parameter
         if self.project is not None:
-            for group in self.optimizer.param_groups:
-                for p in group['params']:
-                    if p.grad is None:
-                        continue
-                    p.data = self.project(p.data)
+            for name, param in self.model.named_parameters():
+                if name in self.modules:
+                    param.data = self.project(param.data)
 
         return loss
 

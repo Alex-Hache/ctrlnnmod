@@ -110,7 +110,7 @@ class Simulator(nn.Module):
         biases = np.array(biases, dtype=object)
         return weights, biases
 
-    def check_(self):
+    def check(self):
         """
             Check if the possible constraints enforced to a model are fullfiled.
 
@@ -119,8 +119,8 @@ class Simulator(nn.Module):
             bool : True if constraints are fullfiled
             info : diverse informations on constraints checked
         """
-        if hasattr(self.ss_model, 'check_'):
-            return self.ss_model.check_()
+        if hasattr(self.ss_model, 'check'):
+            return self.ss_model.check()
         else:
             return None, None
 

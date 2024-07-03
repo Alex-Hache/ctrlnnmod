@@ -16,7 +16,7 @@ from typing import Optional
 
 class RENODE(nn.Module):
     def __init__(self, nx: int, ny: int, nu: int, nq: int, sigma: str,
-                 device: str, bias: bool = False,
+                 device: torch.device, bias: bool = False,
                  feedthrough: bool = True) -> None:
         super(RENODE, self).__init__()
 
@@ -27,7 +27,6 @@ class RENODE(nn.Module):
         self.s = max(nu, ny)
         self.device = device
         self.feedthrough = feedthrough
-
         # Initialization of the Weights
         self.D12 = Parameter(torch.randn(nq, nu, device=device))
         self.B2 = Parameter(torch.randn(nx, nu, device=device))
@@ -71,7 +70,7 @@ class RENODE(nn.Module):
     def _frame(self):
         self.Lambda = torch.diag(self.Lambda_vec)
 
-    def forward(self, x: torch.Tensor, u: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+    def forward(self, u: torch.Tensor, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         """
         Forward pass of the network.
 
@@ -83,6 +82,7 @@ class RENODE(nn.Module):
             tuple[torch.Tensor, torch.Tensor]: Next state and output.
         """
         self._frame()
+        # self.check()
         w = self._solve_w(x, u)
         dx = x @ self.A.T + w @ self.B1.T + u @ self.B2.T
         if self.feedthrough:
@@ -107,19 +107,21 @@ class RENODE(nn.Module):
         v = torch.zeros(nb, self.nq, device=self.device)
 
         for k in range(self.nq):
-            v[:, k] = (1 / self.Lambda[k, k]) * (x @ self.C1[k, :] +
-                                                 w.clone() @ self.D11[k, :] + u @ self.D12[k, :] + self.bv[k])
+            v[:, k] = (1 / self.Lambda[k, k]) * (x @ self.C1[k, :] + w.clone() @ self.D11[k, :] + u @ self.D12[k, :] + self.bv[k])
             w[:, k] = self.act(v[:, k].clone())
         return w
 
+    def check(self):
+        return True  # No constraints
 
-class ContractingREN(RENODE):
+
+class ContractingRENODE(RENODE):
     def __init__(self, nx: int, ny: int, nu: int, nq: int, sigma: str,
-                 device: str, alpha: float, epsilon: float,
+                 device: torch.device, alpha: float, epsilon: float,
                  bias: bool = False, feedthrough: bool = True,
                  param: Optional[str] = None) -> None:
-        super(ContractingREN, self).__init__(nx, ny, nu,
-                                             nq, sigma, device, bias, feedthrough)
+        super(ContractingRENODE, self).__init__(nx, ny, nu,
+                                                nq, sigma, device, bias, feedthrough)
 
         self.param = param
         self.alpha = alpha
@@ -128,7 +130,7 @@ class ContractingREN(RENODE):
         self.P_inv = Parameter(torch.randn(nx, nx, device=device))
         self.S = Parameter(torch.randn(nx, nx, device=device))
         self.X = Parameter(torch.randn(nx + nq, nx + nq, device=device))
-        self.U = Parameter(torch.randn(nx, nu, device=device))
+        self.U = Parameter(torch.randn(nx, nq, device=device))
 
         if param is not None:
             geo.positive_definite(self, 'X', triv=param)
@@ -143,27 +145,27 @@ class ContractingREN(RENODE):
 
         # Check if X is already parameterized to be Positive Definite
         if not is_parametrized(self):
-            H = self.X @ self.X.T + self.epsilon * self.I
-            S = self.S - self.S.T
-            self.P_inv = (self.P_inv @ self.P_inv.T).clone()
+            H = self.X @ self.X.T + self.epsilon * self.I  # Positive definite
+            S = self.S - self.S.T  # skew symmetric
+            P_inv = (self.P_inv @ self.P_inv.T).clone()  # Positive definite
         else:
             H = self.X
             S = self.S
-            self.P_inv = self.P_inv.clone()
+            P_inv = self.P_inv.clone()
 
         # Split H into appropriate blocks
         h1, h2 = torch.split(H, [self.nx, self.nq], dim=0)
         H11, H12 = torch.split(h1, [self.nx, self.nq], dim=1)
         H21, H22 = torch.split(h2, [self.nx, self.nq], dim=1)
 
-        self.A = -(self.P_inv @ (-0.5 * H11 - S) - self.alpha * self.Ix)
-        self.B1 = self.P_inv @ (-H12 @ - self.U)
-        self.Lambda = 0.5 * torch.diag(torch.diag(H22))
+        self.A.data = (P_inv @ (-0.5 * H11 - S) - self.alpha * self.Ix)
+        self.B1.data = P_inv @ (-H12 - self.U)
+        self.Lambda.data = 0.5 * torch.diag(torch.diag(H22))
         L = -torch.tril(H22, -1)
         Lambda_inv = torch.inverse(self.Lambda)
         # Update Lambda and D11
-        self.D11 = Lambda_inv @ L
-        self.C1 = Lambda_inv @ self.U.T
+        self.D11.data = Lambda_inv @ L
+        self.C1.data = Lambda_inv @ self.U.T
 
     def check(self) -> bool:
         """
@@ -175,7 +177,12 @@ class ContractingREN(RENODE):
         self._frame()  # Update parameters before checking contraction
 
         # Construct H(theta_cvx)
-        P = torch.inverse(self.P_inv)
+        if not is_parametrized(self):
+            P_inv = (self.P_inv @ self.P_inv.T).clone()
+        else:
+            P_inv = self.P_inv
+
+        P = torch.inverse(P_inv)
         H11 = -(self.A.T @ P + P @ self.A + 2 * self.alpha * P)
         H12 = -(self.C1.T @ self.Lambda + P @ self.B1)
         H22 = 2 * self.Lambda - self.Lambda @ self.D11 - self.D11.T @ self.Lambda
@@ -189,7 +196,7 @@ class ContractingREN(RENODE):
         return isSDP(H_cvx)
 
 
-class DissipativeREN(ContractingREN):
+class DissipativeRENODE(ContractingRENODE):
     """
     This is a dissipative REN. It is a contractive REN satisfying
     a dissipation inequality given by the matrices QSR.
@@ -200,7 +207,7 @@ class DissipativeREN(ContractingREN):
                  device: str, alpha: float, epsilon: float,
                  bias: bool = False, feedthrough: bool = True,
                  param: Optional[str] = None) -> None:
-        super(DissipativeREN, self).__init__(nx, ny, nu, nq,
+        super(DissipativeRENODE, self).__init__(nx, ny, nu, nq,
                                              sigma, device, alpha, epsilon, bias, feedthrough, param=param)
 
         self.Q = Q
@@ -213,9 +220,12 @@ class DissipativeREN(ContractingREN):
                 geo.orthogonal(self, 'N', triv=param)
             else:
                 # New variables for D22 calculation
-                self.X3 = Parameter(torch.randn(max(nu, ny), max(nu, ny), device=device))
-                self.Y3 = Parameter(torch.randn(max(nu, ny), max(nu, ny), device=device))
-                self.Z3 = Parameter(torch.randn(abs(nu - ny), min(nu, ny), device=device))
+                self.X3 = Parameter(torch.randn(
+                    max(nu, ny), max(nu, ny), device=device))
+                self.Y3 = Parameter(torch.randn(
+                    max(nu, ny), max(nu, ny), device=device))
+                self.Z3 = Parameter(torch.randn(
+                    abs(nu - ny), min(nu, ny), device=device))
 
             # Ensure Q is negative definite
             if not torch.all(torch.linalg.eigvals(Q).real < 0):

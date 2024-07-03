@@ -4,7 +4,8 @@ from .grnssm import Grnssm, LipGrnssm, L2IncGrNSSM
 from .h2 import H2BoundedLinear
 from .hinf import L2BoundedLinear
 from .linear import NnLinear
-from .rensdisc import NODE_REN
+from .renode import RENODE, DissipativeRENODE, ContractingRENODE
+from .rens import REN, DissipativeREN, ContractingREN
 
 
 __all__ = [
@@ -14,5 +15,10 @@ __all__ = [
     "H2BoundedLinear",
     "L2BoundedLinear",
     "NnLinear",
-    "NODE_REN"
+    "RENODE",
+    "ContractingRENODE",
+    "DissipativeRENODE",
+    "REN", 
+    "DissipativeREN", 
+    "ContractingREN"
 ]
