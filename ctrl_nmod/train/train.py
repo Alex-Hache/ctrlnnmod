@@ -9,7 +9,7 @@ from ..utils.data import ExperimentsDataset
 from torch.utils.data import DataLoader
 from torch.optim import Adam, SGD
 from typing import Union, Optional
-from ..losses.losses import _RegularizedLoss
+from ..losses.losses import BaseLoss
 from ..utils.misc import is_legal, flatten_params, write_flat_params
 
 
@@ -21,7 +21,7 @@ class Trainer(ABC):
         metrics = rnn_trainer.eval_(test_data, **kwargs)
     """
 
-    def __init__(self, sim_model: Simulator, loss: _RegularizedLoss, val_loss: Union[_RegularizedLoss, None], **kwargs) -> None:
+    def __init__(self, sim_model: Simulator, loss: BaseLoss, val_loss: Union[BaseLoss, None], **kwargs) -> None:
         super(Trainer, self).__init__()
         self.sim_model = sim_model
         self.criterion = loss
@@ -41,7 +41,7 @@ class SSTrainer(Trainer):
         This class is a used for training state-space models.
     """
 
-    def __init__(self, sim_model: Simulator, loss: _RegularizedLoss, val_loss: _RegularizedLoss) -> None:
+    def __init__(self, sim_model: Simulator, loss: BaseLoss, val_loss: BaseLoss) -> None:
         super(SSTrainer, self).__init__(sim_model=sim_model, loss=loss, val_loss=val_loss)
 
     def fit_(self, train_set: ExperimentsDataset, test_set: ExperimentsDataset,
