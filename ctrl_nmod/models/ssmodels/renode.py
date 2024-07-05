@@ -38,7 +38,7 @@ class RENODE(nn.Module):
         self.D11 = Parameter(torch.zeros(nq, nq, device=device))
         self.C1 = Parameter(torch.zeros(nq, nx, device=device))
         self.B1 = Parameter(torch.zeros(nx, nq, device=device))
-        self.Lambda_vec = Parameter(torch.zeros(nq, 1, device=device))
+        self.Lambda_vec = Parameter(torch.zeros(nq, device=device))
         self.register_buffer('Lambda', torch.zeros(nq, nq, device=device))
 
         if self.feedthrough:
