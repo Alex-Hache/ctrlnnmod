@@ -188,6 +188,79 @@ class RK4Simulator(Simulator):
         return copy
 
 
+class RK45Simulator(Simulator):
+    """
+        Runge-Kutta-Fehlberg (RK45) à pas fixe.
+    """
+    def __init__(self, ss_model, ts):
+        super(RK45Simulator, self).__init__(ss_model=ss_model, ts=ts)
+
+    def __repr__(self):
+        return f"RK45 integrator : ts={self.ts}"
+
+    def __str__(self) -> str:
+        return f"RK45_{str(self.ss_model)}"
+
+    def forward(self, u_batch, x0_batch=torch.zeros(1)):
+        """ Multi-step simulation over (mini)batches
+
+        Parameters
+        ----------
+        u_batch: Tensor. Size: (batch_size, seq_len, n_u)
+            Input sequence for each subsequence in the minibatch
+
+        x0_batch: Tensor. Size: (batch_size, n_x)
+            initial state for each sequence in the minibatch
+        x_batch: Tensor. Size: (batch_size, seq_len, n_x)
+            state sequence for each subsequence in the minibatch
+        Returns
+        -------
+        Tensor. Size: (batch_size, seq_len, n_x)
+            Simulated state for all subsequences in the minibatch
+
+        """
+
+        X_sim_list = []
+        Y_sim_list = []
+        x_step = x0_batch
+
+        with P.cached():  # Useful if there is any parameterized models
+            for u_step in u_batch.split(1, dim=1):  # i in range(seq_len):
+
+                u_step = u_step.squeeze(1)
+                # x_step = x_step.squeeze(0)
+
+                X_sim_list += [x_step]
+
+                dt = self.ts
+                dt2 = dt / 2.0
+                dt4 = dt / 4.0
+                dt8 = dt / 8.0
+                dt27 = dt / 27.0
+
+                k1, y_step = self.ss_model(u_step, x_step)
+                Y_sim_list += [y_step]
+
+                k2_dx, _ = self.ss_model(u_step, x_step + dt4 * k1)
+                k3_dx, _ = self.ss_model(u_step, x_step + dt8 * (3 * k1 + k2_dx))
+                k4_dx, _ = self.ss_model(u_step, x_step + dt27 * (1932 * k1 + 7296 * k2_dx + 7296 * k3_dx))
+                k5_dx, _ = self.ss_model(u_step, x_step + dt2 * (439 * k1 / 216.0 + 3680 * k3_dx / 513.0 + 845 * k4_dx / 4104.0))
+                k6_dx, _ = self.ss_model(u_step, x_step + dt * (-8.0 * k1 / 27.0 + 2.0 * k2_dx - 3544 * k3_dx / 2565.0 + 1859 * k4_dx / 4104.0 - 11 * k5_dx / 40.0))
+
+                dx = dt * (16.0 * k1 / 135.0 + 6656.0 * k3_dx / 12825.0 + 28561.0 * k4_dx / 56430.0 - 9.0 * k5_dx / 50.0 + 2.0 * k6_dx / 55.0)
+                x_step = x_step + dx
+
+            X_sim = torch.stack(X_sim_list, 1)
+            Y_sim = torch.stack(Y_sim_list, 1)
+        return X_sim, Y_sim
+
+    def clone(self):
+        copy_ss = self.ss_model.clone()  # State-space model module must have a clone function
+        copy = type(self)(copy_ss, self.ts)
+        copy.load_state_dict(self.state_dict())
+        return copy
+
+
 class Sim_discrete(Simulator):
     def __init__(self, ss_model, ts=1):
         super(Sim_discrete, self).__init__(ss_model=ss_model, ts=ts)

@@ -107,7 +107,8 @@ class RENODE(nn.Module):
         v = torch.zeros(nb, self.nq, device=self.device)
 
         for k in range(self.nq):
-            v[:, k] = (1 / self.Lambda[k, k]) * (x @ self.C1[k, :] + w.clone() @ self.D11[k, :] + u @ self.D12[k, :] + self.bv[k])
+            v[:, k] = (1 / self.Lambda[k, k]) * (x @ self.C1[k, :] +
+                                                 w.clone() @ self.D11[k, :] + u @ self.D12[k, :] + self.bv[k])
             w[:, k] = self.act(v[:, k].clone())
         return w
 
@@ -204,11 +205,11 @@ class DissipativeRENODE(ContractingRENODE):
 
     def __init__(self, nx: int, ny: int, nu: int, nq: int, sigma: str,
                  Q: torch.Tensor, S: torch.Tensor, R: torch.Tensor,
-                 device: str, alpha: float, epsilon: float,
+                 device: torch.device, alpha: float, epsilon: float,
                  bias: bool = False, feedthrough: bool = True,
                  param: Optional[str] = None) -> None:
         super(DissipativeRENODE, self).__init__(nx, ny, nu, nq,
-                                             sigma, device, alpha, epsilon, bias, feedthrough, param=param)
+                                                sigma, device, alpha, epsilon, bias, feedthrough, param=param)
 
         self.Q = Q
         self.S = S
