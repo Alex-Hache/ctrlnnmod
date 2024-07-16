@@ -4,7 +4,7 @@ from cvxpy.problems.problem import Problem
 from cvxpy.problems.objective import Minimize
 from cvxpy.expressions.variable import Variable
 from cvxpy.atoms.affine.trace import trace
-
+from cvxpy.error import SolverError
 from .base import LMI
 from typing import Union, Tuple
 import numpy as np
@@ -85,7 +85,10 @@ class H2Cont(LMI):
         constraints = [(M + C.T @ C) == -Y, P - (epsilon) * np.eye(nx) >> 0]  # type: ignore
         objective = Minimize(trace(Y))
         prob = Problem(objective, constraints=constraints)
-        prob.solve(solver)
+        try:
+            prob.solve(solver)
+        except SolverError:
+            prob.solve()  # If MOSEK is not installed then try SCS by default
         if prob.status not in ["infeasible", "unbounded"]:
             gamma2_lmi = np.sqrt(np.trace(B.T @ P.value @ B))
         else:
@@ -175,7 +178,11 @@ class H2Disc(LMI):
         constraints = [(M + C.T @ C) == -Y, P - (epsilon) * np.eye(nx) >> 0]  # type: ignore
         objective = Minimize(trace(Y))
         prob = Problem(objective, constraints=constraints)
-        prob.solve(solver)
+        try:
+            prob.solve(solver)
+        except SolverError:
+            prob.solve()  # If MOSEK is not installed then try SCS by default
+
         if prob.status not in ["infeasible", "unbounded"]:
             gamma2_lmi = np.sqrt(np.trace(B.T @ P.value @ B))
         else:

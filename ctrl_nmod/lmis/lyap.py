@@ -56,7 +56,10 @@ class LyapunovDiscrete(LMI):
         P = cp.Variable((n, n), symmetric=True)
         constraints = [P >> tol * np.eye(n), alpha**2 * P - A_np.T @ P @ A_np >> tol * np.eye(n)]
         prob = cp.Problem(cp.Minimize(cp.trace(P)), constraints)
-        prob.solve(solver=solver)
+        try:
+            prob.solve(solver)
+        except cp.SolverError:
+            prob.solve()  # If MOSEK is not installed then try SCS by default
 
         if prob.status not in ["infeasible", "unbounded"]:
             P_value = torch.tensor(P.value)
@@ -114,7 +117,10 @@ class LyapunovContinuous(LMI):
         P = cp.Variable((n, n), symmetric=True)
         constraints = [P >> tol * np.eye(n), A_np.T @ P + P @ A_np + 2 * alpha * P << -tol * np.eye(n)]
         prob = cp.Problem(cp.Minimize(cp.trace(P)), constraints)
-        prob.solve(solver=solver)
+        try:
+            prob.solve(solver)
+        except cp.SolverError:
+            prob.solve()  # If MOSEK is not installed then try SCS by default
 
         if prob.status not in ["infeasible", "unbounded"]:
             P_value = torch.tensor(P.value)

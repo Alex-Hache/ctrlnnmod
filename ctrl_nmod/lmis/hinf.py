@@ -4,7 +4,7 @@ from cvxpy.problems.problem import Problem
 from cvxpy.problems.objective import Minimize
 from cvxpy.expressions.variable import Variable
 from cvxpy.atoms.affine.bmat import bmat
-
+from cvxpy.error import SolverError
 from .base import LMI
 from typing import Union, Tuple, Optional
 import numpy as np
@@ -111,7 +111,11 @@ class HInfCont(LMI):
         objective = Minimize(gam)  # Feasibility problem
 
         prob = Problem(objective, constraints=constraints)
-        prob.solve(solver)
+        try:
+            prob.solve(solver)
+        except SolverError:
+            prob.solve()  # If MOSEK is not installed then try SCS by default
+
         if prob.status not in ["infeasible", "unbounded"]:
             gmma_lmi = gam.value
         else:
@@ -229,6 +233,11 @@ class HInfDisc(LMI):
         objective = Minimize(gam)  # Feasibility problem
 
         prob = Problem(objective, constraints=constraints)
+        try:
+            prob.solve(solver)
+        except SolverError:
+            prob.solve()  # If MOSEK is not installed then try SCS by default
+
         prob.solve(solver)
         if prob.status not in ["infeasible", "unbounded"]:
             gmma_lmi = gam.value

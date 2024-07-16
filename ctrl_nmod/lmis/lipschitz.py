@@ -3,6 +3,7 @@ from torch import Tensor
 import torch
 import torch.nn as nn
 from cvxpy import Variable, bmat, hstack, vstack, Minimize, Problem
+from cvxpy.error import SolverError
 from ..linalg.utils import block_diag
 import numpy as np
 from base import LMI
@@ -127,7 +128,10 @@ class LipschitzLMI(LMI):
         objective = Minimize(lip)
 
         prob = Problem(objective, constraints=constraints)
-        prob.solve(solver)
+        try:
+            prob.solve(solver)
+        except SolverError:
+            prob.solve()  # If MOSEK is not installed then try SCS by default
 
         if prob.status not in ["infeasible", "unbounded"]:
             print(" Lipschitz Constant upper bound (All layer versions): \n")

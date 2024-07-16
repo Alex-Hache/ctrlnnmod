@@ -4,7 +4,7 @@ from cvxpy.problems.problem import Problem
 from cvxpy.problems.objective import Minimize
 from cvxpy.expressions.variable import Variable
 import numpy as np
-
+from cvxpy.error import SolverError
 from geotorch_custom.product import ProductManifold
 from geotorch_custom.psd import PSD
 from geotorch_custom.skew import Skew
@@ -49,7 +49,7 @@ class AlphaStable(ProductManifold):
         Q, P, S = super().forward([X1, X2, X3])
         return self.submersion(Q, P, S)
 
-    def submersion_inv(self, A, check_in_manifold=True, epsilon=1e-8, solver="MOSEK"):
+    def submersion_inv(self, A, check_in_manifold=True, epsilon=1e-5, solver="MOSEK"):
         if check_in_manifold and not self.in_manifold_eigen(A, epsilon):
             raise InManifoldError(A, self)
         with torch.no_grad():
@@ -63,7 +63,11 @@ class AlphaStable(ProductManifold):
             objective = Minimize(0)  # Feasibility problem
 
             prob = Problem(objective, constraints=constraints)
-            prob.solve(solver)
+            try:
+                prob.solve(solver)
+            except SolverError:
+                prob.solve()  # If MOSEK is not installed then try SCS by default
+
             if prob.status not in ["infeasible", "unbounded"]:
                 # Otherwise, problem.value is inf or -inf, respectively.
                 print(f" P eigenvalues : {np.linalg.eig(P.value)[0]}\n")
