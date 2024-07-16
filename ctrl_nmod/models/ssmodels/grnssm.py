@@ -70,7 +70,7 @@ class Grnssm(Module):
             self.hx = Hx(self.nx, self.nh, self.ny)
 
     def __repr__(self):
-        return f"GRNSSM : nh={self.nh}"
+        return f"GRNSSM : nu={self.nu} nx={self.nx} nh={self.nh} ny={self.ny} activation = {self.actF}"
 
     def __str__(self) -> str:
         return f"GRNSSM_act_{str(self.actF)}_nh{self.nh}"
