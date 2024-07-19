@@ -76,10 +76,10 @@ class Grnssm(Module):
             self.hx = Hx(self.nx, self.nh, self.ny)
 
     def __repr__(self):
-        return f"GRNSSM : nu={self.nu} nx={self.nx} nh={self.nh} ny={self.ny} activation = {self.actF}"
+        return f"GRNSSM : nu={self.nu} nx={self.nx} nh={self.nh} ny={self.ny} activation = {self.act_name}"
 
     def __str__(self) -> str:
-        return f"GRNSSM_act_{str(self.actF)}_nh{self.nh}"
+        return f"GRNSSM"
 
     def forward(self, u, x):
         # Forward pass -- prediction of the output at time k : y_k
@@ -114,8 +114,8 @@ class Grnssm(Module):
             if self.hx.Wout.bias is not None:
                 zeros_(self.hx.Wout.bias)
 
-        nn.init.xavier_uniform_(self.fx.Wfu, gain=nn.init.calculate_gain('tanh'))
-        nn.init.xavier_uniform_(self.fx.Wfx, gain=nn.init.calculate_gain('tanh'))
+        nn.init.xavier_uniform_(self.fx.Wfu, gain=nn.init.calculate_gain(self.act_name))
+        nn.init.xavier_uniform_(self.fx.Wfx, gain=nn.init.calculate_gain(self.act_name))
 
     def clone(self):  # Method called by the simulator
         copy = type(self)(

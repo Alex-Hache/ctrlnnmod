@@ -75,7 +75,7 @@ class SSTrainer(Trainer):
         if scheduled:
             step_sched = 0.1
             scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', step_sched,
-                                                                   patience_soft, verbose=True, min_lr=min_lr)
+                                                                   patience_soft, min_lr=min_lr)
         else:
             scheduled = False
         train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True)
@@ -126,12 +126,13 @@ class SSTrainer(Trainer):
                         no_decrease_counter += 1
                     if scheduled:
                         scheduler.step(val_crit)
+                        
                     if no_decrease_counter >= patience_soft:
                         print("Updating criterion weights")
                         self.criterion.update()
                         patience_soft = 0
-                    print("Epoch loss = {:.7f} || val loss = {:.7f} || Best val loss = {:.7f} \n".format(float(epoch_loss),
-                          float(val_crit), float(best_loss)))
+                    print("Epoch loss = {:.7f} || val loss = {:.7f} || Best val loss = {:.7f} || current lr : {:7f}\n".format(float(epoch_loss),
+                          float(val_crit), float(best_loss), scheduler.get_last_lr()[0]))
                 if no_decrease_counter > patience:  # early stopping
                     break
 
