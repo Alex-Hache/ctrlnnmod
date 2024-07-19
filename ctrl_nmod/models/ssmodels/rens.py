@@ -9,7 +9,7 @@ from typing import Optional
 
 """
     This module implements Recurrent Equilibrium Networks in the acyclic case i.e. 
-    with no implicit layers. It is a discrete model.
+    with no implicit layers in its discrete version.
 
 """
 

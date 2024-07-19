@@ -1,4 +1,4 @@
-from torch.nn import Module, Tanh
+from torch.nn import Module
 from ctrl_nmod.models.feedforward.lbdn import Fxu, LipFxu, LipHx, Hx
 from torch.nn.init import zeros_
 from torch.linalg import eigvals
@@ -25,7 +25,7 @@ class Grnssm(Module):
         state_dim: int,
         hidden_dim: int,
         n_hidden_layers: int = 1,
-        actF=Tanh(),
+        actF: str = 'tanh',
         out_eq_nl=False,
         alpha=None,
     ) -> None:
@@ -53,9 +53,15 @@ class Grnssm(Module):
         self.nh = hidden_dim
         self.ny = output_dim
         self.n_hid_layers = n_hidden_layers
+        self.act_name = actF  # Name of the activation function
 
         # Activation functions
-        self.actF = actF
+        if actF.lower() == 'tanh':
+            self.actF = nn.Tanh()
+        elif actF.lower() == 'relu':
+            self.actF = nn.ReLU()
+        else:
+            raise NotImplementedError(f"Function {actF} not yet implemented please choose from 'tanh' or 'relu' ")
 
         # Nonlinear output equation
         self.out_eq_nl = out_eq_nl
@@ -70,7 +76,7 @@ class Grnssm(Module):
             self.hx = Hx(self.nx, self.nh, self.ny)
 
     def __repr__(self):
-        return f"GRNSSM : nh={self.nh}"
+        return f"GRNSSM : nh={self.nh}, activation = {self.act_name}"
 
     def __str__(self) -> str:
         return f"GRNSSM_act_{str(self.actF)}_nh{self.nh}"
@@ -91,8 +97,10 @@ class Grnssm(Module):
         return dx, y
 
     def init_weights_(self, A0, B0, C0, isLinTrainable=True) -> None:
-        # TODO Enforce specific distribution ton inner (and outer) weights
-        # Initializing linear weights
+        """
+            It can be used to initialize the linear part of the model.
+            For example using linear subspace methods or Best Linear Approximation
+        """
 
         self.linmod.init_model_(A0, B0, C0, requires_grad=isLinTrainable)
 
@@ -116,7 +124,7 @@ class Grnssm(Module):
             self.nx,
             self.nh,
             self.n_hid_layers,
-            self.actF,
+            self.act_name,
             self.out_eq_nl,
         )
         copy.load_state_dict(self.state_dict())
@@ -134,7 +142,7 @@ class LipGrnssm(Grnssm):
         state_dim: int,
         hidden_dim: int,
         n_hidden_layers: int = 1,
-        actF=Tanh(),
+        actF: str = 'tanh',
         out_eq_nl=False,
         lip: Tuple[Tensor, Tensor] = (Tensor([1]), Tensor([1])),
         alpha=None
@@ -176,7 +184,7 @@ class LipGrnssm(Grnssm):
 
 class L2IncGrNSSM(LipGrnssm):
     def __init__(self, nu: int, ny: int, nx: int,
-                 nh: int, n_hidden_layers: int = 1, actF=Tanh(),
+                 nh: int, n_hidden_layers: int = 1, actF='tanh',
                  out_eq_nl=False, l2i=1.0, alpha=1.0) -> None:
         # Compute necessary bound for L2i according to Lipschitz upper bound for nl part
         # epsilon_u = torch.sqrt([1.0])

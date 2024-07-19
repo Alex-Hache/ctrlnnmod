@@ -1,6 +1,8 @@
 import numpy as np
 from torch.utils.data import Dataset
 from torch import Tensor
+import matplotlib.pyplot as plt
+import math
 import torch
 from typeguard import typechecked
 from typing import (
@@ -94,7 +96,7 @@ class ExperimentsDataset(Dataset):
         return experiment.__getitem__(sample_index, self.seq_len)
 
     def __len__(self):
-        return self.n_exp_samples_avl
+        return self.n_exp_samples
 
     def _set_index_map(self):
         index, n_exp_samples = 0, 0
@@ -139,3 +141,38 @@ class ExperimentsDataset(Dataset):
                 f"Invalid sequence length : longest experiment is length {max_length} samples asked {seq_len}")
         self.seq_len = seq_len
         self._set_index_map()  # Update index map
+
+    def plot(self, figsize=(15, 10), max_exp_to_plot=4):
+        num_experiments = len(self.experiments)
+        num_figures = min(max_exp_to_plot, math.ceil(num_experiments / 4))
+
+        for fig_num in range(num_figures):
+            fig, axs = plt.subplots(2, 2, figsize=figsize)
+            fig.suptitle(
+                f'Experiments {fig_num*4+1} to {min((fig_num+1)*4, num_experiments)}')
+            axs = axs.flatten()
+
+            for i in range(4):
+                exp_idx = fig_num * 4 + i
+                if exp_idx >= num_experiments:
+                    break
+
+                exp = self.experiments[exp_idx]
+                ax = axs[i]
+
+                u, y, _ = exp.get_data()
+                time = torch.arange(0, len(u)) * exp.ts
+
+                for j in range(exp.nu):
+                    ax.plot(time, u[:, j], label=f'u{j+1}')
+                for j in range(exp.ny):
+                    ax.plot(time, y[:, j], label=f'y{j+1}', linestyle='--')
+
+                ax.set_title(f'Experiment {exp_idx + 1}')
+                ax.set_xlabel('Time')
+                ax.set_ylabel('Value')
+                ax.legend()
+                ax.grid(True)
+
+            plt.tight_layout()
+            plt.show()
