@@ -96,7 +96,7 @@ class ExperimentsDataset(Dataset):
         return experiment.__getitem__(sample_index, self.seq_len)
 
     def __len__(self):
-        return self.n_exp_samples
+        return self.n_exp_samples_avl
 
     def _set_index_map(self):
         index, n_exp_samples = 0, 0
@@ -128,7 +128,7 @@ class ExperimentsDataset(Dataset):
             raise (NotImplementedError("All state orders must be identical"))
 
     def __repr__(self) -> str:
-        return f"Dataset of {self.n_exp} experiments -- Total number of samples : {len(self)}"
+        return f"Dataset of {self.n_exp} experiments -- Total number of samples : {self.n_exp_samples}"
 
     @typechecked
     def set_seq_len(self, seq_len: int):

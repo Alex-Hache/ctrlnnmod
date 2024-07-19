@@ -7,7 +7,7 @@ from ..integrators.integrators import Simulator
 from abc import ABC, abstractmethod
 from ..utils.data import ExperimentsDataset
 from torch.utils.data import DataLoader
-from torch.optim import Adam, SGD
+from torch.optim import Adam, SGD, AdamW
 from typing import Union, Optional
 from ..losses.losses import BaseLoss
 from ..utils.misc import is_legal, flatten_params, write_flat_params
@@ -45,10 +45,10 @@ class SSTrainer(Trainer):
         super(SSTrainer, self).__init__(sim_model=sim_model, loss=loss, val_loss=val_loss)
 
     def fit_(self, train_set: ExperimentsDataset, test_set: ExperimentsDataset,
-             seq_len: int = 30, batch_size: int = 256, opt: str = 'adam', lr: float = 1e-2, min_lr: float = 1e-5, test_freq: int = 1,
+             seq_len: int = 30, batch_size: int = 256, opt: str = 'adam', lr: float = 1e-2, min_lr: float = 1e-5, test_freq: int = 10,
              patience: int = 10, tol_change: float = 0.01, epochs: int = 1000, save_path: Optional[str] = None,
              keep_best: bool = True, max_val_samples: int = 3000, scheduled: bool = False, patience_soft: int = 5,
-             backtrack: bool = True):
+             backtrack: bool = False):
 
         train_set.set_seq_len(seq_len=seq_len)
 
@@ -63,10 +63,12 @@ class SSTrainer(Trainer):
         # Choice of the optimizer
         if opt == 'adam':
             optimizer = Adam(list_params, lr=lr)
+        elif opt == 'adamw':
+            optimizer = AdamW(list_params, lr=lr)
         elif opt == 'sgd':
             optimizer = SGD(list_params, lr=lr)
         else:
-            raise NotImplementedError("Please specify an optimizer among 'adam', 'SGD' \n")
+            raise NotImplementedError("Please specify an optimizer among 'adam', 'sgd' , 'adamw' \n")
 
         # Learning rate and soft constraints scheduleur
 
@@ -82,7 +84,7 @@ class SSTrainer(Trainer):
         # Logging
         vLoss, vVal_loss = [], []
         # Compute first loss
-        init_val_loss, bcheck, _ = self.eval_(val_set=test_set)
+        init_val_loss, _, _ = self.eval_(val_set=test_set)
         vVal_loss.append(float(init_val_loss))
         print("Initial val_MSE = {:.7f} \n".format(float(init_val_loss)))
         best_loss, no_decrease_counter = init_val_loss, 0
@@ -96,17 +98,17 @@ class SSTrainer(Trainer):
                 for _, batch in enumerate(train_loader):
                     optimizer.zero_grad()
                     batch_u, batch_y, batch_x, batch_x0 = batch
-                    x_sim_torch_fit, y_sim_torch_fit = self.sim_model(batch_u, batch_x0)
+                    x_sim_fit, y_sim_fit = self.sim_model(batch_u, batch_x0)
 
                     # Compute fit loss
-                    loss = self.criterion(batch_y, y_sim_torch_fit, batch_x, x_sim_torch_fit)
+                    loss = self.criterion(batch_y, y_sim_fit, x_pred=x_sim_fit, x_true=batch_x)
 
                     # Optimize
                     loss.backward()
                     optimizer.step()
 
                     if backtrack and not is_legal(loss):
-                        loss = self.backtrack(batch_y, y_sim_torch_fit, batch_x, x_sim_torch_fit)
+                        loss = self.backtrack(batch_y, y_sim_fit, batch_x, x_sim_fit)
                     epoch_loss += float(loss.item())
                 epoch_loss = epoch_loss / (len(train_loader))
                 # Statistics
@@ -128,7 +130,7 @@ class SSTrainer(Trainer):
                         print("Updating criterion weights")
                         self.criterion.update()
                         patience_soft = 0
-                    print("Epoch loss = {:.7f} || Val_MSE = {:.7f} || Best loss = {:.7f} \n".format(float(epoch_loss),
+                    print("Epoch loss = {:.7f} || val loss = {:.7f} || Best val loss = {:.7f} \n".format(float(epoch_loss),
                           float(val_crit), float(best_loss)))
                 if no_decrease_counter > patience:  # early stopping
                     break
@@ -173,7 +175,7 @@ class SSTrainer(Trainer):
                     u, y_true, x_true = exp.get_data(idx=max_idx)
                     x_sim, y_sim = self.sim_model.simulate(u, x_true[0, :])
                     y_sim_list.append(y_sim.detach().numpy())
-                    val_loss += self.val_criterion(y_true, y_sim, x_true, x_sim)
+                    val_loss += self.val_criterion(y_true, y_sim)
                 val_crit = val_loss / (len(val_set.experiments))
         else:
             val_crit = math.inf
