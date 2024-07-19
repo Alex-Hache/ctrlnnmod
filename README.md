@@ -35,7 +35,8 @@ and is readily compatible with DataLoader.
 This library is the summary of my PhD's work and is still currently under development. 
 
 ### Future updates
-* Implement Neural ODEs for REN
+* Manage compatibility with torchdiffeq integrators
+* Implement stability-based initializations strategies
 * And enabling gradient and hessian logging with TensorBoardX and [PyHessian](https://github.com/amirgholami/PyHessian)
 
 Feel free to contribute and you can contact me at alexandre DOT hache AT imt-atlantique DOT fr
