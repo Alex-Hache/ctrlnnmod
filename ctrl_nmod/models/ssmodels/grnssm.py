@@ -61,7 +61,8 @@ class Grnssm(Module):
         elif actF.lower() == 'relu':
             self.actF = nn.ReLU()
         else:
-            raise NotImplementedError(f"Function {actF} not yet implemented please choose from 'tanh' or 'relu' ")
+            raise NotImplementedError(
+                f"Function {actF} not yet implemented please choose from 'tanh' or 'relu' ")
 
         # Nonlinear output equation
         self.out_eq_nl = out_eq_nl
@@ -114,8 +115,10 @@ class Grnssm(Module):
             if self.hx.Wout.bias is not None:
                 zeros_(self.hx.Wout.bias)
 
-        nn.init.xavier_uniform_(self.fx.Wfu, gain=nn.init.calculate_gain(self.act_name))
-        nn.init.xavier_uniform_(self.fx.Wfx, gain=nn.init.calculate_gain(self.act_name))
+        nn.init.xavier_uniform_(
+            self.fx.Wfu, gain=nn.init.calculate_gain(self.act_name))
+        nn.init.xavier_uniform_(
+            self.fx.Wfx, gain=nn.init.calculate_gain(self.act_name))
 
     def clone(self):  # Method called by the simulator
         copy = type(self)(
@@ -182,6 +185,20 @@ class LipGrnssm(Grnssm):
         return (self.fx.check_() and self.hx.check_()) if self.out_eq_nl else self.fx.check_()
 
 
+class StableGNSSM(LipGrnssm):
+    r"""
+        x_dot = Ax + Bu + f(x,u)
+        y = Cx + (h(x))
+        avec $A-(\lambda_x + \epsilon)$ stable et $\lambda$ Lipschitz selon x
+    """
+
+    def __init__(self, nu: int, ny: int, nx: int,
+                 nh: int, n_hidden_layers: int = 1, actF='tanh',
+                 out_eq_nl=False, lmbd=1.0, epsilon=1e-2):
+        super(StableGNSSM, self).__init__(nu, ny, nx, nh, n_hidden_layers, actF, out_eq_nl,
+                                          lip=(Tensor([lmbd]), Tensor([10])), alpha=lmbd + epsilon)
+
+
 class L2IncGrNSSM(LipGrnssm):
     def __init__(self, nu: int, ny: int, nx: int,
                  nh: int, n_hidden_layers: int = 1, actF='tanh',
@@ -194,7 +211,8 @@ class L2IncGrNSSM(LipGrnssm):
         lip = (lipx, l2i / torch.sqrt(torch.Tensor([2])))
         super().__init__(nu, ny, nx, nh, n_hidden_layers, actF, out_eq_nl, lip, alpha)
         scaleH = 1 / sqrt(2) - 0.1
-        self.linmod = L2BoundedLinear(nu, ny, nx, gamma=l2i, alpha=alpha, scaleH=scaleH, epsilon=2.0)
+        self.linmod = L2BoundedLinear(
+            nu, ny, nx, gamma=l2i, alpha=alpha, scaleH=scaleH, epsilon=2.0)
         self.frame_()
 
     def __repr__(self):
@@ -217,7 +235,8 @@ class L2IncGrNSSM(LipGrnssm):
             u_traj, x_traj = traj
 
             for u_eq, x_eq in zip(u_traj, x_traj):
-                gamma = self.compute_L2_taylor(u_eq.unsqueeze(0), x_eq.unsqueeze(0))
+                gamma = self.compute_L2_taylor(
+                    u_eq.unsqueeze(0), x_eq.unsqueeze(0))
                 gammas.append(gamma)
         else:
             for k in range(N_trys):  # Compute around the origin
