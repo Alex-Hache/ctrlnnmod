@@ -5,10 +5,10 @@ from ctrl_nmod.linalg.utils import isSDP
 from geotorch_custom.parametrize import is_parametrized
 import geotorch_custom as geo
 from typing import Optional
-
+from ctrl_nmod.lmis import AbsoluteStableLFT
 
 """
-    This module implements Recurrent Equilibrium Networks in the acyclic case i.e. 
+    This module implements Recurrent Equilibrium Networks in the acyclic case i.e.
     with no implicit layers. It is a discrete model.
 
 """
@@ -107,8 +107,7 @@ class RENODE(nn.Module):
         v = torch.zeros(nb, self.nq, device=self.device)
 
         for k in range(self.nq):
-            v[:, k] = (1 / self.Lambda[k, k]) * (x @ self.C1[k, :] +
-                                                 w.clone() @ self.D11[k, :] + u @ self.D12[k, :] + self.bv[k])
+            v[:, k] = (1 / self.Lambda[k, k]) * (x @ self.C1[k, :] + w.clone() @ self.D11[k, :] + u @ self.D12[k, :] + self.bv[k])
             w[:, k] = self.act(v[:, k].clone())
         return w
 
@@ -141,6 +140,25 @@ class ContractingRENODE(RENODE):
         # Register identity matrix buffer
         self.register_buffer('I', torch.eye(nx + nq, device=device))
         self.register_buffer('Ix', torch.eye(nx, device=device))
+
+        # Detach constrained parameters from tree
+        self.A.requires_grad_(False)
+        self.D11.requires_grad_(False)
+        self.C1.requires_grad_(False)
+        self.B1.requires_grad_(False)
+        self.Lambda_vec.requires_grad_(False)
+
+    def _right_inverse(self, A, B1, C1, D11, alpha):
+        """
+            For now only implemented for pure feedforward networks with no skip-connections.
+            # TODO Implement SII initialisation for the corresponding integrator.
+        """
+        M, Lambda, P = AbsoluteStableLFT.solve(A, B1, C1, D11, alpha)
+        P_inv = torch.inverse(P)  # type: ignore
+        H11 = M[:self.nx, :self.nx]
+        S = -0.5 * H11 - P @ (A + alpha * self.Ix)
+        U = Parameter(C1.T @ Lambda)
+        return P_inv, M, S, U, Lambda
 
     def _frame(self):
 
@@ -253,16 +271,14 @@ class DissipativeRENODE(ContractingRENODE):
                 torch.eye(max(self.nu, self.ny), device=self.device)
 
             if self.ny >= self.nu:
-                N_upper = (torch.eye(self.nu, device=self.device) -
-                           M) @ torch.inverse(torch.eye(self.nu, device=self.device) + M)
+                N_upper = (torch.eye(self.nu, device=self.device) - M) @ torch.inverse(torch.eye(self.nu, device=self.device) + M)
                 N_lower = -2 * \
                     self.Z3 @ torch.inverse(torch.eye(self.nu,
                                             device=self.device) + M)
                 N = torch.cat([N_upper, N_lower], dim=0)
             else:
                 N = torch.cat([
-                    torch.inverse(torch.eye(self.ny, device=self.device) +
-                                  M) @ (torch.eye(self.ny, device=self.device) - M),
+                    torch.inverse(torch.eye(self.ny, device=self.device) + M) @ (torch.eye(self.ny, device=self.device) - M),
                     -2 * torch.inverse(torch.eye(self.ny,
                                        device=self.device) + M) @ self.Z3.T
                 ], dim=1)
@@ -312,8 +328,7 @@ class DissipativeRENODE(ContractingRENODE):
         self.B1 = H32
         self.P = H33
         self.C1 = -H21
-        self.E = 0.5 * (H11 + (1 / self.alpha**2) *
-                        self.P + self.Y - self.Y .T)
+        self.E = 0.5 * (H11 + (1 / self.alpha**2) * self.P + self.Y - self.Y .T)
         self.Lambda = 0.5 * torch.diag(torch.diag(H22))
 
         L = -torch.tril(H22, -1)
