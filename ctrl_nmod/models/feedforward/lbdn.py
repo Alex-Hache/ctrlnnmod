@@ -137,7 +137,7 @@ class LBDN(Module):
     '''
 
     def __init__(self, input_dim, hidden_dim, output_dim, scale,
-                 act_f=Tanh(), n_hidden=1) -> None:
+                 act_f=Tanh(), n_hidden=1, param: str = 'expm') -> None:
         super(LBDN, self).__init__()
 
         self.nu = input_dim
@@ -146,15 +146,16 @@ class LBDN(Module):
         self.scale = scale
         self.act_f = act_f
         self.n_hid = n_hidden
+        self.param = param
 
         layers = []
         self.Win = SandwichLayer(self.nu, self.nh,
-                                 scale=self.scale, act_f=self.act_f)  # type: ignore
+                                 scale=self.scale, act_f=self.act_f, param=param)  # type: ignore
         layers.append(('input_layer', self.Win))
         for k in range(self.n_hid - 1):
-            layer = SandwichLayer(self.nh, self.nh, act_f=act_f)  # type: ignore
+            layer = SandwichLayer(self.nh, self.nh, act_f=act_f, param=param)  # type: ignore
             layers.append((f'hidden_layer_{k}', layer))
-        self.Wout = SandwichLinear(self.nh, self.ny)
+        self.Wout = SandwichLinear(self.nh, self.ny, param=param)
         layers.append(('output_layer', self.Wout))
 
         self.layers = Sequential(OrderedDict(layers))
@@ -223,9 +224,9 @@ class LBDN(Module):
 
 class LipFxu(LBDN):
     def __init__(self, input_dim, hidden_dim, state_dim, scalex, scaleu,
-                 act_f=Tanh(), n_hidden=1) -> None:
+                 act_f=Tanh(), n_hidden=1, param: str = 'expm') -> None:
         super().__init__(input_dim + state_dim, hidden_dim, state_dim,
-                         torch.tensor([scalex] * state_dim + [scaleu] * input_dim), act_f, n_hidden)
+                         torch.tensor([scalex] * state_dim + [scaleu] * input_dim), act_f, n_hidden, param=param)
 
         self.nx = state_dim
         self.Wfx = self.Win.weight[:, :self.nx]
@@ -239,9 +240,9 @@ class LipFxu(LBDN):
 
 class LipHx(LBDN):
     def __init__(self, state_dim, hidden_dim, output_dim, scalex,
-                 actF=Tanh(), n_hidden=1) -> None:
+                 actF=Tanh(), n_hidden=1, param: str = 'expm') -> None:
         super().__init__(state_dim, hidden_dim, output_dim,
-                         torch.tensor([scalex] * state_dim), actF, n_hidden)
+                         torch.tensor([scalex] * state_dim), actF, n_hidden, param=param)
         self.Wh = self.Wout.weight
         self.Whx = self.Win.weight
 
