@@ -45,6 +45,34 @@ def block_diag(arr_list):
     return B
 
 
+def schur(matrix, dim_A, dim_B, dim_C, dim_D):
+    """
+    Calcule le complément de Schur pour le bloc A d'une matrice donnée avec des blocs spécifiés.
+
+    Arguments:
+    matrix -- Matrice torch (2D) en entrée.
+    dim_A -- Dimension de la matrice A (nombre de lignes et de colonnes pour un bloc carré).
+    dim_B -- Dimension de la matrice B (nombre de lignes de A et de colonnes de B).
+    dim_C -- Dimension de la matrice C (nombre de lignes de C et de colonnes de A).
+    dim_D -- Dimension de la matrice D (nombre de lignes et de colonnes pour un bloc carré).
+
+    Retourne:
+    Le complément de Schur du bloc A.
+    """
+
+    # Extraction des blocs A, B, C, D
+    A = matrix[:dim_A, :dim_A]
+    B = matrix[:dim_A, dim_A:dim_A + dim_B]
+    C = matrix[dim_A:dim_A + dim_C, :dim_A]
+    D = matrix[dim_A:dim_A + dim_C, dim_A:dim_A + dim_D]
+
+    # Calcul du complément de Schur S = A - B D^{-1} C
+    D_inv = torch.inverse(D)
+    S = A - torch.mm(torch.mm(B, D_inv), C)
+
+    return S
+
+
 def isSDP(L: torch.Tensor, tol=1e-9) -> bool:
     '''
     Check if a Tensor is Positive definite up to a fixed tolerance.
@@ -92,7 +120,41 @@ def cayley(W):
     I_nin = torch.eye(cin, dtype=W.dtype, device=W.device)[None, :, :]
     A = U - U.conj().transpose(1, 2) + V.conj().transpose(1, 2) @ V
     iIpA = torch.inverse(I_nin + A)
-    return torch.cat((iIpA @ (I_nin - A), -2 * V @ iIpA), axis=1)  # type: ignore
+
+    return torch.cat((iIpA @ (I_nin - A), -2 * V @ iIpA), axis=1)     # type: ignore
+
+
+def create_block_lower_triangular(block_sizes, device='cpu'):
+    """
+    Create a strictly block lower triangular matrix with non-zero blocks only on the first sub-diagonal.
+
+    Args:
+    block_sizes (list): A list of integers representing the sizes of each block.
+    device (str): The device to create the tensor on ('cpu' or 'cuda').
+
+    Returns:
+    torch.Tensor: The resulting block lower triangular matrix.
+    """
+    n_blocks = len(block_sizes)
+    total_size = sum(block_sizes)
+
+    # Create the full matrix of zeros
+    matrix = torch.zeros(total_size, total_size, device=device)
+
+    # Create and place the non-zero blocks on the first sub-diagonal
+    start_row = 0
+    start_col = 0
+    for i in range(n_blocks - 1):
+        row_size = block_sizes[i+1]
+        col_size = block_sizes[i]
+        block = torch.randn(row_size, col_size, device=device)
+
+        start_row += block_sizes[i]
+        matrix[start_row:start_row + row_size,
+               start_col:start_col + col_size] = block
+        start_col += col_size
+
+    return matrix
 
 
 class MatrixSquareRoot(Function):
@@ -145,7 +207,8 @@ def solveLipschitz(weights, beta=1, epsilon=1e-6, solver="MOSEK"):
 
     Ts = [Variable((n_h, n_h), diag=True) for n_h in n_hidden]
     T = block_diag(Ts)
-    Ft = bmat([[np.zeros(T.shape), beta * T], [beta * T, -2 * T]])  # type: ignore
+    Ft = bmat([[np.zeros(T.shape), beta * T],
+              [beta * T, -2 * T]])  # type: ignore
     Ws = [weight.detach().numpy() for weight in weights[:-1]]
     W = block_diag(Ws)
     A = hstack([W, np.zeros((W.shape[0], n_hidden[-1]))])
@@ -179,7 +242,8 @@ def solveLipschitz(weights, beta=1, epsilon=1e-6, solver="MOSEK"):
 
     nM = M.shape[0]
     nT = T.shape[0]
-    constraints = [M << -np.eye(nM) * epsilon, T - (epsilon) * np.eye(nT) >> 0, lip - epsilon >= 0]  # type: ignore
+    constraints = [M << -np.eye(nM) * epsilon, T - (epsilon)
+                   * np.eye(nT) >> 0, lip - epsilon >= 0]  # type: ignore
     objective = Minimize(lip)  # Find lowest lipschitz constant
 
     prob = Problem(objective, constraints=constraints)
@@ -226,7 +290,8 @@ class Logm(torch.autograd.Function):
     @staticmethod
     def forward(ctx, A):
         assert A.ndim == 2 and A.size(0) == A.size(1)  # Square matrix
-        assert A.dtype in (torch.float32, torch.float64, torch.complex64, torch.complex128)
+        assert A.dtype in (torch.float32, torch.float64,
+                           torch.complex64, torch.complex128)
         ctx.save_for_backward(A)
         return logm_scipy(A)
 

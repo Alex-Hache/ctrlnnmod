@@ -5,7 +5,7 @@
 import torch
 from torch.nn import Module, Linear, Sequential, Tanh
 from collections import OrderedDict
-from ctrl_nmod.layers.liplayers import SandwichFc, SandwichFcScaled, SandwichLin
+from ctrl_nmod.layers.liplayers import SandwichLinear, SandwichLayer
 from ctrl_nmod.linalg.utils import solveLipschitz
 
 
@@ -29,6 +29,7 @@ class FFNN(Module):
         * fnn : nn.Sequential
             a simple sequential feedforward model
     '''
+
     def __init__(self, input_dim, hidden_dim, output_dim, actF=Tanh(), n_hidden=1) -> None:
         super(FFNN, self).__init__()
         self.nu = input_dim
@@ -46,7 +47,8 @@ class FFNN(Module):
 
         # Hidden layers
         for k in range(self.n_hid - 1):  # If more than 1 hidden layer
-            tup = ('dense{}'.format(k), Linear(hidden_dim, hidden_dim, bias=True))
+            tup = ('dense{}'.format(k), Linear(
+                hidden_dim, hidden_dim, bias=True))
             layers.append(tup)
             tupact = ('actF{}'.format(k), actF)
             layers.append(tupact)
@@ -68,6 +70,7 @@ class Fxu(FFNN):
         .. ::math
             x^+ = Ax + Bu + f(x,u)
     '''
+
     def __init__(self, input_dim, hidden_dim, state_dim,
                  actF=Tanh(), n_hidden=1) -> None:
         super(Fxu, self).__init__(input_dim + state_dim, hidden_dim, state_dim,
@@ -89,6 +92,7 @@ class Hx(FFNN):
         .. ::math
             y = Cx + h(x)
     '''
+
     def __init__(self, state_dim, hidden_dim, output_dim,
                  actF=Tanh(), n_hidden=1) -> None:
         super(Hx, self).__init__(state_dim, hidden_dim, output_dim,
@@ -125,31 +129,32 @@ class LBDN(Module):
             * scale : Tensor
                 the scaling to be used to scale the input in the Lipschitez layers
                 Must be of size nu + nx
-            * actF : nn.Module
+            * act_f : nn.Module
                 the activation function used
             * n_hidden : int
                 number of hidden layers
 
     '''
+
     def __init__(self, input_dim, hidden_dim, output_dim, scale,
-                 actF=Tanh(), n_hidden=1) -> None:
+                 act_f=Tanh(), n_hidden=1) -> None:
         super(LBDN, self).__init__()
 
         self.nu = input_dim
         self.nh = hidden_dim
         self.ny = output_dim
         self.scale = scale
-        self.actF = actF
+        self.act_f = act_f
         self.n_hid = n_hidden
 
         layers = []
-        self.Win = SandwichFcScaled(self.nu, self.nh,
-                                    scale=self.scale, actF=self.actF)  # type: ignore
+        self.Win = SandwichLayer(self.nu, self.nh,
+                                 scale=self.scale, act_f=self.act_f)  # type: ignore
         layers.append(('input_layer', self.Win))
         for k in range(self.n_hid - 1):
-            layer = SandwichFc(self.nh, self.nh, actF=actF)  # type: ignore
+            layer = SandwichLayer(self.nh, self.nh, act_f=act_f)  # type: ignore
             layers.append((f'hidden_layer_{k}', layer))
-        self.Wout = SandwichLin(self.nh, self.ny)
+        self.Wout = SandwichLinear(self.nh, self.ny)
         layers.append(('output_layer', self.Wout))
 
         self.layers = Sequential(OrderedDict(layers))
@@ -201,7 +206,8 @@ class LBDN(Module):
                     Q = layer.Q
                     weights_in.append(Q[:, fout:] * scle)
                     if layer.AB:
-                        weights_out.append(2 * Q[:, :fout].T)  # Weights after activation
+                        # Weights after activation
+                        weights_out.append(2 * Q[:, :fout].T)
                 else:  # regular weights
                     weights_in.append(layer.weight)
 
@@ -217,9 +223,9 @@ class LBDN(Module):
 
 class LipFxu(LBDN):
     def __init__(self, input_dim, hidden_dim, state_dim, scalex, scaleu,
-                 actF=Tanh(), n_hidden=1) -> None:
+                 act_f=Tanh(), n_hidden=1) -> None:
         super().__init__(input_dim + state_dim, hidden_dim, state_dim,
-                         torch.tensor([scalex] * state_dim + [scaleu] * input_dim), actF, n_hidden)
+                         torch.tensor([scalex] * state_dim + [scaleu] * input_dim), act_f, n_hidden)
 
         self.nx = state_dim
         self.Wfx = self.Win.weight[:, :self.nx]

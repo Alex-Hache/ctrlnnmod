@@ -1,7 +1,7 @@
 # __init__.py
 
 from .layers import BetaLayer, CustomSoftplus, DDLayer, ScaledSoftmax, InertiaMatrix, CoriolisMatrix, softplus_epsilon
-from .liplayers import SandwichFc, SandwichFcScaled, SandwichLin
+from .liplayers import SandwichLayer, SandwichLinear
 
 __all__ = [
     'BetaLayer',
@@ -11,7 +11,6 @@ __all__ = [
     'InertiaMatrix',
     'CoriolisMatrix',
     'softplus_epsilon',
-    'SandwichFc',
-    'SandwichFcScaled',
-    'SandwichLin'
+    'SandwichLayer',
+    'SandwichLinear',
 ]

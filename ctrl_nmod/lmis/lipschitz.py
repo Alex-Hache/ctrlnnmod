@@ -2,11 +2,11 @@ from typing import Tuple, List, Optional
 from torch import Tensor
 import torch
 import torch.nn as nn
-from cvxpy import Variable, bmat, hstack, vstack, Minimize, Problem
+from cvxpy import Variable, bmat, Minimize, Problem, diag
 from cvxpy.error import SolverError
 from ..linalg.utils import block_diag
 import numpy as np
-from base import LMI
+from .base import LMI
 
 
 class LipschitzLMI(LMI):
@@ -89,17 +89,16 @@ class LipschitzLMI(LMI):
         n_in = weights[0].shape[1]
         n_hidden = [w.shape[0] for w in weights[:-1]]
         n_out = weights[-1].shape[0]
-
-        Ts = [Variable((n_h, n_h), diag=True) for n_h in n_hidden]
-        T = block_diag(Ts)
+        N = sum(n_hidden)
+        T = diag(Variable(N))
         Ft = bmat([[np.zeros(T.shape), beta * T], [beta * T, -2 * T]])
-        Ws = [weight.detach().numpy() for weight in weights[:-1]]
-        W = block_diag(Ws)
-        A = hstack([W, np.zeros((W.shape[0], n_hidden[-1]))])
+        Ws = [weight.detach() for weight in weights[:-1]]
+        W = torch.block_diag(*Ws).numpy()
+        A = np.hstack([W, np.zeros((W.shape[0], n_hidden[-1]))])
 
         I_B = np.eye(sum(n_hidden))
-        B = hstack([np.zeros((I_B.shape[0], n_in)), I_B])
-        AB = vstack([A, B])
+        B = np.hstack([np.zeros((I_B.shape[0], n_in)), I_B])
+        AB = np.vstack([A, B])
         LMI = AB.T @ Ft @ AB
 
         LMI_schur = block_diag([LMI, np.zeros((n_out, n_out))])
@@ -140,7 +139,7 @@ class LipschitzLMI(LMI):
             raise ValueError("SDP problem is infeasible or unbounded")
 
         lip = torch.Tensor(np.array(np.sqrt(lip.value))
-                           ).to(dtype=torch.float32)
-        T = torch.Tensor(T.value).to(dtype=torch.float32)
-        M = torch.Tensor(M.value).to(dtype=torch.float32)
+                           ).to(dtype=torch.get_default_dtype())
+        T = torch.Tensor(T.value).to(dtype=torch.get_default_dtype())
+        M = torch.Tensor(M.value).to(dtype=torch.get_default_dtype())
         return T, lip, M

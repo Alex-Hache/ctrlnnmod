@@ -80,7 +80,7 @@ class Grnssm(Module):
         return f"GRNSSM : nu={self.nu} nx={self.nx} nh={self.nh} ny={self.ny} activation = {self.act_name}"
 
     def __str__(self) -> str:
-        return f"GRNSSM"
+        return "GRNSSM"
 
     def forward(self, u, x):
         # Forward pass -- prediction of the output at time k : y_k

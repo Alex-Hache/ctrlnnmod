@@ -54,7 +54,8 @@ class LyapunovDiscrete(LMI):
         n = A.size(0)
         A_np = A.numpy()
         P = cp.Variable((n, n), symmetric=True)
-        constraints = [P >> tol * np.eye(n), alpha**2 * P - A_np.T @ P @ A_np >> tol * np.eye(n)]
+        constraints = [
+            P >> tol * np.eye(n), alpha**2 * P - A_np.T @ P @ A_np >> tol * np.eye(n)]
         prob = cp.Problem(cp.Minimize(cp.trace(P)), constraints)
         try:
             prob.solve(solver)
@@ -66,7 +67,8 @@ class LyapunovDiscrete(LMI):
             # assert isSDP(P_value), "The solved P is not positive definite."
             return P_value, alpha**2 * P_value - A.t().matmul(P_value).matmul(A)
         else:
-            raise ValueError("The LMI is not satisfied for the given system matrix A.")
+            raise ValueError(
+                "The LMI is not satisfied for the given system matrix A.")
 
 
 class LyapunovContinuous(LMI):
@@ -99,7 +101,7 @@ class LyapunovContinuous(LMI):
         return Q
 
     @classmethod
-    def solve(cls, A: Tensor, alpha: float, tol: float = 1e-9, solver: str = 'MOSEK') -> Tuple[Tensor, Tensor]:
+    def solve(cls, A: Tensor, alpha: float, tol: float = 1e-9, solver: str = 'MOSEK', Q=None) -> Tuple[Tensor, Tensor]:
         """
         Solve the continuous-time Lyapunov LMI using cvxpy.
 
@@ -115,8 +117,16 @@ class LyapunovContinuous(LMI):
         n = A.size(0)
         A_np = A.numpy()
         P = cp.Variable((n, n), symmetric=True)
-        constraints = [P >> tol * np.eye(n), A_np.T @ P + P @ A_np + 2 * alpha * P << -tol * np.eye(n)]
-        prob = cp.Problem(cp.Minimize(cp.trace(P)), constraints)
+        if Q is None:  # Only feasiblity for some Q
+            constraints = [
+                P >> tol * np.eye(n), A_np.T @ P + P @ A_np + 2 * alpha * P << -tol * np.eye(n)]
+            prob = cp.Problem(cp.Minimize(cp.trace(P)), constraints)
+
+        else:  # Given Q
+            constraints = [
+                P >> tol * np.eye(n), A_np.T @ P + P @ A_np + 2 * alpha * P == - Q]
+            prob = cp.Problem(cp.Minimize(0), constraints)
+
         try:
             prob.solve(solver)
         except cp.SolverError:
@@ -127,7 +137,8 @@ class LyapunovContinuous(LMI):
             # assert isSDP(P_value), "The solved P is not positive definite."
             return -(A.t().matmul(P_value) + P_value.matmul(A) + 2 * alpha * P_value), P_value
         else:
-            raise ValueError("The LMI is not satisfied for the given system matrix A.")
+            raise ValueError(
+                "The LMI is not satisfied for the given system matrix A.")
 
 
 # Example usage
