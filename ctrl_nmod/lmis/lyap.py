@@ -10,7 +10,7 @@ from .base import LMI
 
 class LyapunovDiscrete(LMI):
     """
-    Lyapunov LMI for discrete-time systems.
+    Lyapunov LMI for discrete-time linear systems.
     """
 
     def __init__(self, A: Tensor, alpha: float) -> None:
@@ -73,7 +73,7 @@ class LyapunovDiscrete(LMI):
 
 class LyapunovContinuous(LMI):
     """
-    Lyapunov LMI for continuous-time systems.
+    Lyapunov LMI for continuous-time linear systems.
     """
 
     def __init__(self, A: Tensor, alpha: float) -> None:
