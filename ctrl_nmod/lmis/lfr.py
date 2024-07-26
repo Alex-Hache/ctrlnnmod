@@ -33,6 +33,7 @@ class AbsoluteStableLFT(LMI):
 
     solve : classmethod
         solve the LMI for given (A,B,C,D11) quadruplet
+        returns : X, Lambda, P
 
     raises
     ------
