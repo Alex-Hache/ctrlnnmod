@@ -187,11 +187,21 @@ class LipGrnssm(Grnssm):
 
 class StableGNSSM(LipGrnssm):
     r"""
-        x_dot = Ax + Bu + f(x,u)
-        y = Cx + (h(x))
-        avec $A-(\lambda_x + \epsilon)$ stable et $\lambda$ Lipschitz selon x
-    """
+        u is a generalized input ex : [control, distrubance]:
+            .. ::math
+                x^+ = Ax + Bu + f(x,u)
+                y = Cx + h(x)
 
+        params :
+            * input_dim : size of input layer
+            * hidden_dim : size of hidden layers
+            * state_dim : size of the state-space
+            * n_hid_layers : number of hidden layers
+            * output_dim : size of the output layer
+            * actF : activation function for nonlienar residuals
+            * out_eq : nonlinear output equation
+            * lambda : lipschitz bound for f nonlinearity
+        """
     def __init__(self, nu: int, ny: int, nx: int,
                  nh: int, n_hidden_layers: int = 1, actF='tanh',
                  out_eq_nl=False, lmbd=1.0, epsilon=1e-2):

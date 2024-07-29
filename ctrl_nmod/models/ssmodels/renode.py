@@ -6,7 +6,7 @@ from geotorch_custom.parametrize import is_parametrized
 import geotorch_custom as geo
 from typing import Optional
 from ctrl_nmod.lmis import AbsoluteStableLFT
-
+from ctrl_nmod.linalg.utils import sqrtm
 """
     This module implements Recurrent Equilibrium Networks in the acyclic case i.e.
     with no implicit layers. It is a discrete model.
@@ -45,7 +45,9 @@ class RENODE(nn.Module):
             self.D22 = Parameter(torch.zeros(ny, nu, device=device))
         else:
             self.register_buffer('D22', torch.zeros(ny, nu, device=device))
-
+        
+        self.bias = bias
+        
         if bias:
             self.bx = Parameter(torch.randn(nx, 1, device=device))
             self.bv = Parameter(torch.randn(nq, 1, device=device))
@@ -55,6 +57,7 @@ class RENODE(nn.Module):
             self.register_buffer('bv', torch.zeros(nq, 1, device=device))
             self.register_buffer('by', torch.zeros(ny, 1, device=device))
 
+        self.sigma = sigma
         # Activation function
         if sigma == "tanh":
             self.act = nn.Tanh()
@@ -153,12 +156,35 @@ class ContractingRENODE(RENODE):
             For now only implemented for pure feedforward networks with no skip-connections.
             # TODO Implement SII initialisation for the corresponding integrator.
         """
-        M, Lambda, P = AbsoluteStableLFT.solve(A, B1, C1, D11, alpha)
+        M, Lambda, P = AbsoluteStableLFT.solve(A, B1, C1, D11, alpha, tol=1e-2)
         P_inv = torch.inverse(P)  # type: ignore
         H11 = M[:self.nx, :self.nx]
         S = -0.5 * H11 - P @ (A + alpha * self.Ix)
         U = Parameter(C1.T @ Lambda)
-        return P_inv, M, S, U, Lambda
+        return P_inv, -M, S, U, Lambda
+
+    def init_weights_(self, A: torch.Tensor, B: torch.Tensor, C: torch.Tensor):
+        self.B2.data = B
+        self.C2.data = C
+        self.A.data = A
+
+        # Initializing nonlinear part outer weights to zeros
+        D11 = Parameter(torch.zeros_like(self.D11) + torch.randn_like(self.D11).tril(-1))
+        B1 = Parameter(torch.zeros_like(self.B1))
+        C1 = Parameter(torch.randn_like(self.C1))
+        alpha_A = -torch.min(torch.real(torch.linalg.eigvals(A)))
+        alpha = alpha_A - 5*self.epsilon  # Set margin to alpha stability
+        P_inv, X, S, U, Lambda = self._right_inverse(A, B1, C1, D11, alpha=alpha)
+
+        self.S.data, self.U.data = S, U
+        self.Lambda.data = Lambda
+
+        if not is_parametrized(self):  # Case where PSD matrices are parameterized as square
+            self.P_inv = sqrtm(P_inv)
+            self.X = sqrtm(X)
+        else:  # Let geotorch mechanism handle the initialization
+            self.P_inv = P_inv
+            self.X = X
 
     def _frame(self):
 
@@ -214,6 +240,40 @@ class ContractingRENODE(RENODE):
         # Check if H_cvx is positive definite
         return isSDP(H_cvx)
 
+    def __str__(self) -> str:
+        return f'ContractinRENODE_{self.alpha}'
+        
+    def clone(self):
+        # Create a new instance of the class
+        new_model = ContractingRENODE(
+            nx=self.nx,
+            ny=self.ny,
+            nu=self.nu,
+            nq=self.nq,
+            sigma=self.sigma,
+            device=self.device,
+            alpha=self.alpha,
+            epsilon=self.epsilon,
+            bias=self.bias,
+            feedthrough=self.feedthrough,
+            param=self.param
+        )
+
+        # Copy the state dict
+        new_model.load_state_dict(self.state_dict())
+
+        # Copy the requires_grad status of parameters
+        for param_name, param in self.named_parameters():
+            new_model.get_parameter(param_name).requires_grad_(param.requires_grad)
+
+        # Copy any additional attributes that are not part of the state dict
+        new_model.A.requires_grad_(self.A.requires_grad)
+        new_model.D11.requires_grad_(self.D11.requires_grad)
+        new_model.C1.requires_grad_(self.C1.requires_grad)
+        new_model.B1.requires_grad_(self.B1.requires_grad)
+        new_model.Lambda_vec.requires_grad_(self.Lambda_vec.requires_grad)
+
+        return new_model
 
 class DissipativeRENODE(ContractingRENODE):
     """

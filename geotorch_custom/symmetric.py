@@ -153,7 +153,7 @@ class SymF(ProductManifold):
         X1, X2 = super().right_inverse([Q, L], check_in_manifold=False)
         return self.frame_inv(X1, X2)
 
-    def in_manifold_eigen(self, L, eps=1e-4):
+    def in_manifold_eigen(self, L, eps=1e-6):
         r"""
         Checks that an ascending ordered vector of eigenvalues is in the manifold.
 

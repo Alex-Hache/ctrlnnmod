@@ -3,7 +3,7 @@ import torch
 from torch import Tensor
 from torch.nn import Parameter
 from cvxpy.error import SolverError
-from cvxpy import Variable, Problem, Minimize, bmat, diag
+from cvxpy import Variable, Problem, Minimize, bmat, diag, Maximize, trace
 from typing import Union, Tuple, Optional
 # from ..linalg.utils import isSDP
 from .base import LMI
@@ -100,7 +100,7 @@ class AbsoluteStableLFT(LMI):
             P - (tol) * np.eye(nx) >> 0,
             Lambda - tol * np.eye(nq) >> 0   # type: ignore,
         ]
-        objective = Minimize(0)  # Feasibility problem
+        objective = Minimize(trace(P))  # Feasibility problem
 
         prob = Problem(objective, constraints=constraints)
         try:
