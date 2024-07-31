@@ -5,8 +5,8 @@
 import torch
 from torch.nn import Module, Linear, Sequential, Tanh
 from collections import OrderedDict
-from ctrl_nmod.layers.liplayers import SandwichLinear, SandwichLayer
-from ctrl_nmod.linalg.utils import solveLipschitz
+from ctrlnmod.layers.liplayers import SandwichLinear, SandwichLayer
+from ctrlnmod.linalg.utils import solveLipschitz
 
 
 class FFNN(Module):

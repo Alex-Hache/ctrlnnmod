@@ -1,11 +1,11 @@
 from torch.nn import Module
-from ctrl_nmod.models.feedforward.lbdn import Fxu, LipFxu, LipHx, Hx
+from ctrlnmod.models.feedforward.lbdn import Fxu, LipFxu, LipHx, Hx
 from torch.nn.init import zeros_
 from torch.linalg import eigvals
 from torch import Tensor, real, min
 from typing import Tuple
-from ctrl_nmod.models.ssmodels.linear import NnLinear
-from ctrl_nmod.models.ssmodels.hinf import L2BoundedLinear
+from ctrlnmod.models.ssmodels.linear import NnLinear
+from ctrlnmod.models.ssmodels.hinf import L2BoundedLinear
 import torch
 from cvxpy.expressions.variable import Variable
 from cvxpy.problems.problem import Problem

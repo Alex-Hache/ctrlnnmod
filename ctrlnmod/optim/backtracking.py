@@ -2,7 +2,7 @@ import torch.optim as optim
 import torch.nn as nn
 from typing import Callable
 import torch
-from ctrl_nmod.lmis import LMI
+from ctrlnmod.lmis import LMI
 
 
 def is_positive_definite(lmi: LMI):

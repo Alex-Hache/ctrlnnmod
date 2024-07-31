@@ -1,12 +1,12 @@
 import torch
 from torch import nn
 from torch.nn.parameter import Parameter
-from ctrl_nmod.linalg.utils import isSDP
+from ctrlnmod.linalg.utils import isSDP
 from geotorch_custom.parametrize import is_parametrized
 import geotorch_custom as geo
 from typing import Optional
-from ctrl_nmod.lmis import AbsoluteStableLFT
-from ctrl_nmod.linalg.utils import sqrtm
+from ctrlnmod.lmis import AbsoluteStableLFT
+from ctrlnmod.linalg.utils import sqrtm
 """
     This module implements Recurrent Equilibrium Networks in the acyclic case i.e.
     with no implicit layers. It is a discrete model.

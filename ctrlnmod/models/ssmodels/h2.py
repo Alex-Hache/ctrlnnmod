@@ -4,7 +4,7 @@ import torch.nn as nn
 from torch.nn import Module
 from torch.nn.parameter import Parameter
 import geotorch_custom as geo
-from ctrl_nmod.linalg.utils import sqrtm
+from ctrlnmod.linalg.utils import sqrtm
 import numpy as np
 from cvxpy.expressions.variable import Variable
 from cvxpy.problems.problem import Problem

@@ -1,7 +1,7 @@
 import torch
 from torch import nn
 from torch.nn.parameter import Parameter
-from ctrl_nmod.linalg.utils import isSDP
+from ctrlnmod.linalg.utils import isSDP
 from geotorch_custom.parametrize import is_parametrized
 import geotorch_custom as geo
 from typing import Optional
