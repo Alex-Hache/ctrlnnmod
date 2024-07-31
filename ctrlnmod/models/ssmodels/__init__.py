@@ -1,6 +1,6 @@
 # __init__.py
 
-from .grnssm import Grnssm, LipGrnssm, L2IncGrNSSM
+from .grnssm import Grnssm, LipGrnssm, L2IncGrNSSM, StableGNSSM
 from .h2 import H2BoundedLinear
 from .hinf import L2BoundedLinear
 from .linear import NnLinear
@@ -12,6 +12,7 @@ __all__ = [
     "Grnssm",
     "LipGrnssm",
     "L2IncGrNSSM",
+    "StableGNSSM",
     "H2BoundedLinear",
     "L2BoundedLinear",
     "NnLinear",
