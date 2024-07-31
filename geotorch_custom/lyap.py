@@ -3,6 +3,7 @@ from torch import Tensor
 from cvxpy.problems.problem import Problem
 from cvxpy.problems.objective import Minimize
 from cvxpy.expressions.variable import Variable
+from cvxpy import trace
 import numpy as np
 from cvxpy.error import SolverError
 from geotorch_custom.product import ProductManifold
@@ -60,7 +61,7 @@ class AlphaStable(ProductManifold):
                 A.T @ P + P @ A + 2 * self.alpha * P  # type: ignore
             )  # solve the negative definite version
             constraints = [Q << -epsilon * np.eye(nx), P - (epsilon) * np.eye(nx) >> 0]  # type: ignore
-            objective = Minimize(0)  # Feasibility problem
+            objective = Minimize(trace(P))  # Feasibility problem
 
             prob = Problem(objective, constraints=constraints)
             try:

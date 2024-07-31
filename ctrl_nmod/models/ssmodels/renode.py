@@ -168,10 +168,17 @@ class ContractingRENODE(RENODE):
         self.C2.data = C
         self.A.data = A
 
+        # Initializing bias to zero
+        self.bx.data = torch.zeros_like(self.bx.data)
+        self.bv.data = torch.randn_like(self.bv.data)
+        self.by.data = torch.zeros_like(self.by.data)
+
         # Initializing nonlinear part outer weights to zeros
         D11 = Parameter(torch.zeros_like(self.D11) + torch.randn_like(self.D11).tril(-1))
         B1 = Parameter(torch.zeros_like(self.B1))
         C1 = Parameter(torch.randn_like(self.C1))
+        self.D21.data = torch.zeros_like(self.D21.data)
+        
         alpha_A = -torch.min(torch.real(torch.linalg.eigvals(A)))
         alpha = alpha_A - 5*self.epsilon  # Set margin to alpha stability
         P_inv, X, S, U, Lambda = self._right_inverse(A, B1, C1, D11, alpha=alpha)
@@ -180,8 +187,8 @@ class ContractingRENODE(RENODE):
         self.Lambda.data = Lambda
 
         if not is_parametrized(self):  # Case where PSD matrices are parameterized as square
-            self.P_inv = sqrtm(P_inv)
-            self.X = sqrtm(X)
+            self.P_inv.data = sqrtm(P_inv)
+            self.X.data = sqrtm(X)
         else:  # Let geotorch mechanism handle the initialization
             self.P_inv = P_inv
             self.X = X

@@ -137,9 +137,10 @@ class SSTrainer(Trainer):
                     scheduler.step(val_loss)  # Use the scheduler
                     
                     if no_improvement_count >= patience_soft:
-                        print(f"No improvement for {patience} epochs. Updating regularizations.")
+                        print(f"No improvement for {patience_soft} epochs. Updating regularizations.")
                         self.criterion.update()
                         patience_soft = 0
+                        no_improvement_count = 0
                     
                     print(f"Epoch loss = {average_train_loss:.7f} || val loss = {val_loss:.7f} || "
                           f"Best val loss = {best_val_loss:.7f} || current lr : {scheduler.get_last_lr()[0]:.7f}")

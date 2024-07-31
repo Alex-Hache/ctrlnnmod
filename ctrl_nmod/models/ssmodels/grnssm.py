@@ -129,6 +129,7 @@ class Grnssm(Module):
             self.n_hid_layers,
             self.act_name,
             self.out_eq_nl,
+            self.alpha
         )
         copy.load_state_dict(self.state_dict())
         return copy
