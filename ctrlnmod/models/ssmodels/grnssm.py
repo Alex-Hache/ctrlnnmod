@@ -28,6 +28,7 @@ class Grnssm(Module):
         actF: str = 'tanh',
         out_eq_nl=False,
         alpha=None,
+        bias=True
     ) -> None:
         r"""
         u is a generalized input ex : [control, distrubance]:
@@ -54,6 +55,7 @@ class Grnssm(Module):
         self.ny = output_dim
         self.n_hid_layers = n_hidden_layers
         self.act_name = actF  # Name of the activation function
+        self.bias = bias
 
         # Activation functions
         if actF.lower() == 'tanh':
@@ -72,9 +74,9 @@ class Grnssm(Module):
         self.alpha = alpha
 
         # Nonlinear state part
-        self.fx = Fxu(self.nu, self.nh, self.nx)
+        self.fx = Fxu(self.nu, self.nh, self.nx, bias=self.bias)
         if self.out_eq_nl:
-            self.hx = Hx(self.nx, self.nh, self.ny)
+            self.hx = Hx(self.nx, self.nh, self.ny, bias=bias)
 
     def __repr__(self):
         return f"GRNSSM : nu={self.nu} nx={self.nx} nh={self.nh} ny={self.ny} activation = {self.act_name}"

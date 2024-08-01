@@ -1,11 +1,11 @@
-from ctrl_nmod.utils.data import ExperimentsDataset, Experiment
-from ctrl_nmod.integrators.integrators import RK4Simulator
-from ctrl_nmod.models.ssmodels.grnssm import Grnssm
-from ctrl_nmod.train.train import SSTrainer
-from ctrl_nmod.losses.losses import MSELoss, NMSELoss
-from ctrl_nmod.regularizations.regularizations import StateRegularization
+from ctrlnmod.utils.data import ExperimentsDataset, Experiment
+from ctrlnmod.integrators.integrators import RK4Simulator
+from ctrlnmod.models.ssmodels.grnssm import Grnssm
+from ctrlnmod.train.train import SSTrainer
+from ctrlnmod.losses.losses import MSELoss, NMSELoss, NRMSELoss
+from ctrlnmod.regularizations.regularizations import StateRegularization
 from data.pendulum.load_pendulum import load_pendulum
-from ctrl_nmod.plot.plots import plot_yTrue_vs_error
+from ctrlnmod.plot.plots import plot_yTrue_vs_error
 from scipy.io import savemat
 import os
 import torch
@@ -17,43 +17,47 @@ u_train_yuqi, y_train_yuqi, u_test_yuqi, y_test_yuqi, ts = load_pendulum(['data_
 
 
 # Length of sequences to consider
-seq_len = 20
+seq_len = 30
 nx = 2
 
-train_set = ExperimentsDataset([Experiment(u_train, y_train, ts=ts, nx=nx, x_trainable=True)], seq_len)
-train_set.append(Experiment(u_train_yuqi, y_train_yuqi, ts=ts, nx=nx, x_trainable=True))
+train_set = ExperimentsDataset([Experiment(u_train, y_train, ts=ts, nx=nx, x_trainable=False)], seq_len)
+# train_set.append(Experiment(u_train_yuqi, y_train_yuqi, ts=ts, nx=nx, x_trainable=False))
 test_set = ExperimentsDataset([Experiment(u_test, y_test, ts=ts, nx=nx)], seq_len)
-test_set.append(Experiment(u_test_yuqi, y_test_yuqi, ts=ts, nx=nx, x_trainable=True))
+# test_set.append(Experiment(u_test_yuqi, y_test_yuqi, ts=ts, nx=nx, x_trainable=False))
 
-nu, ny, nh = 2, 1, 8
+nu, ny, nh = 2, 1, 16
 # actF = 'relu'
-model = Grnssm(nu, ny, nx, nh)
+model = Grnssm(nu, ny, nx, nh, n_hidden_layers=2)
 # A0, B0, C0, D0 = findBLA(u_train, y_train, nx, float(1/fs[0]), model_type='continuous')
-A0 = -torch.eye(nx)
-B0 = torch.Tensor([[0, 1], [1, 0]])
+A0 = -torch.zeros((nx, nx))
+B0 = torch.Tensor([[0, 0], [0, 0]])
 C0 = torch.Tensor([[1, 0]])
 
-model.init_weights_(A0, B0, C0)
+model.init_weights_(A0, B0, C0, isLinTrainable=False)
 sim_model = RK4Simulator(model, ts=torch.Tensor([ts]))
-loss = MSELoss([StateRegularization(model, 0.01, 0.0, updatable=False, verbose=True)])
-val_loss = NMSELoss()
+loss = MSELoss([StateRegularization(model, 0.00, 0.0, updatable=False)])
+val_loss = NRMSELoss()
 
-trainer = SSTrainer(sim_model, loss=loss, val_loss=val_loss)
+
+optimizer = torch.optim.AdamW(sim_model.parameters())
+
+
+trainer = SSTrainer(sim_model, loss=loss, val_loss=val_loss, optimizer=optimizer)
 
 # Training options
 
-batch_size, lr, keep_best = 128, 1e-3, True
+batch_size, lr, keep_best = 512, 1e-3, True
 epochs, optimizer = 100, 'adamw'
 
 scheduled = True
 step_sched = 0.1
-save_path = f'results/try_1/{str(trainer)}'
+save_path = f'results/try_no_lin/{str(trainer)}'
 os.makedirs(save_path, exist_ok=True)
 
 best_model, res = trainer.fit_(train_set=train_set, test_set=test_set,
                                batch_size=batch_size, lr=lr, keep_best=keep_best,
-                               save_path=save_path, epochs=epochs, opt=optimizer,
-                               scheduled=True)
+                               save_path=save_path, epochs=epochs,
+                               scheduled=False, test_freq=1, patience=100)
 
 
 # Best model simulation on test set
