@@ -97,13 +97,14 @@ class Grnssm(Module):
             y = y_lin
         return dx, y
 
-    def init_weights_(self, A0, B0, C0, isLinTrainable=True) -> None:
+
+    def init_weights_(self, A0, B0, C0, requires_grad=True) -> None:
         """
             It can be used to initialize the linear part of the model.
             For example using linear subspace methods or Best Linear Approximation
         """
 
-        self.linmod.init_model_(A0, B0, C0, requires_grad=isLinTrainable)
+        self.linmod.init_model_(A0, B0, C0, requires_grad=requires_grad)
 
         # Initializing nonlinear output weights to 0
         zeros_(self.fx.Wout.weight)
