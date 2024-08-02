@@ -30,31 +30,33 @@ class FFNN(Module):
             a simple sequential feedforward model
     '''
 
-    def __init__(self, input_dim, hidden_dim, output_dim, actF=Tanh(), n_hidden=1) -> None:
+    def __init__(self, input_dim, hidden_dim, output_dim, 
+                 actF=Tanh(), n_hidden=1, bias=True) -> None:
         super(FFNN, self).__init__()
         self.nu = input_dim
         self.nh = hidden_dim
         self.ny = output_dim
         self.actF = actF
         self.n_hid = n_hidden
+        self.bias = bias
 
         layers = []
 
         # Input layer
-        self.Win = Linear(self.nu, self.nh, bias=True)
+        self.Win = Linear(self.nu, self.nh, bias=bias)
         layers.append(('input_layer', self.Win))
         layers.append(('actF0', self.actF))
 
         # Hidden layers
         for k in range(self.n_hid - 1):  # If more than 1 hidden layer
             tup = ('dense{}'.format(k), Linear(
-                hidden_dim, hidden_dim, bias=True))
+                hidden_dim, hidden_dim, bias=self.bias))
             layers.append(tup)
             tupact = ('actF{}'.format(k), actF)
             layers.append(tupact)
 
         # Output layer
-        self.Wout = Linear(self.nh, self.ny, bias=True)
+        self.Wout = Linear(self.nh, self.ny, bias=self.bias)
         layers.append(('Out layer', self.Wout))
 
         self.fnn = Sequential(OrderedDict(layers))
@@ -72,9 +74,9 @@ class Fxu(FFNN):
     '''
 
     def __init__(self, input_dim, hidden_dim, state_dim,
-                 actF=Tanh(), n_hidden=1) -> None:
+                 actF=Tanh(), n_hidden=1, bias=True) -> None:
         super(Fxu, self).__init__(input_dim + state_dim, hidden_dim, state_dim,
-                                  actF, n_hidden)
+                                  actF, n_hidden, bias=bias)
         self.nx = state_dim
         self.Wfx = self.Win.weight[:, :self.nx]
         self.Wfu = self.Win.weight[:, self.nx:]
@@ -94,9 +96,9 @@ class Hx(FFNN):
     '''
 
     def __init__(self, state_dim, hidden_dim, output_dim,
-                 actF=Tanh(), n_hidden=1) -> None:
+                 actF=Tanh(), n_hidden=1, bias=True) -> None:
         super(Hx, self).__init__(state_dim, hidden_dim, output_dim,
-                                 actF, n_hidden)
+                                 actF, n_hidden, bias=bias)
         self.nx = state_dim
         self.Wh = self.Wout.weight
         self.Whx = self.Win.weight
@@ -137,7 +139,7 @@ class LBDN(Module):
     '''
 
     def __init__(self, input_dim, hidden_dim, output_dim, scale,
-                 act_f=Tanh(), n_hidden=1, param: str = 'expm') -> None:
+                 act_f=Tanh(), n_hidden=1, param: str = 'expm', bias=True) -> None:
         super(LBDN, self).__init__()
 
         self.nu = input_dim
@@ -147,15 +149,17 @@ class LBDN(Module):
         self.act_f = act_f
         self.n_hid = n_hidden
         self.param = param
+        self.bias = bias
 
         layers = []
         self.Win = SandwichLayer(self.nu, self.nh,
-                                 scale=self.scale, act_f=self.act_f, param=param)  # type: ignore
+                                 scale=self.scale, act_f=self.act_f, param=param,
+                                 bias=bias)  # type: ignore
         layers.append(('input_layer', self.Win))
         for k in range(self.n_hid - 1):
-            layer = SandwichLayer(self.nh, self.nh, act_f=act_f, param=param)  # type: ignore
+            layer = SandwichLayer(self.nh, self.nh, act_f=act_f, param=param, bias=bias)  # type: ignore
             layers.append((f'hidden_layer_{k}', layer))
-        self.Wout = SandwichLinear(self.nh, self.ny, param=param)
+        self.Wout = SandwichLinear(self.nh, self.ny, param=param)  # No bias on the output layer
         layers.append(('output_layer', self.Wout))
 
         self.layers = Sequential(OrderedDict(layers))
