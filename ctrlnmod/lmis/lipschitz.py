@@ -30,9 +30,9 @@ class LipschitzLMI(LMI):
 
     def _diagT(self):
         return torch.diag(self.T)
-    
-    def forward(self) -> Tensor:
-        T = self._diagT(self.T)
+
+    def forward(self) -> Tuple[Tensor, Tensor]:
+        T = self._diagT()
         weights = self.weights
         beta = self.beta
 
@@ -77,7 +77,7 @@ class LipschitzLMI(LMI):
         return M, T
 
     @classmethod
-    def solve(cls, weights: List[Tensor], beta: float = 1, solver: str = "MOSEK", tol: float = 1e-6) -> Tuple[Tensor, Tensor, Tensor]:
+    def solve(cls, weights: List[Tensor], beta: float = 1, solver: str = "MOSEK", tol: float = 1e-8) -> Tuple[Tensor, Tensor, Tensor]:
         r'''
             This function solves the Linear Matrix Inequality for
             estimating an upper bound on the Lipschitz constant of
@@ -145,5 +145,132 @@ class LipschitzLMI(LMI):
         lip = torch.Tensor(np.array(np.sqrt(lip.value))
                            ).to(dtype=torch.get_default_dtype())
         T = torch.Tensor(T.value).to(dtype=torch.get_default_dtype())
+        M = torch.Tensor(M.value).to(dtype=torch.get_default_dtype())
+        return T, lip, M
+
+
+class LipschitzLMI2(LMI):
+    def __init__(self, weights: List[Tensor], beta: float = 1.0,
+                 T: Optional[Tensor] = None, lip: Optional[float] = None, epsilon: float = 1e-8):
+        super().__init__()
+        self.weights = weights
+        self.beta = beta
+        self.epsilon = epsilon
+
+        if T is None:
+            T, eta, _ = LipschitzLMI.solve(weights=weights, beta=beta)
+
+        if lip is not None:
+            self.lip = nn.Parameter(torch.Tensor(lip))
+            if self.lip < eta:
+                self.lip = eta
+        else:
+            self.T = nn.Parameter(torch.diag(T))
+            self.lip = nn.Parameter(eta)
+
+    def _diagT(self):
+        return torch.diag(self.T)
+
+    def forward(self) -> Tuple[Tensor, Tensor]:
+        T = self._diagT()
+        weights = self.weights
+        beta = self.beta
+
+        n_in = weights[0].shape[1]
+        n_hidden = [w.shape[0] for w in weights[:-1]]
+        n_out = weights[-1].shape[0]
+
+        # Since self.T is already block diagonal
+        Ft_top = torch.cat((torch.zeros_like(T), beta * T), dim=1)
+        Ft_bottom = torch.cat((beta * T, -2 * T), dim=1)
+        Ft = torch.cat((Ft_top, Ft_bottom), dim=0)
+
+        Ws = [w for w in weights[:-1]]
+        W_block = torch.block_diag(*Ws)
+        A = torch.cat((W_block, torch.zeros(W_block.shape[0], n_hidden[-1])), dim=1)
+
+        I_B = torch.eye(sum(n_hidden))
+        B = torch.cat((torch.zeros(I_B.shape[0], n_in), I_B), dim=1)
+        AB = torch.cat((A, B), dim=0)
+        LMI = AB.t() @ Ft @ AB
+
+        LMI_schur = torch.block_diag(LMI, torch.zeros(n_out, n_out))
+
+        L = -self.lip * torch.eye(n_in)
+
+        b11 = torch.zeros(n_hidden[-1], n_hidden[-1])
+        b12 = weights[-1].t()
+        b21 = weights[-1]
+        b22 = -torch.eye(n_out)
+        bf_top = torch.cat((b11, b12), dim=1)
+        bf_bottom = torch.cat((b21, b22), dim=1)
+        bf = torch.cat((bf_top, bf_bottom), dim=0)
+
+        if sum(n_hidden[:-1]) > 0:
+            inter = torch.zeros(sum(n_hidden[:-1]), sum(n_hidden[:-1]))
+            part2 = torch.block_diag(L, inter, bf)
+        else:
+            part2 = torch.block_diag(L, bf)
+
+        M = LMI_schur + part2
+
+        return M, T
+
+    @classmethod
+    def solve(cls, B1: Tensor, D11: Tensor, C1: Tensor,
+              beta: float = 1, solver: str = "MOSEK", tol: float = 1e-8) -> Tuple[Tensor, Tensor, Tensor]:
+        r'''
+            This function solves the Linear Matrix Inequality for
+            estimating an upper bound on the Lipschitz constant of
+            a feedforward neural network.
+            https://arxiv.org/abs/2005.02929
+            params :
+                * weights : a list of neural network weights
+                * beta : the maximum slope of activation functions
+        '''
+
+        # Define shapes
+        B1 = B1.numpy()
+        C1 = C1.numpy()
+        D11 = D11.numpy()
+
+        n_in = C1.shape[1]
+        n_out = B1.shape[0]
+        nq = D11.shape[0]
+
+        lip = Variable()
+        Lambda = diag(Variable(nq))
+        M11 = lip * np.eye(n_in)
+        M12 = - C1.T @ Lambda
+        M13 = np.zeros((n_in, n_out))
+        M22 = 2 * beta * Lambda - Lambda @ D11 - D11.T @ Lambda
+        M23 = - B1.T
+        M33 = np.eye(n_out)
+
+        M = bmat(
+            [[M11, M12, M13],
+             [M12.T, M22, M23],
+             [M13.T, M23.T, M33]]
+        )
+        nM = M.shape[0]
+        nT = Lambda.shape[0]
+        constraints = [M - np.eye(nM) * tol >> 0, Lambda - (tol) * np.eye(nT) >> 0, lip - tol >= 0]
+        objective = Minimize(lip)
+
+        prob = Problem(objective, constraints=constraints)
+        try:
+            prob.solve(solver)
+        except SolverError:
+            prob.solve()  # If MOSEK is not installed then try SCS by default
+
+        if prob.status not in ["infeasible", "unbounded"]:
+            print(" Lipschitz Constant upper bound (All layer versions): \n")
+            print(np.sqrt(lip.value))
+        else:
+            raise ValueError("SDP problem is infeasible or unbounded")
+
+        lip = torch.Tensor(np.array(np.sqrt(lip.value))
+                           ).to(dtype=torch.get_default_dtype())
+        T = torch.Tensor(Lambda.value).to(dtype=torch.get_default_dtype())
         M = torch.Tensor(M.value).to(dtype=torch.get_default_dtype())
         return T, lip, M
