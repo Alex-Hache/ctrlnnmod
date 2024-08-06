@@ -1,77 +1,74 @@
-import numpy as np
 import torch
-from torch import Tensor
+from torch import nn, Tensor
 from torch.nn import Parameter
 from cvxpy.error import SolverError
-from cvxpy import Variable, Problem, Minimize, bmat, diag, Maximize, trace
-from typing import Union, Tuple, Optional
-# from ..linalg.utils import isSDP
+from cvxpy import Variable, Problem, Minimize, bmat, diag, trace
+from typing import Union, Tuple, Optional, Callable
 from .base import LMI
-
+import numpy as np
 
 class AbsoluteStableLFT(LMI):
-    r"""
-    This LMI gives an upper bound on the L2 gain of continiuous-time linear system.
-
-    attributes
-    ------
-        * A : Tensor
-        * B1 : Tensor
-        * C1 : Tensor
-        * D11 : Tensor
-        * alpha :
-            contraction metric i.e. largest lyapunov exponent
-        * mu :
-            upper bound on absolute stability
-            i.e. maximum admissible slope for the activation functions
-            in the case of neural networks
-        * P :
-            Lyapunov certificate
-
-    methods
-    -------
-
-    solve : classmethod
-        solve the LMI for given (A,B,C,D11) quadruplet
-        returns : X, Lambda, P
-
-    raises
-    ------
-        ValueError :
-            if the SDP problem problem is infeasible or unbounded
-
-    """
-
-    def __init__(self, A: Tensor, B1: Tensor, C1: Tensor, D11: Optional[Tensor] = None,
-                 Lambda: Union[Tensor, None] = None, P: Union[Tensor, None] = None,
-                 alpha: Tensor = torch.zeros((1)), mu: Tensor = torch.Tensor([1.0])) -> None:
+    def __init__(self, model: Optional[nn.Module] = None, 
+                 extract_lmi_matrices: Optional[Callable] = None,
+                 A: Optional[Tensor] = None, 
+                 B1: Optional[Tensor] = None, 
+                 C1: Optional[Tensor] = None, 
+                 D11: Optional[Tensor] = None,
+                 Lambda_vec: Optional[Tensor] = None, 
+                 P: Optional[Tensor] = None,
+                 alpha: Tensor = torch.zeros((1)), 
+                 mu: Tensor = torch.Tensor([1.0])) -> None:
         super(AbsoluteStableLFT, self).__init__()
-        self.A = A
-        self.B1 = B1
-        self.C1 = C1
+        
+        self.model = model
+        self.extract_lmi_matrices = extract_lmi_matrices
+        self.alpha = alpha
         self.mu = mu
 
-        # Shapes
-        nq, nx = B1.shape[1], A.shape[0]
-        self.nq, self.nx = nq, nx
-
-        if D11 is not None:
-            self.D11 = D11
+        if model is not None and extract_lmi_matrices is not None:
+            # Initialize matrices from the model
+            self.update_matrices(model, None)
+            self.hook = model.register_forward_pre_hook(self.update_matrices)
         else:
-            self.D11 = torch.zeros((nq, nq))
+            self.A, self.B1, self.C1, self.D11 = A, B1, C1, D11
 
-        self.shape = nq + nx  # LMI total size
-        self.alpha = alpha
-        if Lambda is not None and P is not None:
-            self.Lambda = Lambda
-            self.P = P
-        elif Lambda is not None and P is None:
-            self.Lambda = Lambda
-            _, Lambda, P = AbsoluteStableLFT.solve(self.A, self.B1, self.C1, self.D11, self.alpha, self.mu, Lambda=self.Lambda)
+        if self.A is not None:
+            self._initialize_parameters(Lambda_vec, P)
         else:
-            _, Lambda, P = AbsoluteStableLFT.solve(self.A, self.B1, self.C1, self.D11, self.alpha, self.mu)
-            self.Lambda = Parameter(Lambda.requires_grad_(True))
+            raise ValueError("Either provide a model and extract_lmi_matrices, or provide A, B1, C1, D11 matrices.")
+
+    def _initialize_parameters(self, Lambda_vec: Optional[Tensor] = None, P: Optional[Tensor] = None):
+        self.nq, self.nx = self.B1.shape[1], self.A.shape[0]
+        self.shape = self.nq + self.nx
+        
+        if self.D11 is None:
+            self.D11 = torch.zeros((self.nq, self.nq))
+
+        if Lambda_vec is not None and P is not None:
+            self.Lambda_vec = Parameter(Lambda_vec.requires_grad_(True))
             self.P = Parameter(P.requires_grad_(True))
+        elif Lambda_vec is not None:
+            self.Lambda_vec = Parameter(Lambda_vec.requires_grad_(True))
+            _, Lambda, P = self.solve(self.A, self.B1, self.C1, self.D11, self.alpha, self.mu, Lambda=torch.diag(Lambda_vec))
+            self.P = Parameter(P.requires_grad_(True))
+        else:
+            _, Lambda, P = self.solve(self.A, self.B1, self.C1, self.D11, self.alpha, self.mu)
+            self.Lambda_vec = Parameter(torch.diag(Lambda).requires_grad_(True))
+            self.P = Parameter(P.requires_grad_(True))
+
+    def update_matrices(self, module, input):
+        if self.extract_lmi_matrices is None:
+            raise ValueError("extract_lmi_matrices is not defined")
+        
+        matrices = self.extract_lmi_matrices()
+        self.A = matrices['A']
+        self.B1 = matrices['B1']
+        self.C1 = matrices['C1']
+        self.D11 = matrices['D11']
+
+        # Re-initialize parameters only if they haven't been initialized yet
+        if not hasattr(self, 'Lambda_vec') or not hasattr(self, 'P'):
+            self._initialize_parameters()
 
     @classmethod
     def solve(cls, A: Tensor, B1: Tensor, C1: Tensor, D11: Tensor, alpha: Tensor,
@@ -82,6 +79,7 @@ class AbsoluteStableLFT(LMI):
         C1 = C1.detach().numpy()
         D11 = D11.detach().numpy()
         mu = mu.detach().numpy()
+        alpha = alpha.numpy()
 
         nx = A.shape[0]
         nq = B1.shape[1]
@@ -113,12 +111,16 @@ class AbsoluteStableLFT(LMI):
 
         return Tensor(M.value), Tensor(Lambda.value), Tensor(P.value)
 
+    def _proj(self):
+        return 0.5 * (self.P + self.P.T), torch.diag(self.Lambda_vec)
+    
     def forward(self):
-        M11 = self.A.T @ self.P + self.P @ self.A
-        M12 = self.P @ self.B1 + self.C1.T @ self.Lambda
-        M22 = -2 / self.mu * self.Lambda + self.D11.T @ self.Lambda + self.Lambda @ self.D11
+        P_sym, Lambda = self._proj()
+        M11 = self.A.T @ P_sym + P_sym @ self.A + 2 * self.alpha * P_sym
+        M12 = P_sym @ self.B1 + self.C1.T @ Lambda
+        M22 = -2 / self.mu * Lambda + self.D11.T @ Lambda + Lambda @ self.D11
 
         M1 = torch.cat([M11, M12], dim=1)
         M2 = torch.cat([M12.T, M22], dim=1)
         M = torch.cat([M1, M2], dim=0)
-        return -M
+        return -M, P_sym, Lambda  # Always return a positive definite version

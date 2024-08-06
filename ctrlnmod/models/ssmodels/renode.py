@@ -122,7 +122,7 @@ class ContractingRENODE(RENODE):
     def __init__(self, nx: int, ny: int, nu: int, nq: int, sigma: str,
                  device: torch.device, alpha: float, epsilon: float,
                  bias: bool = False, feedthrough: bool = True,
-                 param: Optional[str] = None) -> None:
+                 param: Optional[str] = 'square') -> None:
         super(ContractingRENODE, self).__init__(nx, ny, nu,
                                                 nq, sigma, device, bias, feedthrough)
 
@@ -135,7 +135,7 @@ class ContractingRENODE(RENODE):
         self.X = Parameter(torch.randn(nx + nq, nx + nq, device=device))
         self.U = Parameter(torch.randn(nx, nq, device=device))
 
-        if param is not None:
+        if param is not 'square':
             geo.positive_definite(self, 'X', triv=param)
             geo.positive_definite(self, 'P_inv', triv=param)
             geo.skew_symmetric(self, 'S')
@@ -156,7 +156,7 @@ class ContractingRENODE(RENODE):
             For now only implemented for pure feedforward networks with no skip-connections.
             # TODO Implement SII initialisation for the corresponding integrator.
         """
-        M, Lambda, P = AbsoluteStableLFT.solve(A, B1, C1, D11, alpha, tol=1e-2)
+        M, Lambda, P = AbsoluteStableLFT.solve(A, B1, C1, D11, alpha, tol=1e-4)
         P_inv = torch.inverse(P)  # type: ignore
         H11 = M[:self.nx, :self.nx]
         S = -0.5 * H11 - P @ (A + alpha * self.Ix)
@@ -168,7 +168,7 @@ class ContractingRENODE(RENODE):
         self.C2.data = C
         self.A.data = A
 
-        # Initializing bias to zero
+        # Initializing bias to zero except the inner ones
         self.bx.data = torch.zeros_like(self.bx.data)
         self.bv.data = torch.randn_like(self.bv.data)
         self.by.data = torch.zeros_like(self.by.data)

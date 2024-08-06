@@ -52,7 +52,7 @@ class FFNN(Module):
             tup = ('dense{}'.format(k), Linear(
                 hidden_dim, hidden_dim, bias=self.bias))
             layers.append(tup)
-            tupact = ('actF{}'.format(k), actF)
+            tupact = ('actF{}'.format(k+1), actF)
             layers.append(tupact)
 
         # Output layer

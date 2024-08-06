@@ -123,10 +123,14 @@ class HInfCont(LMI):
 
         return Tensor(M.value), Tensor(np.array([gmma_lmi])), Tensor(P.value)
 
+    def _symP(self):
+        return 0.5*(self.P + self.P.T)
+
     def forward(self):
+        P = self._symP()
         # TODO implement version with nonzero D
-        M11 = torch.matmul(self.A.T, self.P) + torch.matmul(self.P, self.A) + 1 / self.gamma * torch.matmul(self.C.T, self.C)
-        M12 = torch.matmul(self.P, self.B)
+        M11 = torch.matmul(self.A.T, P) + torch.matmul(P, self.A) + 1 / self.gamma * torch.matmul(self.C.T, self.C)
+        M12 = torch.matmul(P, self.B)
         M22 = -self.gamma * torch.eye(self.nu)
 
         M = torch.cat((torch.cat((M11, M12), 1), torch.cat((M12.T, M22), 1)), 0)
@@ -246,6 +250,9 @@ class HInfDisc(LMI):
 
         return Tensor(M.value), Tensor([gmma_lmi]), Tensor(P.value)
 
+    def _symP(self):
+        return 0.5*(self.P + self.P.T)
+
     def forward(self):
         r'''
          M = [A^TPA-P  A^T*P*B C^T
@@ -253,10 +260,11 @@ class HInfDisc(LMI):
                 *  *  -\gamma I_{nu}] <0
         ** returns : -M
         '''
-        M11 = torch.matmul(torch.matmul(self.A.T, self.P), self.A) - self.P
-        M12 = torch.matmul(torch.matmul(self.A.T, self.P), self.B)
+        P = self._symP()
+        M11 = torch.matmul(torch.matmul(self.A.T, P), self.A) - P
+        M12 = torch.matmul(torch.matmul(self.A.T, P), self.B)
         M13 = self.C.T
-        M22 = torch.matmul(torch.matmul(self.B.T, self.P), self.B) - self.gamma * self.Inu
+        M22 = torch.matmul(torch.matmul(self.B.T, P), self.B) - self.gamma * self.Inu
         M23 = self.D.T
         M33 = self.gamma * self.Iny
 

@@ -25,10 +25,14 @@ class LipschitzLMI(LMI):
             if self.lip < eta:
                 self.lip = eta
         else:
-            self.T = nn.Parameter(T)
+            self.T = nn.Parameter(torch.diag(T))
             self.lip = nn.Parameter(eta)
 
+    def _diagT(self):
+        return torch.diag(self.T)
+    
     def forward(self) -> Tensor:
+        T = self._diagT(self.T)
         weights = self.weights
         beta = self.beta
 
@@ -37,8 +41,8 @@ class LipschitzLMI(LMI):
         n_out = weights[-1].shape[0]
 
         # Since self.T is already block diagonal
-        Ft_top = torch.cat((torch.zeros_like(self.T), beta * self.T), dim=1)
-        Ft_bottom = torch.cat((beta * self.T, -2 * self.T), dim=1)
+        Ft_top = torch.cat((torch.zeros_like(T), beta * T), dim=1)
+        Ft_bottom = torch.cat((beta * T, -2 * T), dim=1)
         Ft = torch.cat((Ft_top, Ft_bottom), dim=0)
 
         Ws = [w for w in weights[:-1]]
@@ -70,7 +74,7 @@ class LipschitzLMI(LMI):
 
         M = LMI_schur + part2
 
-        return M
+        return M, T
 
     @classmethod
     def solve(cls, weights: List[Tensor], beta: float = 1, solver: str = "MOSEK", tol: float = 1e-6) -> Tuple[Tensor, Tensor, Tensor]:

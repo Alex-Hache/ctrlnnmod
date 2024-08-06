@@ -74,15 +74,115 @@ class Grnssm(Module):
         self.alpha = alpha
 
         # Nonlinear state part
-        self.fx = Fxu(self.nu, self.nh, self.nx, bias=self.bias)
+        self.fx = Fxu(self.nu, self.nh, self.nx, actF=self.actF, n_hidden=n_hidden_layers, bias=self.bias)
         if self.out_eq_nl:
-            self.hx = Hx(self.nx, self.nh, self.ny, bias=bias)
+            self.hx = Hx(self.nx, self.nh, self.ny, actF=self.actF, n_hidden=n_hidden_layers, bias=bias)
 
     def __repr__(self):
         return f"GRNSSM : nu={self.nu} nx={self.nx} nh={self.nh} ny={self.ny} activation = {self.act_name}"
 
     def __str__(self) -> str:
         return "GRNSSM"
+
+    def build_dims(self, nl_part):
+        # First step build fx
+        list_shapes = []
+
+        for i, (name, layer) in enumerate(nl_part.fnn.named_modules()):
+            if hasattr(layer, 'weight'): 
+               list_shapes.append(layer.weight.shape)
+        nq = sum(shape[0] for shape in list_shapes[:-1]) # Until the end except for the las element
+        return list_shapes, nq
+    
+    def build_C1_D12(self, nq_x, list_shapes_x, nq_y, list_shapes_y):
+        C1_x = torch.zeros((nq_x, self.nx))
+        D12_x = torch.zeros((nq_x, self.nu))
+        nh1, nxu = list_shapes_x[0]
+        C1_x[:nh1, :] = self.fx.fnn[0].weight[:, :self.nx]
+        D12_x[:nh1, :] = self.fx.fnn[0].weight[:, self.nx:]
+
+        if self.out_eq_nl:
+            C1_y = torch.zeros((nq_y, self.nx))
+            D12_y = torch.zeros((nq_y, self.nu))
+            nh1y, nyu = list_shapes_y[0]
+            C1_y[:nh1y, :] = self.hx.fnn[0].weight[:, :self.nx]
+            C1 = torch.cat((C1_x, C1_y), dim=0)
+            D12 = torch.cat((D12_x, D12_y), dim=0)
+        else:
+            C1 = C1_x
+            D12 = D12_x
+        return C1, D12
+    
+    def build_B1(self, nq_x, list_shapes_x, nq_y):
+        B1_x = torch.zeros((self.nx, nq_x))
+        nl, nhl = list_shapes_x[-1]
+        B1_x[:, nq_x-nhl:] = self.fx.fnn[-1].weight
+
+        B1_y = torch.zeros((self.nx, nq_y))
+        B1 = torch.cat([B1_x, B1_y], dim = 1)  # output equation is not connected to the state one.
+
+        return B1
+    
+    def build_D21(self, nq_y, list_shapes_y, nq_x):
+
+        D21 = torch.zeros((self.ny, nq_x + nq_y))
+        if self.out_eq_nl:
+            nl, nhl = list_shapes_y[-1]
+            D21[:, (nq_x + nq_y)-nhl:] = self.hx.fnn[-1].weight
+        return D21
+
+    def build_D11(self, nq_x, list_shapes_x, nq_y, list_shapes_y):
+        list_shapes_inter = list_shapes_x[1:-1]
+        D11_x = torch.zeros((nq_x, nq_x))
+        index_row, index_col = list_shapes_x[0][0], 0
+        for i, shape in enumerate(list_shapes_inter):
+            end_row = index_row + shape[0]
+            end_col = index_col + shape[1]
+            D11_x[index_row:end_row, index_col:end_col] = self.fx.fnn[2*(i+1)].weight
+            index_row = end_row
+            index_col = end_col
+        
+        D11_y = torch.zeros((nq_y, nq_y))
+        if self.out_eq_nl:
+            index_row, index_col = list_shapes_y[0][0], 0
+            for i, shape in enumerate(list_shapes_inter):
+                end_row = index_row + shape[0]
+                end_col = index_col + shape[1]
+                D11_y[index_row:end_row, index_col:end_col] = self.hx.fnn[2*(i+1)].weight
+                index_row = end_row
+                index_col = end_col
+        D11 = torch.block_diag(D11_x, D11_y)
+        return D11
+
+    def to_snof(self):
+        list_shapes_x, nq_x = self.build_dims(self.fx)
+        if self.out_eq_nl:
+            list_shapes_y, nq_y = self.build_dims(self.hx)
+        else:
+            list_shapes_y, nq_y = [], 0
+        A = self.linmod.A.weight
+        
+        B1 = self.build_B1(nq_x, list_shapes_x, nq_y)
+        B2 = self.linmod.B.weight
+        C1, D12 = self.build_C1_D12(nq_x, list_shapes_x, nq_y, list_shapes_y)
+        C2 = self.linmod.C.weight
+        D11 = self.build_D11(nq_x, list_shapes_x, nq_y, list_shapes_y)
+        D21 = self.build_D21(nq_y, list_shapes_y, nq_x)
+        D22 = torch.zeros(self.ny, self.nu)
+
+        weights = {
+            'A': A,
+            'B1': B1,
+            'B2': B2,
+            'C1' : C1,
+            'C2': C2,
+            'D11': D11,
+            'D21':D21,
+            'D12':D12,
+            'D22':D22
+        }
+        return weights
+    
 
     def forward(self, u, x):
         # Forward pass -- prediction of the output at time k : y_k

@@ -44,6 +44,39 @@ def block_diag(arr_list):
 
     return B
 
+def build_D11(weights, n):
+    """
+    Create the W' matrix as a block diagonal matrix with blocks strictly below the main diagonal.
+    
+    Parameters:
+    weights: Either a nn.Sequential model or a list/tensor of weights
+    n: The size of the square matrix (number of rows/columns)
+    
+    Returns:
+    D11: torch.Tensor representing the W' matrix
+    """
+    # Initialize W' as a zero tensor
+    D11 = torch.zeros(n, n)
+    
+    # Extract weights from the input
+    if isinstance(weights, torch.nn.Sequential):
+        # If weights is a Sequential model, extract weights from its layers
+        weight_list = [layer.weight.data for layer in weights if hasattr(layer, 'weight')]
+    elif isinstance(weights, (list, torch.Tensor)):
+        # If weights is already a list or tensor, use it directly
+        weight_list = weights if isinstance(weights, list) else weights.tolist()
+    else:
+        raise ValueError("Input must be either nn.Sequential, a list, or a tensor of weights")
+    
+    # Ensure we have the correct number of weights
+    if len(weight_list) != n - 1:
+        raise ValueError(f"Incorrect number of weights. Expected {n-1}, got {len(weight_list)}")
+    
+    # Fill the block diagonal elements of W' with the weights
+    for i in range(1, n):
+        D11[i, i-1] = weight_list[i-1]
+    
+    return D11
 
 def schur(matrix, dim_A, dim_B, dim_C, dim_D):
     """

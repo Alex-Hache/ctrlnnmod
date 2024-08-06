@@ -89,6 +89,9 @@ class LyapunovContinuous(LMI):
         self.alpha = alpha
         self.P = Parameter(torch.eye(A.size(0)))
 
+    def _symP(self):
+        return 0.5 * (self.P + self.P.T)
+    
     def forward(self) -> Tensor:
         """
         Compute the LMI for the continuous-time Lyapunov equation.
@@ -96,9 +99,10 @@ class LyapunovContinuous(LMI):
         Returns:
             Tensor: The positive definite LMI matrix.
         """
-        Q = -(self.A.t().matmul(self.P) + self.P.matmul(self.A) + 2 * self.alpha * self.P)
+        P = self._symP()
+        Q = -(self.A.t().matmul(P) + P.matmul(self.A) + 2 * self.alpha * P)
         # assert isSDP(Q), "The forward result is not positive definite."
-        return Q
+        return Q, P
 
     @classmethod
     def solve(cls, A: Tensor, alpha: float, tol: float = 1e-9, solver: str = 'MOSEK', Q=None) -> Tuple[Tensor, Tensor]:

@@ -66,16 +66,20 @@ class LogdetRegularization(Regularization):
         self.min_weight = min_weight
 
     def __call__(self) -> Tensor:
-        matrix = self.model()
-        _, logdet = slogdet(matrix)
-        return -self.lambda_logdet * logdet
+        matrices = self.model()
+        total_logdet = 0
+        for matrix in matrices:
+            _, logdet = slogdet(matrix)
+            total_logdet += logdet
+        
+        return -self.lambda_logdet * total_logdet
 
     def update(self) -> None:
         if self.updatable and self.factor > self.min_weight:
             old_lambda = self.lambda_logdet.item()
             self.lambda_logdet *= self.factor
             if self.verbose:
-                print(f"Updated Logdet regularization lambda: {old_lambda} -> {self.lambda_logdet.item()}")
+                print(f"Updated Logdet regularization lambda: {old_lambda} -> {self.lambda_logdet.item()} \n")
             if self.factor <= self.min_weight:
                 print("Minimum weight reached")
 
