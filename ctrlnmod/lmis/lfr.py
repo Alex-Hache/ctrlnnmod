@@ -74,12 +74,12 @@ class AbsoluteStableLFT(LMI):
     def solve(cls, A: Tensor, B1: Tensor, C1: Tensor, D11: Tensor, alpha: Tensor,
               mu: Tensor = Tensor([1.0]), solver="MOSEK", tol=1e-6, Lambda=None) -> Tuple[Tensor, Tensor, Tensor]:
 
-        A = A.detach().numpy()
-        B1 = B1.detach().numpy()
-        C1 = C1.detach().numpy()
-        D11 = D11.detach().numpy()
-        mu = mu.detach().numpy()
-        alpha = alpha.numpy()
+        A = A.detach().numpy().astype(np.float64)
+        B1 = B1.detach().numpy().astype(np.float64)
+        C1 = C1.detach().numpy().astype(np.float64)
+        D11 = D11.detach().numpy().astype(np.float64)
+        mu = mu.detach().numpy().astype(np.float64)
+        alpha = alpha.numpy().astype(np.float64)
 
         nx = A.shape[0]
         nq = B1.shape[1]
