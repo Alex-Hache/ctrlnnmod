@@ -17,7 +17,7 @@ from ctrlnmod.linalg.utils import sqrtm
 class RENODE(nn.Module):
     def __init__(self, nx: int, ny: int, nu: int, nq: int, sigma: str,
                  device: torch.device, bias: bool = False,
-                 feedthrough: bool = True) -> None:
+                 feedthrough: bool = True, out_eq_nl: bool = False) -> None:
         super(RENODE, self).__init__()
 
         self.nx = nx
@@ -31,8 +31,11 @@ class RENODE(nn.Module):
         self.D12 = Parameter(torch.randn(nq, nu, device=device))
         self.B2 = Parameter(torch.randn(nx, nu, device=device))
         self.C2 = Parameter(torch.randn(ny, nx, device=device))
-        self.D21 = Parameter(torch.randn(ny, nq, device=device))
-
+        self.out_eq_nl = out_eq_nl
+        if out_eq_nl:
+            self.D21 = Parameter(torch.randn(ny, nq, device=device))
+        else:   
+            self.register_buffer('D21', torch.zeros((ny, nq), device=device))
         # Potentially constrained parameters in case of C or QSR REN
         self.A = Parameter(torch.zeros(nx, nx, device=device))
         self.D11 = Parameter(torch.zeros(nq, nq, device=device))
@@ -121,10 +124,10 @@ class RENODE(nn.Module):
 class ContractingRENODE(RENODE):
     def __init__(self, nx: int, ny: int, nu: int, nq: int, sigma: str,
                  device: torch.device, alpha: float, epsilon: float,
-                 bias: bool = False, feedthrough: bool = True,
+                 bias: bool = False, feedthrough: bool = False, out_eq_nl = False,
                  param: Optional[str] = 'square') -> None:
         super(ContractingRENODE, self).__init__(nx, ny, nu,
-                                                nq, sigma, device, bias, feedthrough)
+                                                nq, sigma, device, bias, feedthrough, out_eq_nl=out_eq_nl)
 
         self.param = param
         self.alpha = alpha
@@ -135,7 +138,7 @@ class ContractingRENODE(RENODE):
         self.X = Parameter(torch.randn(nx + nq, nx + nq, device=device))
         self.U = Parameter(torch.randn(nx, nq, device=device))
 
-        if param is not 'square':
+        if param != 'square':
             geo.positive_definite(self, 'X', triv=param)
             geo.positive_definite(self, 'P_inv', triv=param)
             geo.skew_symmetric(self, 'S')
@@ -263,6 +266,7 @@ class ContractingRENODE(RENODE):
             epsilon=self.epsilon,
             bias=self.bias,
             feedthrough=self.feedthrough,
+            out_eq_nl=self.out_eq_nl,
             param=self.param
         )
 
