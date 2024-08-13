@@ -17,6 +17,10 @@ from geotorch_custom.exceptions import (
 from geotorch_custom.utils import _extra_repr
 
 
+def get_lyap_exp(A):
+    return -torch.max(torch.real(torch.linalg.eigvals(A)))
+
+
 class AlphaStable(ProductManifold):
     def __init__(self, size, alpha: float, triv="expm"):
 
@@ -52,7 +56,8 @@ class AlphaStable(ProductManifold):
 
     def submersion_inv(self, A, check_in_manifold=True, epsilon=1e-3, solver="MOSEK"):
         if check_in_manifold and not self.in_manifold_eigen(A, epsilon):
-            raise InManifoldError(A, self)
+            print(f"Enforced alpha = {self.alpha} and given alpha = {get_lyap_exp(A)}")
+            raise InManifoldError(get_lyap_exp(A), self.alpha)
         with torch.no_grad():
             A = A.detach().numpy()
             nx = A.shape[0]

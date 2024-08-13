@@ -228,9 +228,9 @@ class LBDN(Module):
 
 class LipFxu(LBDN):
     def __init__(self, input_dim, hidden_dim, state_dim, scalex, scaleu,
-                 act_f=Tanh(), n_hidden=1, param: str = 'expm') -> None:
+                 act_f=Tanh(), n_hidden=1, param: str = 'expm', bias=True) -> None:
         super().__init__(input_dim + state_dim, hidden_dim, state_dim,
-                         torch.tensor([scalex] * state_dim + [scaleu] * input_dim), act_f, n_hidden, param=param)
+                         torch.tensor([scalex] * state_dim + [scaleu] * input_dim), act_f, n_hidden, param=param, bias=bias)
 
         self.nx = state_dim
         self.Wfx = self.Win.weight[:, :self.nx]
@@ -244,9 +244,9 @@ class LipFxu(LBDN):
 
 class LipHx(LBDN):
     def __init__(self, state_dim, hidden_dim, output_dim, scalex,
-                 actF=Tanh(), n_hidden=1, param: str = 'expm') -> None:
+                 actF=Tanh(), n_hidden=1, param: str = 'expm', bias=True) -> None:
         super().__init__(state_dim, hidden_dim, output_dim,
-                         torch.tensor([scalex] * state_dim), actF, n_hidden, param=param)
+                         torch.tensor([scalex] * state_dim), actF, n_hidden, param=param, bias=bias)
         self.Wh = self.Wout.weight
         self.Whx = self.Win.weight
 

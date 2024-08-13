@@ -2,7 +2,7 @@ import torch
 from torch import nn, Tensor
 from torch.nn import Parameter
 from cvxpy.error import SolverError
-from cvxpy import Variable, Problem, Minimize, bmat, diag, trace
+from cvxpy import Variable, Problem, Minimize, bmat, diag, trace, Maximize
 from typing import Union, Tuple, Optional, Callable
 from .base import LMI
 import numpy as np
@@ -98,18 +98,18 @@ class AbsoluteStableLFT(LMI):
             P - (tol) * np.eye(nx) >> 0,
             Lambda - tol * np.eye(nq) >> 0   # type: ignore,
         ]
-        objective = Minimize(trace(P))  # Feasibility problem
+        objective = Maximize(0)  # Feasibility problem
 
         prob = Problem(objective, constraints=constraints)
         try:
-            prob.solve(solver)
+            prob.solve(solver, verbose=False)
         except SolverError:
             prob.solve()  # If MOSEK is not installed then try SCS by default
 
         if prob.status in ["infeasible", "unbounded"]:
             raise ValueError("SDP problem is infeasible or unbounded")
 
-        return Tensor(M.value), Tensor(Lambda.value), Tensor(P.value)
+        return Tensor(-M.value), Tensor(Lambda.value), Tensor(P.value)
 
     def _proj(self):
         return 0.5 * (self.P + self.P.T), torch.diag(self.Lambda_vec)

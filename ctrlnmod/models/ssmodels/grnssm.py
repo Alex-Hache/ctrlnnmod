@@ -1,5 +1,6 @@
 from torch.nn import Module
 from ctrlnmod.models.feedforward.lbdn import Fxu, LipFxu, LipHx, Hx
+from ctrlnmod.lmis.hinf import HInfCont
 from torch.nn.init import zeros_
 from torch.linalg import eigvals
 from torch import Tensor, real, min
@@ -7,97 +8,116 @@ from typing import Tuple
 from ctrlnmod.models.ssmodels.linear import NnLinear
 from ctrlnmod.models.ssmodels.hinf import L2BoundedLinear
 import torch
-from cvxpy.expressions.variable import Variable
-from cvxpy.problems.problem import Problem
-from cvxpy.problems.objective import Minimize
-from cvxpy.atoms.affine.bmat import bmat
-import numpy as np
-from math import sqrt
-from scipy.io import savemat
 import torch.nn as nn
-
+from math import sqrt
+import numpy as np
+from scipy.io import savemat
 
 class Grnssm(Module):
     def __init__(
         self,
-        input_dim: int,
-        output_dim: int,
-        state_dim: int,
-        hidden_dim: int,
+        nu: int,
+        ny: int,
+        nx: int,
+        nh: int,
         n_hidden_layers: int = 1,
         actF: str = 'tanh',
-        out_eq_nl=False,
-        alpha=None,
-        bias=True
+        out_eq_nl: bool = False,
+        alpha: float = None,
+        bias: bool = True
     ) -> None:
-        r"""
-        u is a generalized input ex : [control, distrubance]:
-            .. ::math
-                x^+ = Ax + Bu + f(x,u)
-                y = Cx + h(x)
-
-        params :
-            * input_dim : size of input layer
-            * hidden_dim : size of hidden layers
-            * state_dim : size of the state-space
-            * n_hid_layers : number of hidden layers
-            * output_dim : size of the output layer
-            * actF : activation function for nonlienar residuals
-            * out_eq : nonlinear output equation
-            * alpha : alpha-stability bound for A matrix
-        """
         super(Grnssm, self).__init__()
 
-        # Set network dimensions
-        self.nu = input_dim
-        self.nx = state_dim
-        self.nh = hidden_dim
-        self.ny = output_dim
-        self.n_hid_layers = n_hidden_layers
-        self.act_name = actF  # Name of the activation function
+        self.nu = nu
+        self.nx = nx
+        self.ny = ny
+        self.nh = nh
+        self.n_hidden_layers = n_hidden_layers
+        self.act_name = actF
         self.bias = bias
+        self.out_eq_nl = out_eq_nl
+        self.alpha = alpha
 
-        # Activation functions
         if actF.lower() == 'tanh':
             self.actF = nn.Tanh()
         elif actF.lower() == 'relu':
             self.actF = nn.ReLU()
         else:
-            raise NotImplementedError(
-                f"Function {actF} not yet implemented please choose from 'tanh' or 'relu' ")
+            raise NotImplementedError(f"Function {actF} not yet implemented. Please choose 'tanh' or 'relu'.")
 
-        # Nonlinear output equation
-        self.out_eq_nl = out_eq_nl
-
-        # Linear part
         self.linmod = NnLinear(self.nu, self.ny, self.nx, alpha=alpha)
-        self.alpha = alpha
-
-        # Nonlinear state part
-        self.fx = Fxu(self.nu, self.nh, self.nx, actF=self.actF,
-                      n_hidden=n_hidden_layers, bias=self.bias)
+        self.fx = Fxu(self.nu, self.nh, self.nx, actF=self.actF, n_hidden=n_hidden_layers, bias=self.bias)
+        
         if self.out_eq_nl:
-            self.hx = Hx(self.nx, self.nh, self.ny, actF=self.actF,
-                         n_hidden=n_hidden_layers, bias=bias)
+            self.hx = Hx(self.nx, self.nh, self.ny, actF=self.actF, n_hidden=n_hidden_layers, bias=bias)
 
     def __repr__(self):
-        return f"GRNSSM : nu={self.nu} nx={self.nx} nh={self.nh} ny={self.ny} activation = {self.act_name}"
+        return f"GRNSSM : nu={self.nu} nx={self.nx} nh={self.nh} ny={self.ny} activation={self.act_name}"
 
     def __str__(self) -> str:
         return "GRNSSM"
 
-    def build_dims(self, nl_part):
-        # First step build fx
-        list_shapes = []
+    def forward(self, u, x):
+        x_lin, y_lin = self.linmod(u, x)
+        fx = self.fx(x, u)
+        dx = x_lin + fx
 
-        for i, (name, layer) in enumerate(nl_part.fnn.named_modules()):
+        if self.out_eq_nl:
+            hx = self.hx(x)
+            y = y_lin + hx
+        else:
+            y = y_lin
+        return dx, y
+
+    def init_weights_(self, A0, B0, C0, requires_grad=True) -> None:
+        self.linmod.init_model_(A0, B0, C0, requires_grad=requires_grad)
+        zeros_(self.fx.Wout.weight)
+        if self.fx.Wout.bias is not None:
+            zeros_(self.fx.Wout.bias)
+        if self.out_eq_nl:
+            zeros_(self.hx.Wout.weight)
+            if self.hx.Wout.bias is not None:
+                zeros_(self.hx.Wout.bias)
+
+        nn.init.xavier_uniform_(self.fx.Wfu, gain=nn.init.calculate_gain(self.act_name))
+        nn.init.xavier_uniform_(self.fx.Wfx, gain=nn.init.calculate_gain(self.act_name))
+
+    def clone(self):
+        copy = type(self)(self.nu, self.ny, self.nx, self.nh, self.n_hidden_layers, self.act_name, self.out_eq_nl, self.alpha, self.bias)
+        copy.load_state_dict(self.state_dict())
+        return copy
+
+    def check_(self, *args):
+        return True
+
+    def _frame(self):
+        A = self.linmod.A.weight
+        B2 = self.linmod.B.weight
+        C2 = self.linmod.C.weight
+
+        list_shapes_x, nq_x = self._build_dims(self.fx)
+        if self.out_eq_nl:
+            list_shapes_y, nq_y = self._build_dims(self.hx)
+        else:
+            list_shapes_y, nq_y = [], 0
+
+        B1 = self._build_B1(nq_x, list_shapes_x, nq_y)
+        C1, D12 = self._build_C1_D12(nq_x, list_shapes_x, nq_y, list_shapes_y)
+        D11 = self._build_D11(nq_x, list_shapes_x, nq_y, list_shapes_y)
+        D21 = self._build_D21(nq_y, list_shapes_y, nq_x)
+        D22 = torch.zeros(self.ny, self.nu)
+
+        return A, B1, B2, C1, C2, D11, D12, D21, D22
+
+    def _build_dims(self, nl_part):
+        list_shapes = []
+        for _, layer in nl_part.fnn.named_modules():
             if hasattr(layer, 'weight'):
                 list_shapes.append(layer.weight.shape)
-        # Until the end except for the las element
         nq = sum(shape[0] for shape in list_shapes[:-1])
         return list_shapes, nq
 
-    def build_C1_D12(self, nq_x, list_shapes_x, nq_y, list_shapes_y):
+    def _build_C1_D12(self, nq_x, list_shapes_x, nq_y, list_shapes_y):
         C1_x = torch.zeros((nq_x, self.nx))
         D12_x = torch.zeros((nq_x, self.nu))
         nh1, nxu = list_shapes_x[0]
@@ -116,34 +136,30 @@ class Grnssm(Module):
             D12 = D12_x
         return C1, D12
 
-    def build_B1(self, nq_x, list_shapes_x, nq_y):
+    def _build_B1(self, nq_x, list_shapes_x, nq_y):
         B1_x = torch.zeros((self.nx, nq_x))
         nl, nhl = list_shapes_x[-1]
         B1_x[:, nq_x - nhl:] = self.fx.fnn[-1].weight
 
         B1_y = torch.zeros((self.nx, nq_y))
-        # output equation is not connected to the state one.
         B1 = torch.cat([B1_x, B1_y], dim=1)
-
         return B1
 
-    def build_D21(self, nq_y, list_shapes_y, nq_x):
-
+    def _build_D21(self, nq_y, list_shapes_y, nq_x):
         D21 = torch.zeros((self.ny, nq_x + nq_y))
         if self.out_eq_nl:
             nl, nhl = list_shapes_y[-1]
             D21[:, (nq_x + nq_y) - nhl:] = self.hx.fnn[-1].weight
         return D21
 
-    def build_D11(self, nq_x, list_shapes_x, nq_y, list_shapes_y):
+    def _build_D11(self, nq_x, list_shapes_x, nq_y, list_shapes_y):
         list_shapes_inter = list_shapes_x[1:-1]
         D11_x = torch.zeros((nq_x, nq_x))
         index_row, index_col = list_shapes_x[0][0], 0
         for i, shape in enumerate(list_shapes_inter):
             end_row = index_row + shape[0]
             end_col = index_col + shape[1]
-            D11_x[index_row:end_row,
-                  index_col:end_col] = self.fx.fnn[2 * (i + 1)].weight
+            D11_x[index_row:end_row, index_col:end_col] = self.fx.fnn[2 * (i + 1)].weight
             index_row = end_row
             index_col = end_col
 
@@ -153,216 +169,105 @@ class Grnssm(Module):
             for i, shape in enumerate(list_shapes_inter):
                 end_row = index_row + shape[0]
                 end_col = index_col + shape[1]
-                D11_y[index_row:end_row,
-                      index_col:end_col] = self.hx.fnn[2 * (i + 1)].weight
+                D11_y[index_row:end_row, index_col:end_col] = self.hx.fnn[2 * (i + 1)].weight
                 index_row = end_row
                 index_col = end_col
         D11 = torch.block_diag(D11_x, D11_y)
         return D11
 
-    def to_snof(self):
-        list_shapes_x, nq_x = self.build_dims(self.fx)
-        if self.out_eq_nl:
-            list_shapes_y, nq_y = self.build_dims(self.hx)
-        else:
-            list_shapes_y, nq_y = [], 0
-        A = self.linmod.A.weight
-
-        B1 = self.build_B1(nq_x, list_shapes_x, nq_y)
-        B2 = self.linmod.B.weight
-        C1, D12 = self.build_C1_D12(nq_x, list_shapes_x, nq_y, list_shapes_y)
-        C2 = self.linmod.C.weight
-        D11 = self.build_D11(nq_x, list_shapes_x, nq_y, list_shapes_y)
-        D21 = self.build_D21(nq_y, list_shapes_y, nq_x)
-        D22 = torch.zeros(self.ny, self.nu)
-
-        weights = {
-            'A': A,
-            'B1': B1,
-            'B2': B2,
-            'C1': C1,
-            'C2': C2,
-            'D11': D11,
-            'D21': D21,
-            'D12': D12,
-            'D22': D22
-        }
-        return weights
-
-    def forward(self, u, x):
-        # Forward pass -- prediction of the output at time k : y_k
-        x_lin, y_lin = self.linmod(u, x)  # Linear part
-
-        # Nonlinear part fx
-        fx = self.fx(x, u)
-        dx = x_lin + fx
-
-        if self.out_eq_nl:
-            hx = self.hx(x)
-            y = y_lin + hx
-        else:
-            y = y_lin
-        return dx, y
-
-    def init_weights_(self, A0, B0, C0, requires_grad=True) -> None:
-        """
-            It can be used to initialize the linear part of the model.
-            For example using linear subspace methods or Best Linear Approximation
-        """
-
-        self.linmod.init_model_(A0, B0, C0, requires_grad=requires_grad)
-
-        # Initializing nonlinear output weights to 0
-        zeros_(self.fx.Wout.weight)
-        if self.fx.Wout.bias is not None:
-            zeros_(self.fx.Wout.bias)
-        # zeros_(self.Wh.weight)
-        if self.out_eq_nl:
-            zeros_(self.hx.Wout.weight)
-            if self.hx.Wout.bias is not None:
-                zeros_(self.hx.Wout.bias)
-
-        nn.init.xavier_uniform_(
-            self.fx.Wfu, gain=nn.init.calculate_gain(self.act_name))
-        nn.init.xavier_uniform_(
-            self.fx.Wfx, gain=nn.init.calculate_gain(self.act_name))
-
-    def clone(self):  # Method called by the simulator
-        copy = type(self)(
-            self.nu,
-            self.ny,
-            self.nx,
-            self.nh,
-            self.n_hid_layers,
-            self.act_name,
-            self.out_eq_nl,
-            self.alpha
-        )
-        copy.load_state_dict(self.state_dict())
-        return copy
-
-    def check_(self, *args):
-        return True
-
-
 class LipGrnssm(Grnssm):
     def __init__(
         self,
-        input_dim: int,
-        output_dim: int,
-        state_dim: int,
-        hidden_dim: int,
+        nu: int,
+        ny: int,
+        nx: int,
+        nh: int,
         n_hidden_layers: int = 1,
         actF: str = 'tanh',
-        out_eq_nl=False,
+        out_eq_nl: bool = False,
         lip: Tuple[Tensor, Tensor] = (Tensor([1]), Tensor([1])),
-        alpha=None
+        alpha: float = None,
+        param: str = 'expm',
+        bias: bool = True
     ) -> None:
-        super(LipGrnssm, self).__init__(
-            input_dim,
-            output_dim,
-            state_dim,
-            hidden_dim,
-            n_hidden_layers,
-            actF,
-            out_eq_nl,
-            alpha=alpha
-        )
+        super(LipGrnssm, self).__init__(nu, ny, nx, nh, n_hidden_layers, actF, out_eq_nl, alpha, bias)
 
-        # We override the definition of the nonlinear parts of the network
-        # and replace them with LBDN networks
-
-        # Nonlinear state part
         self.lip_x = lip[0]
         self.lip_u = lip[1]
 
-        self.fx = LipFxu(
-            self.nu, self.nh, self.nx, scalex=self.lip_x, scaleu=self.lip_u
-        )
-        # Nonlinear output part
+        self.fx = LipFxu(self.nu, self.nh, self.nx, scalex=self.lip_x, scaleu=self.lip_u, param=param, bias=bias)
         if self.out_eq_nl:
-            self.hx = LipHx(self.nx, self.nh, self.ny, scalex=self.lip_x)
-
-    def forward(self, u, x):
-        return super().forward(u, x)
-
-    def right_inverse_(self, A0, B0, C0, isLinTrainable=True):
-        super().init_weights_(A0, B0, C0, isLinTrainable)
+            self.hx = LipHx(self.nx, self.nh, self.ny, scalex=self.lip_x, bias=bias, param=param)
 
     def check_(self) -> bool:
         return (self.fx.check_() and self.hx.check_()) if self.out_eq_nl else self.fx.check_()
 
-
 class StableGNSSM(LipGrnssm):
-    r"""
-        u is a generalized input ex : [control, distrubance]:
-            .. ::math
-                x^+ = Ax + Bu + f(x,u)
-                y = Cx + h(x)
-
-        params :
-            * input_dim : size of input layer
-            * hidden_dim : size of hidden layers
-            * state_dim : size of the state-space
-            * n_hid_layers : number of hidden layers
-            * output_dim : size of the output layer
-            * actF : activation function for nonlienar residuals
-            * out_eq : nonlinear output equation
-            * lambda : lipschitz bound for f nonlinearity
-        """
-
-    def __init__(self, nu: int, ny: int, nx: int,
-                 nh: int, n_hidden_layers: int = 1, actF='tanh',
-                 out_eq_nl=False, lmbd=1.0, epsilon=1e-2):
-        super(StableGNSSM, self).__init__(nu, ny, nx, nh, n_hidden_layers, actF, out_eq_nl,
-                                          lip=(Tensor([lmbd]), Tensor([10])), alpha=lmbd + epsilon)
-
+    def __init__(
+        self,
+        nu: int,
+        ny: int,
+        nx: int,
+        nh: int,
+        n_hidden_layers: int = 1,
+        actF: str = 'tanh',
+        out_eq_nl: bool = False,
+        lmbd: float = 1.0,
+        epsilon: float = 1e-2,
+        bias: bool = True
+    ):
+        super(StableGNSSM, self).__init__(
+            nu, ny, nx, nh, n_hidden_layers, actF, out_eq_nl,
+            lip=(Tensor([lmbd]), Tensor([10])), alpha=lmbd + epsilon, bias=bias
+        )
 
 class L2IncGrNSSM(LipGrnssm):
-    def __init__(self, nu: int, ny: int, nx: int,
-                 nh: int, n_hidden_layers: int = 1, actF='tanh',
-                 out_eq_nl=False, l2i=1.0, alpha=1.0) -> None:
-        # Compute necessary bound for L2i according to Lipschitz upper bound for nl part
-        # epsilon_u = torch.sqrt([1.0])
-        # epsilon_x = torch.sqrt([1.0])
+    def __init__(
+        self,
+        nu: int,
+        ny: int,
+        nx: int,
+        nh: int,
+        n_hidden_layers: int = 1,
+        actF: str = 'tanh',
+        out_eq_nl: bool = False,
+        l2i: float = 1.0,
+        alpha: float = 1.0,
+        bias: bool = True
+    ) -> None:
         self.gamma = l2i
-        lipx = torch.sqrt(torch.Tensor([2 * alpha]))  # Dummy init
+        lipx = torch.sqrt(torch.Tensor([2 * alpha]))
         lip = (lipx, l2i / torch.sqrt(torch.Tensor([2])))
-        super().__init__(nu, ny, nx, nh, n_hidden_layers, actF, out_eq_nl, lip, alpha)
+        super().__init__(nu, ny, nx, nh, n_hidden_layers, actF, out_eq_nl, lip, alpha, bias=bias)
         scaleH = 1 / sqrt(2) - 0.1
-        self.linmod = L2BoundedLinear(
-            nu, ny, nx, gamma=l2i, alpha=alpha, scaleH=scaleH, epsilon=2.0)
-        self.frame_()
+        self.linmod = L2BoundedLinear(nu, ny, nx, gamma=l2i, alpha=alpha, scaleH=scaleH, epsilon=2.0)
+        self._frame()
 
     def __repr__(self):
         return f"Incr L2 bounded GRNSSM : eta={float(self.gamma)} -- nh={self.nh}"
 
-    def frame_(self):
+    def _frame(self):
         self.alpha = (self.lip_x**2) / (2 * min(real(eigvals(self.linmod.P))))
         self.linmod.alpha = self.alpha
-
-    def forward(self, u, x):
-        return super().forward(u, x)
+        return super()._frame()
 
     def right_inverse_(self, A, B, C, eta, alpha):
         self.linmod.right_inverse_(A, B, C, eta, alpha)
 
     def check_(self, traj=None, N_trys=1000) -> Tuple[bool, np.ndarray]:
-        self.frame_()
+        self._frame()
         gammas = []
         if traj is not None:
             u_traj, x_traj = traj
-
             for u_eq, x_eq in zip(u_traj, x_traj):
-                gamma = self.compute_L2_taylor(
-                    u_eq.unsqueeze(0), x_eq.unsqueeze(0))
+                gamma = self.compute_L2_taylor(u_eq.unsqueeze(0), x_eq.unsqueeze(0))
                 gammas.append(gamma)
         else:
-            for k in range(N_trys):  # Compute around the origin
+            for _ in range(N_trys):
                 u_eq, x_eq = torch.rand((1, self.nu)), torch.rand((1, self.nx))
                 gamma = self.compute_L2_taylor(u_eq, x_eq)
                 gammas.append(gamma)
-        bl2i = all(np.array(gammas) <= gamma)
+        bl2i = all(np.array(gammas) <= self.gamma)
         b_lin_bounded, _ = self.linmod.check_()
         if not b_lin_bounded:
             print("Prescribed L2 gain for linear part not okay")
@@ -378,35 +283,7 @@ class L2IncGrNSSM(LipGrnssm):
         B, A = jac[0]
         D, C = jac[1]
         with torch.no_grad():
-            A = A.squeeze(0).squeeze(1).detach().numpy()
-            B = B.squeeze(0).squeeze(1).detach().numpy()
-            C = C.squeeze(0).squeeze(1).detach().numpy()
-            D = D.squeeze(0).squeeze(1).detach().numpy()
-            nx = A.shape[0]
-            nu = B.shape[1]
-            ny = C.shape[0]
-            P = Variable((nx, nx), "P", PSD=True)
-            gam = Variable()
-            M = bmat(
-                [
-                    [A.T @ P + P @ A, P @ B, C.T],
-                    [B.T @ P, -gam * np.eye(nu), D.T],
-                    [C, D, -gam * np.eye(ny)],
-                ]
-            )
-            constraints = [
-                M << -epsilon * np.eye(nx + nu + ny),
-                P - (epsilon) * np.eye(nx) >> 0,
-                gam - epsilon >= 0,
-            ]
-            objective = Minimize(gam)  # Feasibility problem
-
-            prob = Problem(objective, constraints=constraints)
-            prob.solve(solver)
-            if prob.status not in ["infeasible", "unbounded"]:
-                gamma = np.sqrt(gam.value)
-            else:
-                gamma = np.Inf
+            _, gamma, _ = HInfCont.solve(A, B, C, D, alpha = torch.zeros(1))
         return gamma
 
     def save_weights(self):
@@ -426,3 +303,4 @@ class L2IncGrNSSM(LipGrnssm):
             'C': C.detach().numpy()
         }
         savemat('weights.mat', mdict)
+

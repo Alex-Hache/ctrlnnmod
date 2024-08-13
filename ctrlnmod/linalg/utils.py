@@ -11,6 +11,8 @@ from cvxpy.atoms.affine.hstack import hstack
 from cvxpy.atoms.affine.vstack import vstack
 from typing import Union
 
+def get_lyap_exp(A):
+    return -torch.max(torch.real(torch.linalg.eigvals(A)))
 
 def block_diag(arr_list):
     '''create a block diagonal matrix from a list of cvxpy matrices'''
