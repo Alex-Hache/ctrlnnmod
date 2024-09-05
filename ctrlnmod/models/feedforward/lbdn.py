@@ -7,7 +7,7 @@ from torch.nn import Module, Linear, Sequential, Tanh
 from collections import OrderedDict
 from ctrlnmod.layers.liplayers import SandwichLinear, SandwichLayer
 from ctrlnmod.linalg.utils import solveLipschitz
-
+from ctrlnmod.lmis.lipschitz import LipschitzLMI, LipschitzLMI2
 
 class FFNN(Module):
     '''
@@ -59,10 +59,10 @@ class FFNN(Module):
         self.Wout = Linear(self.nh, self.ny, bias=self.bias)
         layers.append(('Out layer', self.Wout))
 
-        self.fnn = Sequential(OrderedDict(layers))
+        self.layers = Sequential(OrderedDict(layers))
 
     def forward(self, x):
-        return self.fnn(x)
+        return self.layers(x)
 
 
 class Fxu(FFNN):
@@ -84,7 +84,7 @@ class Fxu(FFNN):
 
     def forward(self, x, u):
         z = torch.cat((x, u), 1)
-        return self.fnn(z)
+        return self.layers(z)
 
 
 class Hx(FFNN):
@@ -104,7 +104,7 @@ class Hx(FFNN):
         self.Whx = self.Win.weight
 
     def forward(self, x):
-        return self.fnn(x)
+        return self.layers(x)
 
 
 class LBDN(Module):
@@ -167,22 +167,25 @@ class LBDN(Module):
     def forward(self, x):
         return self.layers(x)
 
-    def check_(self):
+    def check(self):
         weights = self.extractWeightsSandwich()
         Wfx = weights[0][:, :self.nx]
         Wfu = weights[0][:, self.nx:]
 
-        weights_x = [Wfx, weights[1]]
-        weights_u = [Wfu, weights[1]]
+        weights_x = [Wfx, *weights[1:]]
+        weights_u = [Wfu, *weights[1:]]
 
-        _, lx, _ = solveLipschitz(weights_x)
-        _, lu, _ = solveLipschitz(weights_u)
+        _, lx, _ = LipschitzLMI.solve(weights_x)
+        _, lu, _ = LipschitzLMI.solve(weights_u)
 
         lip = torch.Tensor([lx] * self.nx + [lu] * self.nu)
+
+
+        infos = {'lipx' : round(lx.item(), 3), 'lipu': round(lu.item(), 3)}
         if torch.all(self.scale - lip > 0):
-            return True
+            return True, infos
         else:
-            return False
+            return False, infos
 
     def extractWeightsSandwich(self):
         '''
@@ -200,7 +203,7 @@ class LBDN(Module):
                 if hasattr(layer, 'psi'):  # Sandwich fc class
                     psi = layer.psi
                     f = psi.shape[0]
-                    Q = layer.Q
+                    Q = layer.weight
                     At, B = Q[:, :f].T, Q[:, f:]
                     Win = (2**0.5) * torch.exp(-psi).diag() @ B * scle
                     Wout = (2**0.5) * At @ torch.exp(psi).diag()
@@ -208,7 +211,7 @@ class LBDN(Module):
                     weights_out.append(Wout)  # weights after activation
                 elif hasattr(layer, 'AB'):  # Sandwich lin class
                     fout, _ = layer.weight.shape
-                    Q = layer.Q
+                    Q = layer.weight
                     weights_in.append(Q[:, fout:] * scle)
                     if layer.AB:
                         # Weights after activation
@@ -231,7 +234,7 @@ class LipFxu(LBDN):
                  act_f=Tanh(), n_hidden=1, param: str = 'expm', bias=True) -> None:
         super().__init__(input_dim + state_dim, hidden_dim, state_dim,
                          torch.tensor([scalex] * state_dim + [scaleu] * input_dim), act_f, n_hidden, param=param, bias=bias)
-
+        self.nu = input_dim
         self.nx = state_dim
         self.Wfx = self.Win.weight[:, :self.nx]
         self.Wfu = self.Win.weight[:, self.nx:]

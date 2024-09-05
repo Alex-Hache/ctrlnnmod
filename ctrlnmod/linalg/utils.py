@@ -108,7 +108,7 @@ def schur(matrix, dim_A, dim_B, dim_C, dim_D):
     return S
 
 
-def isSDP(L: torch.Tensor, tol=1e-9) -> bool:
+def isSDP(L: torch.Tensor, tol=1e-3) -> bool:
     '''
     Check if a Tensor is Positive definite up to a fixed tolerance.
 

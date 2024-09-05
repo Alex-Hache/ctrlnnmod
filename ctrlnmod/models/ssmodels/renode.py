@@ -99,9 +99,9 @@ class RENODE(nn.Module):
         return w
 
     def check(self) -> bool:
-        return True
+        return True, {}
 
-    def init_weights_(self, A: torch.Tensor, B: torch.Tensor, C: torch.Tensor) -> None:
+    def init_weights_(self, A: torch.Tensor, B: torch.Tensor, C: torch.Tensor,  **kwargs) -> None:
         with torch.no_grad():
             self.A.copy_(A)
             self.B2.copy_(B)
@@ -157,6 +157,7 @@ class ContractingRENODE(RENODE):
         self.P_inv = Parameter(torch.eye(nx, nx, device=device), requires_grad=True)
         self.S = Parameter(torch.zeros(nx, nx, device=device), requires_grad=True)
         self.X = Parameter(torch.eye(nx + nq, nx + nq, device=device), requires_grad=True)
+        self.X_test = Parameter(torch.eye(nx + nq, nx + nq, device=device), requires_grad=True)
         self.U = Parameter(torch.zeros(nx, nq, device=device), requires_grad=True)
 
         if param != 'square':
@@ -166,6 +167,7 @@ class ContractingRENODE(RENODE):
 
         self.register_buffer('I', torch.eye(nx + nq, device=device))
         self.register_buffer('Ix', torch.eye(nx, device=device))
+        self.register_buffer('Lambda', torch.zeros((nq, nq), device=device))
 
     def _right_inverse(self, A: torch.Tensor, B1: torch.Tensor, C1: torch.Tensor, 
                        D11: torch.Tensor, alpha: torch.Tensor) -> Tuple[torch.Tensor, ...]:
@@ -174,16 +176,16 @@ class ContractingRENODE(RENODE):
         Q = M[:self.nx, :self.nx]
         S = 0.5 * Q + P @ (A + alpha * self.Ix)
         U = C1.T @ Lambda
-        return P_inv, M, S, U
+        return P_inv, M, S, U, Lambda
 
-    def init_weights_(self, A: torch.Tensor, B: torch.Tensor, C: torch.Tensor) -> None:
+    def init_weights_(self, A: torch.Tensor, B: torch.Tensor, C: torch.Tensor, **kwargs) -> None:
         super().init_weights_(A, B, C)
         with torch.no_grad():
             alpha_A = -torch.min(torch.real(torch.linalg.eigvals(A)))
             alpha = alpha_A - 10 * self.epsilon
             alpha = 0.0
             self.alpha = torch.tensor([alpha], device=self.device, requires_grad=False)
-            P_inv, X, S, U = self._right_inverse(self.A, self.B1, self.C1, self.D11, self.alpha)
+            P_inv, X, S, U, Lambda = self._right_inverse(self.A, self.B1, self.C1, self.D11, self.alpha)
 
             self.U.copy_(U)
 
@@ -192,9 +194,9 @@ class ContractingRENODE(RENODE):
                 self.X.copy_(sqrtm(X))
                 self.S.copy_(torch.tril(S, -1))
             else:
-                self.P_inv.copy_(P_inv)
-                self.X.copy_(X)
-                self.S.copy_(S)
+                self.P_inv = P_inv
+                self.X = X
+                self.S = S
 
     def _frame(self) -> Tuple[torch.Tensor, ...]:
         if not is_parametrized(self):
@@ -213,6 +215,7 @@ class ContractingRENODE(RENODE):
         A = P_inv @ (-0.5 * H11 + S) - self.alpha * self.Ix
         B1 = P_inv @ (-H12 - self.U)
         Lambda = 0.5 * torch.diag(torch.diag(H22))
+        self.Lambda = Lambda.detach().clone()
         L = -torch.tril(H22, -1)
         Lambda_inv = torch.inverse(Lambda)
         D11 = Lambda_inv @ L
@@ -231,13 +234,13 @@ class ContractingRENODE(RENODE):
         P = torch.inverse(P_inv)
         H11 = -(A.T @ P + P @ A + 2 * self.alpha * P)
         H12 = -(C1.T @ torch.diag(torch.diag(D11)) + P @ B1)
-        H22 = torch.diag(torch.diag(D11)) - D11 - D11.T @ torch.diag(torch.diag(D11))
+        H22 = 2* self.Lambda -self.Lambda @ D11 - D11.T @ self.Lambda
 
         H_upper = torch.cat([H11, H12], dim=1)
         H_lower = torch.cat([H12.T, H22], dim=1)
         H_cvx = torch.cat([H_upper, H_lower], dim=0)
 
-        return isSDP(H_cvx)
+        return torch.all(torch.real(torch.linalg.eigvals(H_cvx)) > 0), {}
 
     def __str__(self) -> str:
         return f'ContractingRENODE_{self.alpha.item()}'

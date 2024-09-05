@@ -10,6 +10,7 @@ from typing import (
     TypeVar,
 )
 T_co = TypeVar('T_co', covariant=True)
+import lightning as pl
 
 
 @typechecked
@@ -176,3 +177,34 @@ class ExperimentsDataset(Dataset):
 
             plt.tight_layout()
             plt.show()
+
+
+class ExperimentsDataModule(pl.LightningDataModule):
+    def __init__(self, train_set: ExperimentsDataset, val_set: ExperimentsDataset, 
+                 batch_size: int = 32, num_workers: int = 0, max_idx_val: int = None):
+        super().__init__()
+        self.train_set = train_set
+        self.val_set = val_set
+        self.batch_size = batch_size
+        self.num_workers = num_workers
+        self.max_idx_val = max_idx_val
+        
+    def setup(self, stage=None):
+        if self.max_idx_val is None:
+            self.max_idx_val = min(exp.n_samples for exp in self.val_set.experiments)
+
+    def val_dataloader(self):
+        batch_u = torch.stack([exp.u[:self.max_idx_val] for exp in self.val_set.experiments])
+        batch_y_true = torch.stack([exp.y[:self.max_idx_val] for exp in self.val_set.experiments])
+        batch_x0 = torch.stack([exp.x[0] for exp in self.val_set.experiments])
+        
+        dataset = torch.utils.data.TensorDataset(batch_u, batch_y_true, batch_x0)
+        return torch.utils.data.DataLoader(dataset, batch_size=len(self.val_set.experiments))
+
+    def train_dataloader(self):
+        return torch.utils.data.DataLoader(
+            self.train_set, 
+            batch_size=self.batch_size, 
+            shuffle=True,
+            num_workers=self.num_workers
+        )

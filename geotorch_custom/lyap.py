@@ -85,6 +85,7 @@ class AlphaStable(ProductManifold):
             Q = Tensor(-Q.value)
 
             S = Tensor(P.value) @ Tensor(A) + 0.5 * Q + self.alpha * Tensor(P.value)
+            print(torch.real(torch.linalg.eigvals(Q)))
         return Q, P_inv, S
 
     def right_inverse(self, A, check_in_manifold=True):

@@ -2,6 +2,16 @@ import torch
 from functools import wraps
 
 
+
+
+def rk4_discretize(A, h):
+    I = torch.eye(A.size(0), dtype=A.dtype, device=A.device)
+    k1 = h * A
+    k2 = h * torch.mm(A, (I + 0.5 * k1))
+    k3 = h * torch.mm(A, (I + 0.5 * k2))
+    k4 = h * torch.mm(A, (I + k3))
+    return I + (k1 + 2*k2 + 2*k3 + k4) / 6.0
+
 def find_module(model: torch.nn.Module, target_class):
     for name, module in model.named_children():
         if isinstance(module, target_class):

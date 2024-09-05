@@ -27,8 +27,8 @@ class AbsoluteStableLFT(LMI):
 
         if model is not None and extract_lmi_matrices is not None:
             # Initialize matrices from the model
-            self.update_matrices(model, None)
-            self.hook = model.register_forward_pre_hook(self.update_matrices)
+            self.update_matrices()
+            self.hook = self.register_forward_pre_hook(self.update_matrices)
         else:
             self.A, self.B1, self.C1, self.D11 = A, B1, C1, D11
 
@@ -56,15 +56,15 @@ class AbsoluteStableLFT(LMI):
             self.Lambda_vec = Parameter(torch.diag(Lambda).requires_grad_(True))
             self.P = Parameter(P.requires_grad_(True))
 
-    def update_matrices(self, module, input):
+    def update_matrices(self, *args):
         if self.extract_lmi_matrices is None:
             raise ValueError("extract_lmi_matrices is not defined")
         
-        matrices = self.extract_lmi_matrices()
-        self.A = matrices['A']
-        self.B1 = matrices['B1']
-        self.C1 = matrices['C1']
-        self.D11 = matrices['D11']
+        A, B1, B2, C1, C2, D11, D12, D21, D22 = self.extract_lmi_matrices()
+        self.A = A
+        self.B1 = B1
+        self.C1 = C1
+        self.D11 = D11
 
         # Re-initialize parameters only if they haven't been initialized yet
         if not hasattr(self, 'Lambda_vec') or not hasattr(self, 'P'):
@@ -98,13 +98,13 @@ class AbsoluteStableLFT(LMI):
             P - (tol) * np.eye(nx) >> 0,
             Lambda - tol * np.eye(nq) >> 0   # type: ignore,
         ]
-        objective = Maximize(0)  # Feasibility problem
+        objective = Minimize(0)  # Feasibility problem
 
         prob = Problem(objective, constraints=constraints)
         try:
-            prob.solve(solver, verbose=False)
+            prob.solve(solver, verbose=True)
         except SolverError:
-            prob.solve()  # If MOSEK is not installed then try SCS by default
+            prob.solve(solver='SCS', verbose=True)  # If MOSEK is not installed then try SCS by default
 
         if prob.status in ["infeasible", "unbounded"]:
             raise ValueError("SDP problem is infeasible or unbounded")
@@ -113,7 +113,7 @@ class AbsoluteStableLFT(LMI):
 
     def _proj(self):
         return 0.5 * (self.P + self.P.T), torch.diag(self.Lambda_vec)
-    
+
     def forward(self):
         P_sym, Lambda = self._proj()
         M11 = self.A.T @ P_sym + P_sym @ self.A + 2 * self.alpha * P_sym

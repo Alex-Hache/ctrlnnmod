@@ -12,6 +12,20 @@ import torch.nn as nn
 from math import sqrt
 import numpy as np
 from scipy.io import savemat
+from geotorch_custom import is_parametrized
+
+
+
+
+
+def rk4_discretize(A, h):
+    I = torch.eye(A.size(0), dtype=A.dtype, device=A.device)
+    k1 = h * A
+    k2 = h * torch.mm(A, (I + 0.5 * k1))
+    k3 = h * torch.mm(A, (I + 0.5 * k2))
+    k4 = h * torch.mm(A, (I + k3))
+    return I + (k1 + 2*k2 + 2*k3 + k4) / 6.0
+
 
 class Grnssm(Module):
     def __init__(
@@ -69,8 +83,8 @@ class Grnssm(Module):
             y = y_lin
         return dx, y
 
-    def init_weights_(self, A0, B0, C0, requires_grad=True) -> None:
-        self.linmod.init_model_(A0, B0, C0, requires_grad=requires_grad)
+    def init_weights_(self, A0, B0, C0, requires_grad=True, adjust_alpha=False, margin=1e-4) -> None:
+        self.linmod.init_weights_(A0, B0, C0, requires_grad=requires_grad, adjust_alpha=adjust_alpha, margin=margin)
         zeros_(self.fx.Wout.weight)
         if self.fx.Wout.bias is not None:
             zeros_(self.fx.Wout.bias)
@@ -87,8 +101,8 @@ class Grnssm(Module):
         copy.load_state_dict(self.state_dict())
         return copy
 
-    def check_(self, *args):
-        return True
+    def check(self, *args):
+        return True, {}
 
     def _frame(self):
         A = self.linmod.A.weight
@@ -111,7 +125,7 @@ class Grnssm(Module):
 
     def _build_dims(self, nl_part):
         list_shapes = []
-        for _, layer in nl_part.fnn.named_modules():
+        for layer in nl_part.layers:
             if hasattr(layer, 'weight'):
                 list_shapes.append(layer.weight.shape)
         nq = sum(shape[0] for shape in list_shapes[:-1])
@@ -121,14 +135,14 @@ class Grnssm(Module):
         C1_x = torch.zeros((nq_x, self.nx))
         D12_x = torch.zeros((nq_x, self.nu))
         nh1, nxu = list_shapes_x[0]
-        C1_x[:nh1, :] = self.fx.fnn[0].weight[:, :self.nx]
-        D12_x[:nh1, :] = self.fx.fnn[0].weight[:, self.nx:]
+        C1_x[:nh1, :] = self.fx.layers[0].weight[:, :self.nx]
+        D12_x[:nh1, :] = self.fx.layers[0].weight[:, self.nx:]
 
         if self.out_eq_nl:
             C1_y = torch.zeros((nq_y, self.nx))
             D12_y = torch.zeros((nq_y, self.nu))
             nh1y, nyu = list_shapes_y[0]
-            C1_y[:nh1y, :] = self.hx.fnn[0].weight[:, :self.nx]
+            C1_y[:nh1y, :] = self.hx.layers[0].weight[:, :self.nx]
             C1 = torch.cat((C1_x, C1_y), dim=0)
             D12 = torch.cat((D12_x, D12_y), dim=0)
         else:
@@ -139,7 +153,7 @@ class Grnssm(Module):
     def _build_B1(self, nq_x, list_shapes_x, nq_y):
         B1_x = torch.zeros((self.nx, nq_x))
         nl, nhl = list_shapes_x[-1]
-        B1_x[:, nq_x - nhl:] = self.fx.fnn[-1].weight
+        B1_x[:, nq_x - nhl:] = self.fx.layers[-1].weight
 
         B1_y = torch.zeros((self.nx, nq_y))
         B1 = torch.cat([B1_x, B1_y], dim=1)
@@ -149,7 +163,7 @@ class Grnssm(Module):
         D21 = torch.zeros((self.ny, nq_x + nq_y))
         if self.out_eq_nl:
             nl, nhl = list_shapes_y[-1]
-            D21[:, (nq_x + nq_y) - nhl:] = self.hx.fnn[-1].weight
+            D21[:, (nq_x + nq_y) - nhl:] = self.hx.layers[-1].weight
         return D21
 
     def _build_D11(self, nq_x, list_shapes_x, nq_y, list_shapes_y):
@@ -159,7 +173,7 @@ class Grnssm(Module):
         for i, shape in enumerate(list_shapes_inter):
             end_row = index_row + shape[0]
             end_col = index_col + shape[1]
-            D11_x[index_row:end_row, index_col:end_col] = self.fx.fnn[2 * (i + 1)].weight
+            D11_x[index_row:end_row, index_col:end_col] = self.fx.layers[2 * (i + 1)].weight
             index_row = end_row
             index_col = end_col
 
@@ -169,7 +183,7 @@ class Grnssm(Module):
             for i, shape in enumerate(list_shapes_inter):
                 end_row = index_row + shape[0]
                 end_col = index_col + shape[1]
-                D11_y[index_row:end_row, index_col:end_col] = self.hx.fnn[2 * (i + 1)].weight
+                D11_y[index_row:end_row, index_col:end_col] = self.hx.layers[2 * (i + 1)].weight
                 index_row = end_row
                 index_col = end_col
         D11 = torch.block_diag(D11_x, D11_y)
@@ -195,12 +209,116 @@ class LipGrnssm(Grnssm):
         self.lip_x = lip[0]
         self.lip_u = lip[1]
 
-        self.fx = LipFxu(self.nu, self.nh, self.nx, scalex=self.lip_x, scaleu=self.lip_u, param=param, bias=bias)
+        self.fx = LipFxu(self.nu, self.nh, self.nx, n_hidden=n_hidden_layers, scalex=self.lip_x, scaleu=self.lip_u, param=param, bias=bias)
         if self.out_eq_nl:
-            self.hx = LipHx(self.nx, self.nh, self.ny, scalex=self.lip_x, bias=bias, param=param)
+            self.hx = LipHx(self.nx, self.nh, self.ny, n_hidden=n_hidden_layers, scalex=self.lip_x, bias=bias, param=param)
 
-    def check_(self) -> bool:
-        return (self.fx.check_() and self.hx.check_()) if self.out_eq_nl else self.fx.check_()
+    def __str__(self):
+        return 'lipgnssm'
+    
+    def __repr__(self):
+        return f"LipGNSSM  : alpha = {self.alpha}   Lamda x = {self.lip_x}, Lambda_u = {self.lip_u}"
+        
+    def check(self):
+        fx_check, infos = self.fx.check()
+        merged_info = infos.copy()  # Start with the infos dictionary
+        
+        # Initialize the overall check as the result of fx_check
+        overall_check = fx_check
+        
+        if self.out_eq_nl:
+            hx_check, infos_hx = self.hx.check()
+            overall_check = overall_check and hx_check  # Combine the boolean checks
+            merged_info.update(infos_hx)  # Merge the dictionaries
+        
+        return overall_check, merged_info
+
+
+    def _frame(self):
+        A = self.linmod.A.weight
+        B2 = self.linmod.B.weight
+        C2 = self.linmod.C.weight
+        weights_x = self.fx.extractWeightsSandwich()
+        list_shapes_x, nq_x = self._build_dims(weights_x)
+        if self.out_eq_nl:
+            weights_y = self.hx.extractWeightsSandwich()
+            list_shapes_y, nq_y = self._build_dims(weights_y)
+        else:
+            list_shapes_y, nq_y, weights_y = [], 0, []
+
+        B1 = self._build_B1(nq_x, list_shapes_x, nq_y, weights_x)
+        C1, D12 = self._build_C1_D12(nq_x, list_shapes_x, nq_y, list_shapes_y,weights_x, weights_y)
+        D11 = self._build_D11(nq_x, list_shapes_x, nq_y, list_shapes_y, weights_x, weights_y)
+        D21 = self._build_D21(nq_y, list_shapes_y, nq_x, weights_y)
+        D22 = torch.zeros(self.ny, self.nu)
+
+        return A, B1, B2, C1, C2, D11, D12, D21, D22
+
+    def _build_dims(self, weights):
+        list_shapes = []
+        for layer in weights:
+            list_shapes.append(layer.shape)
+        nq = sum(shape[0] for shape in list_shapes[:-1])
+        return list_shapes, nq
+
+    def _build_C1_D12(self, nq_x, list_shapes_x, nq_y, list_shapes_y, weights_x, weights_y):
+        C1_x = torch.zeros((nq_x, self.nx))
+        D12_x = torch.zeros((nq_x, self.nu))
+        nh1, nxu = list_shapes_x[0]
+        C1_x[:nh1, :] = weights_x[0][:, :self.nx]
+        D12_x[:nh1, :] =  weights_x[0][:, self.nx:]
+
+        if self.out_eq_nl:
+            C1_y = torch.zeros((nq_y, self.nx))
+            D12_y = torch.zeros((nq_y, self.nu))
+            nh1y, nyu = list_shapes_y[0]
+            C1_y[:nh1y, :] =  weights_y[0][:, :self.nx]
+            C1 = torch.cat((C1_x, C1_y), dim=0)
+            D12 = torch.cat((D12_x, D12_y), dim=0)
+        else:
+            C1 = C1_x
+            D12 = D12_x
+        return C1, D12
+
+    def _build_B1(self, nq_x, list_shapes_x, nq_y, weights_x):
+        B1_x = torch.zeros((self.nx, nq_x))
+        nl, nhl = list_shapes_x[-1]
+        B1_x[:, nq_x - nhl:] = weights_x[-1]
+
+        B1_y = torch.zeros((self.nx, nq_y))
+        B1 = torch.cat([B1_x, B1_y], dim=1)
+        return B1
+
+    def _build_D21(self, nq_y, list_shapes_y, nq_x, weights_y):
+        D21 = torch.zeros((self.ny, nq_x + nq_y))
+        if self.out_eq_nl:
+            nl, nhl = list_shapes_y[-1]
+            D21[:, (nq_x + nq_y) - nhl:] = weights_y[-1]
+        return D21
+
+    def _build_D11(self, nq_x, list_shapes_x, nq_y, list_shapes_y, weights_x, weights_y):
+        list_shapes_inter = list_shapes_x[1:-1]
+        D11_x = torch.zeros((nq_x, nq_x))
+        index_row, index_col = list_shapes_x[0][0], 0
+        for i, shape in enumerate(list_shapes_inter):
+            end_row = index_row + shape[0]
+            end_col = index_col + shape[1]
+            D11_x[index_row:end_row, index_col:end_col] = weights_x[2 *i + 1]
+            index_row = end_row
+            index_col = end_col
+
+        D11_y = torch.zeros((nq_y, nq_y))
+        if self.out_eq_nl:
+            index_row, index_col = list_shapes_y[0][0], 0
+            for i, shape in enumerate(list_shapes_inter):
+                end_row = index_row + shape[0]
+                end_col = index_col + shape[1]
+                D11_y[index_row:end_row, index_col:end_col] = weights_y[2 *i + 1]
+                index_row = end_row
+                index_col = end_col
+        D11 = torch.block_diag(D11_x, D11_y)
+        return D11
+
 
 class StableGNSSM(LipGrnssm):
     def __init__(
@@ -218,7 +336,7 @@ class StableGNSSM(LipGrnssm):
     ):
         super(StableGNSSM, self).__init__(
             nu, ny, nx, nh, n_hidden_layers, actF, out_eq_nl,
-            lip=(Tensor([lmbd]), Tensor([10])), alpha=lmbd + epsilon, bias=bias
+            lip=(Tensor([lmbd]), Tensor([lmbd])), alpha=lmbd + epsilon, bias=bias
         )
 
 class L2IncGrNSSM(LipGrnssm):

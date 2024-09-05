@@ -3,7 +3,7 @@ from torch.nn.parameter import Parameter
 import geotorch_custom as geo
 from geotorch_custom.parametrize import is_parametrized
 import torch
-
+from ctrlnmod.utils.misc import rk4_discretize 
 
 class NnLinear(Module):
     """
@@ -46,34 +46,36 @@ class NnLinear(Module):
         return self.A.weight, self.B.weight, self.C.weight
 
     def right_inverse_(self, A0, B0, C0, requires_grad=True):
+        # Check matrix dimensions
+        assert self.nx == A0.shape[0] == A0.shape[1], f"Given A matrix has incorrect size: nx = {self.nx}, found {A0.shape}"
+        assert (self.nx, self.nu) == B0.shape, f"Given B matrix has incorrect size: expected ({self.nx}, {self.nu}), found {B0.shape}"
+        assert (self.ny, self.nx) == C0.shape, f"Given C matrix has incorrect size: expected ({self.ny}, {self.nx}), found {C0.shape}"
 
-        try:
-            assert self.nx, self.nx == A0.shape
-        except AssertionError:
-            raise ValueError(f"Given A matrix have incorrect size : nx = {self.nx} found {A0.shape}")
-        try:
-            assert self.nx, self.nu == B0.shape
-        except AssertionError:
-            raise ValueError(f"Given B matrix have incorrect size : nu = {self.nu} found {B0.shape}")
-        try:
-            assert self.ny, self.nx == C0.shape
-        except AssertionError:
-            raise ValueError(f"Given C matrix have incorrect size : ny = {self.ny} found {C0.shape}")
-
+        # Initialize A
         if is_parametrized(self.A):
             self.A.weight = A0
         else:
             self.A.weight = Parameter(A0)
+        
+        # Initialize B and C
         self.B.weight = Parameter(B0)
         self.C.weight = Parameter(C0)
+
+        self.A0 = self.A.weight.detach().clone()
+        self.B0 = self.B.weight.detach().clone()
+        self.C0 = self.C.weight.detach().clone()
+        
+        # Set requires_grad
         if not requires_grad:
             if is_parametrized(self.A):
-                for parameters in self.A.parameters():
-                    parameters.requires_grad_(False)
+                for parameter in self.A.parameters():
+                    parameter.requires_grad_(False)
             else:
                 self.A.requires_grad_(False)
             self.B.requires_grad_(False)
             self.C.requires_grad_(False)
+
+        
 
     def check_(self):
         if self.alpha is None:
@@ -88,7 +90,23 @@ class NnLinear(Module):
         copy.load_state_dict(self.state_dict())
         return copy
 
-    def init_model_(self, A0, B0, C0, requires_grad=True):
+    def init_weights_(self, A0, B0, C0, requires_grad=True, margin=0.1, adjust_alpha=False):
+                # Compute the Lyapunov exponent of A0
+        A0_lyap_exp = -torch.max(torch.real(torch.linalg.eigvals(A0)))
+
+        if adjust_alpha:  # For now to be set to fals
+            # Adjust alpha to be slightly smaller than A0's Lyapunov exponent
+            self.alpha = torch.tensor(float(A0_lyap_exp) - margin, device=A0.device)
+        else:
+            # Shift eigenvalues of A0 to match the desired alpha
+            if self.alpha is None:
+                alpha = 0.0 
+            else:
+                alpha = self.alpha
+            if A0_lyap_exp < alpha:
+                shift = self.alpha - A0_lyap_exp + margin
+                A0 = A0 - shift * torch.eye(self.nx, device=A0.device)  # Move to left part of the left half plane
+
         self.right_inverse_(A0, B0, C0, requires_grad=requires_grad)
 
 

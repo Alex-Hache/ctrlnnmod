@@ -75,12 +75,12 @@ class LogdetRegularization(Regularization):
         return -self.lambda_logdet * total_logdet
 
     def update(self) -> None:
-        if self.updatable and self.factor > self.min_weight:
+        if self.updatable and self.lambda_logdet > self.min_weight:
             old_lambda = self.lambda_logdet.item()
             self.lambda_logdet *= self.factor
             if self.verbose:
                 print(f"Updated Logdet regularization lambda: {old_lambda} -> {self.lambda_logdet.item()} \n")
-            if self.factor <= self.min_weight:
+            if self.lambda_logdet <= self.min_weight:
                 print("Minimum weight reached")
 
 

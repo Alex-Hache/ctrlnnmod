@@ -9,6 +9,12 @@ from torch.utils.data import DataLoader
 from typing import Union, Optional
 from ..losses.losses import BaseLoss
 from ..utils.misc import is_legal, flatten_params, write_flat_params
+import lightning as pl
+from lightning.pytorch.loggers import TensorBoardLogger
+from lightning.pytorch.callbacks import EarlyStopping, Timer, Callback
+from ctrlnmod.optim import ProjectedOptimizer, BackTrackOptimizer, project_to_pos_def, is_positive_definite
+import os
+from typing import Callable, Optional, Dict, Any
 
 
 class Trainer(ABC):
@@ -236,6 +242,134 @@ class SSTrainer(Trainer):
             if i > max_iter:
                 print("Maximum iterations reached")
             return crit
+
+
+class StopTrainingCallback(Callback):
+    def on_validation_epoch_end(self, trainer: pl.Trainer, pl_module: pl.LightningModule) -> None:
+        # Access the stop condition from the LightningModule
+        print(f'Stop training flag : {pl_module.stop_training_flag}')
+        if pl_module.stop_training_flag:
+            print("Stopping training because the boolean condition is set to True.")
+            trainer.should_stop = True
+
+
+class LitNode(pl.LightningModule):
+    def __init__(
+        self,
+        model: torch.nn.Module,
+        criterion: Callable,
+        val_criterion: Callable,
+        lr: float,
+        patience_soft: int = 30,
+        use_backtracking: bool = False,
+        use_projection: bool = False,
+        condition_fn: Optional[Callable] = None,
+        custom_logging_fn: Optional[Callable] = None,
+        log_gradient_norms: bool = False
+    ):
+        super().__init__()
+        self.model = model
+        self.criterion = criterion
+        self.val_criterion = val_criterion
+        self.lr = lr
+        self.best_val_loss = float('inf')
+        self.patience_soft = patience_soft
+        self.no_decrease_counter = 0
+        self.use_backtracking = use_backtracking
+        self.use_projection = use_projection
+        self.condition_fn = condition_fn
+        self.custom_logging_fn = custom_logging_fn
+        self.log_gradient_norms = log_gradient_norms
+        self.timer = Timer()
+        self.stop_training_flag = False
+        if self.use_backtracking and self.use_projection:
+            raise ValueError("Cannot use both backtracking and projection. Choose one or neither.")
+
+    def configure_optimizers(self):
+        optimizer = torch.optim.AdamW(self.parameters(), self.lr)
+        if self.use_projection:
+            optimizer = ProjectedOptimizer(optimizer, project_to_pos_def, self.model)
+        elif self.use_backtracking:
+            optimizer = BackTrackOptimizer(optimizer, self.model, self.condition_fn or (lambda x: True))
+        return optimizer
+
+    def forward(self, u, x0):
+        return self.model(u, x0)
+
+    def training_step(self, train_batch, batch_idx):
+        
+        batch_u, batch_y, batch_x, batch_x0 = train_batch
+        states, outputs = self(batch_u, batch_x0)
+        loss = self.criterion(outputs, batch_y, x_pred=states, x_true=batch_x)
+        self.log('train_loss', loss, prog_bar=True)
+        return loss
+
+    def validation_step(self, batch, batch_idx):
+        batch_u, batch_y_true, batch_x0 = batch
+        with torch.no_grad():
+            batch_x_sim, batch_y_sim = self(batch_u, batch_x0)
+            val_loss = self.val_criterion(batch_y_true, batch_y_sim)
+            val_loss = val_loss / batch_u.size(0)
+
+        self.log('val_loss', val_loss, prog_bar=True)
+
+        # Custom logging
+        if self.custom_logging_fn:
+            try:
+                custom_logs = self.custom_logging_fn(self.model, batch_u, batch_y_true, batch_y_sim, self.criterion)
+                for log_name, log_value in custom_logs.items():
+                    self.log(log_name, log_value)
+            except Exception as e:
+                print(f"Error in custom logging function: {e}")
+                
+            if 'is_solve_ok' in custom_logs and  (not custom_logs['is_solve_ok']):
+                self.stop_training_flag = True  # Stop training if lmi is false
+        return {'val_loss': val_loss, 'y_sim': batch_y_sim.detach()}
+
+    def on_train_start(self):
+        self.version = self.logger.version if isinstance(self.logger, TensorBoardLogger) else 0
+
+    def on_train_epoch_end(self):
+        self.timer.time_elapsed('train')
+        self.timer.time_elapsed('validate')
+        
+    def on_after_backward(self):
+        if self.log_gradient_norms:
+            for name, param in self.named_parameters():
+                if param.grad is not None:
+                    param_norm = param.norm()
+                    self.log(f'gradient_norm_normed/{name}', param.grad.norm()/param_norm, on_epoch=True)
+
+    def get_res_dir(self):
+        return os.path.join(self.logger.log_dir)
+
+    def on_validation_epoch_end(self):
+        avg_val_loss = self.trainer.callback_metrics.get('val_loss')
+        if avg_val_loss is not None:
+            if avg_val_loss < self.best_val_loss:
+                self.best_val_loss = avg_val_loss
+                self.no_decrease_counter = 0
+            else:
+                self.no_decrease_counter += 1
+
+            if self.no_decrease_counter >= self.patience_soft:
+                if hasattr(self.criterion, 'update') and callable(self.criterion.update):
+                    print("Updating criterion weights")
+                    self.criterion.update()
+                    self.no_decrease_counter = 0
+
+            self.log('no_decrease_counter', self.no_decrease_counter, on_epoch=True)
+        epoch_time = self.timer.time_elapsed('validate')
+        self.log('val_epoch_time', epoch_time)
+
+def train_model(lit_model, data_module, logger, epochs):
+    early_stop_callback = EarlyStopping(monitor='val_loss', min_delta=0.0005, patience=50, verbose=True, mode='min')
+    timer_callback = Timer()
+    break_callback = StopTrainingCallback()
+    trainer = pl.Trainer(logger=logger, num_sanity_val_steps=0, max_epochs=epochs, log_every_n_steps=1,
+                         callbacks=[early_stop_callback, timer_callback, break_callback])
+    trainer.fit(lit_model, datamodule=data_module)
+    return trainer
 
 '''
 How to save a model
