@@ -12,10 +12,7 @@ import torch.nn as nn
 from math import sqrt
 import numpy as np
 from scipy.io import savemat
-from geotorch_custom import is_parametrized
-
-
-
+from typing import Optional
 
 
 def rk4_discretize(A, h):
@@ -24,7 +21,7 @@ def rk4_discretize(A, h):
     k2 = h * torch.mm(A, (I + 0.5 * k1))
     k3 = h * torch.mm(A, (I + 0.5 * k2))
     k4 = h * torch.mm(A, (I + k3))
-    return I + (k1 + 2*k2 + 2*k3 + k4) / 6.0
+    return I + (k1 + 2 * k2 + 2 * k3 + k4) / 6.0
 
 
 class Grnssm(Module):
@@ -37,7 +34,7 @@ class Grnssm(Module):
         n_hidden_layers: int = 1,
         actF: str = 'tanh',
         out_eq_nl: bool = False,
-        alpha: float = None,
+        alpha: Optional[float] = None,
         bias: bool = True
     ) -> None:
         super(Grnssm, self).__init__()
@@ -57,13 +54,16 @@ class Grnssm(Module):
         elif actF.lower() == 'relu':
             self.actF = nn.ReLU()
         else:
-            raise NotImplementedError(f"Function {actF} not yet implemented. Please choose 'tanh' or 'relu'.")
+            raise NotImplementedError(
+                f"Function {actF} not yet implemented. Please choose 'tanh' or 'relu'.")
 
         self.linmod = NnLinear(self.nu, self.ny, self.nx, alpha=alpha)
-        self.fx = Fxu(self.nu, self.nh, self.nx, actF=self.actF, n_hidden=n_hidden_layers, bias=self.bias)
-        
+        self.fx = Fxu(self.nu, self.nh, self.nx, actF=self.actF,
+                      n_hidden=n_hidden_layers, bias=self.bias)
+
         if self.out_eq_nl:
-            self.hx = Hx(self.nx, self.nh, self.ny, actF=self.actF, n_hidden=n_hidden_layers, bias=bias)
+            self.hx = Hx(self.nx, self.nh, self.ny, actF=self.actF,
+                         n_hidden=n_hidden_layers, bias=bias)
 
     def __repr__(self):
         return f"GRNSSM : nu={self.nu} nx={self.nx} nh={self.nh} ny={self.ny} activation={self.act_name}"
@@ -84,7 +84,8 @@ class Grnssm(Module):
         return dx, y
 
     def init_weights_(self, A0, B0, C0, requires_grad=True, adjust_alpha=False, margin=1e-4) -> None:
-        self.linmod.init_weights_(A0, B0, C0, requires_grad=requires_grad, adjust_alpha=adjust_alpha, margin=margin)
+        self.linmod.init_weights_(
+            A0, B0, C0, requires_grad=requires_grad, adjust_alpha=adjust_alpha, margin=margin)
         zeros_(self.fx.Wout.weight)
         if self.fx.Wout.bias is not None:
             zeros_(self.fx.Wout.bias)
@@ -93,11 +94,14 @@ class Grnssm(Module):
             if self.hx.Wout.bias is not None:
                 zeros_(self.hx.Wout.bias)
 
-        nn.init.xavier_uniform_(self.fx.Wfu, gain=nn.init.calculate_gain(self.act_name))
-        nn.init.xavier_uniform_(self.fx.Wfx, gain=nn.init.calculate_gain(self.act_name))
+        nn.init.xavier_uniform_(
+            self.fx.Wfu, gain=nn.init.calculate_gain(self.act_name))
+        nn.init.xavier_uniform_(
+            self.fx.Wfx, gain=nn.init.calculate_gain(self.act_name))
 
     def clone(self):
-        copy = type(self)(self.nu, self.ny, self.nx, self.nh, self.n_hidden_layers, self.act_name, self.out_eq_nl, self.alpha, self.bias)
+        copy = type(self)(self.nu, self.ny, self.nx, self.nh, self.n_hidden_layers,
+                          self.act_name, self.out_eq_nl, self.alpha, self.bias)
         copy.load_state_dict(self.state_dict())
         return copy
 
@@ -173,7 +177,8 @@ class Grnssm(Module):
         for i, shape in enumerate(list_shapes_inter):
             end_row = index_row + shape[0]
             end_col = index_col + shape[1]
-            D11_x[index_row:end_row, index_col:end_col] = self.fx.layers[2 * (i + 1)].weight
+            D11_x[index_row:end_row,
+                  index_col:end_col] = self.fx.layers[2 * (i + 1)].weight
             index_row = end_row
             index_col = end_col
 
@@ -183,11 +188,13 @@ class Grnssm(Module):
             for i, shape in enumerate(list_shapes_inter):
                 end_row = index_row + shape[0]
                 end_col = index_col + shape[1]
-                D11_y[index_row:end_row, index_col:end_col] = self.hx.layers[2 * (i + 1)].weight
+                D11_y[index_row:end_row,
+                      index_col:end_col] = self.hx.layers[2 * (i + 1)].weight
                 index_row = end_row
                 index_col = end_col
         D11 = torch.block_diag(D11_x, D11_y)
         return D11
+
 
 class LipGrnssm(Grnssm):
     def __init__(
@@ -200,39 +207,41 @@ class LipGrnssm(Grnssm):
         actF: str = 'tanh',
         out_eq_nl: bool = False,
         lip: Tuple[Tensor, Tensor] = (Tensor([1]), Tensor([1])),
-        alpha: float = None,
+        alpha: Optional[float] = None,
         param: str = 'expm',
         bias: bool = True
     ) -> None:
-        super(LipGrnssm, self).__init__(nu, ny, nx, nh, n_hidden_layers, actF, out_eq_nl, alpha, bias)
+        super(LipGrnssm, self).__init__(nu, ny, nx, nh,
+                                        n_hidden_layers, actF, out_eq_nl, alpha, bias)
 
         self.lip_x = lip[0]
         self.lip_u = lip[1]
 
-        self.fx = LipFxu(self.nu, self.nh, self.nx, n_hidden=n_hidden_layers, scalex=self.lip_x, scaleu=self.lip_u, param=param, bias=bias)
+        self.fx = LipFxu(self.nu, self.nh, self.nx, n_hidden=n_hidden_layers,
+                         scalex=self.lip_x, scaleu=self.lip_u, param=param, bias=bias)
         if self.out_eq_nl:
-            self.hx = LipHx(self.nx, self.nh, self.ny, n_hidden=n_hidden_layers, scalex=self.lip_x, bias=bias, param=param)
+            self.hx = LipHx(self.nx, self.nh, self.ny, n_hidden=n_hidden_layers,
+                            scalex=self.lip_x, bias=bias, param=param)
 
     def __str__(self):
         return 'lipgnssm'
-    
+
     def __repr__(self):
         return f"LipGNSSM  : alpha = {self.alpha}   Lamda x = {self.lip_x}, Lambda_u = {self.lip_u}"
-        
+
     def check(self):
         fx_check, infos = self.fx.check()
         merged_info = infos.copy()  # Start with the infos dictionary
-        
+
         # Initialize the overall check as the result of fx_check
         overall_check = fx_check
-        
+
         if self.out_eq_nl:
             hx_check, infos_hx = self.hx.check()
             overall_check = overall_check and hx_check  # Combine the boolean checks
             merged_info.update(infos_hx)  # Merge the dictionaries
-        
-        return overall_check, merged_info
 
+        return overall_check, merged_info
 
     def _frame(self):
         A = self.linmod.A.weight
@@ -247,8 +256,10 @@ class LipGrnssm(Grnssm):
             list_shapes_y, nq_y, weights_y = [], 0, []
 
         B1 = self._build_B1(nq_x, list_shapes_x, nq_y, weights_x)
-        C1, D12 = self._build_C1_D12(nq_x, list_shapes_x, nq_y, list_shapes_y,weights_x, weights_y)
-        D11 = self._build_D11(nq_x, list_shapes_x, nq_y, list_shapes_y, weights_x, weights_y)
+        C1, D12 = self._build_C1_D12(
+            nq_x, list_shapes_x, nq_y, list_shapes_y, weights_x, weights_y)
+        D11 = self._build_D11(nq_x, list_shapes_x, nq_y,
+                              list_shapes_y, weights_x, weights_y)
         D21 = self._build_D21(nq_y, list_shapes_y, nq_x, weights_y)
         D22 = torch.zeros(self.ny, self.nu)
 
@@ -266,13 +277,13 @@ class LipGrnssm(Grnssm):
         D12_x = torch.zeros((nq_x, self.nu))
         nh1, nxu = list_shapes_x[0]
         C1_x[:nh1, :] = weights_x[0][:, :self.nx]
-        D12_x[:nh1, :] =  weights_x[0][:, self.nx:]
+        D12_x[:nh1, :] = weights_x[0][:, self.nx:]
 
         if self.out_eq_nl:
             C1_y = torch.zeros((nq_y, self.nx))
             D12_y = torch.zeros((nq_y, self.nu))
             nh1y, nyu = list_shapes_y[0]
-            C1_y[:nh1y, :] =  weights_y[0][:, :self.nx]
+            C1_y[:nh1y, :] = weights_y[0][:, :self.nx]
             C1 = torch.cat((C1_x, C1_y), dim=0)
             D12 = torch.cat((D12_x, D12_y), dim=0)
         else:
@@ -303,7 +314,7 @@ class LipGrnssm(Grnssm):
         for i, shape in enumerate(list_shapes_inter):
             end_row = index_row + shape[0]
             end_col = index_col + shape[1]
-            D11_x[index_row:end_row, index_col:end_col] = weights_x[2 *i + 1]
+            D11_x[index_row:end_row, index_col:end_col] = weights_x[2 * i + 1]
             index_row = end_row
             index_col = end_col
 
@@ -313,7 +324,7 @@ class LipGrnssm(Grnssm):
             for i, shape in enumerate(list_shapes_inter):
                 end_row = index_row + shape[0]
                 end_col = index_col + shape[1]
-                D11_y[index_row:end_row, index_col:end_col] = weights_y[2 *i + 1]
+                D11_y[index_row:end_row, index_col:end_col] = weights_y[2 * i + 1]
                 index_row = end_row
                 index_col = end_col
         D11 = torch.block_diag(D11_x, D11_y)
@@ -339,6 +350,7 @@ class StableGNSSM(LipGrnssm):
             lip=(Tensor([lmbd]), Tensor([lmbd])), alpha=lmbd + epsilon, bias=bias
         )
 
+
 class L2IncGrNSSM(LipGrnssm):
     def __init__(
         self,
@@ -356,9 +368,11 @@ class L2IncGrNSSM(LipGrnssm):
         self.gamma = l2i
         lipx = torch.sqrt(torch.Tensor([2 * alpha]))
         lip = (lipx, l2i / torch.sqrt(torch.Tensor([2])))
-        super().__init__(nu, ny, nx, nh, n_hidden_layers, actF, out_eq_nl, lip, alpha, bias=bias)
+        super().__init__(nu, ny, nx, nh, n_hidden_layers,
+                         actF, out_eq_nl, lip, alpha, bias=bias)
         scaleH = 1 / sqrt(2) - 0.1
-        self.linmod = L2BoundedLinear(nu, ny, nx, gamma=l2i, alpha=alpha, scaleH=scaleH, epsilon=2.0)
+        self.linmod = L2BoundedLinear(
+            nu, ny, nx, gamma=l2i, alpha=alpha, scaleH=scaleH, epsilon=2.0)
         self._frame()
 
     def __repr__(self):
@@ -378,7 +392,8 @@ class L2IncGrNSSM(LipGrnssm):
         if traj is not None:
             u_traj, x_traj = traj
             for u_eq, x_eq in zip(u_traj, x_traj):
-                gamma = self.compute_L2_taylor(u_eq.unsqueeze(0), x_eq.unsqueeze(0))
+                gamma = self.compute_L2_taylor(
+                    u_eq.unsqueeze(0), x_eq.unsqueeze(0))
                 gammas.append(gamma)
         else:
             for _ in range(N_trys):
@@ -401,7 +416,7 @@ class L2IncGrNSSM(LipGrnssm):
         B, A = jac[0]
         D, C = jac[1]
         with torch.no_grad():
-            _, gamma, _ = HInfCont.solve(A, B, C, D, alpha = torch.zeros(1))
+            _, gamma, _ = HInfCont.solve(A, B, C, D, alpha=torch.zeros(1))
         return gamma
 
     def save_weights(self):
@@ -421,4 +436,3 @@ class L2IncGrNSSM(LipGrnssm):
             'C': C.detach().numpy()
         }
         savemat('weights.mat', mdict)
-

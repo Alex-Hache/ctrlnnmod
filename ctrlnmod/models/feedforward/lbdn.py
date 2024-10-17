@@ -6,8 +6,9 @@ import torch
 from torch.nn import Module, Linear, Sequential, Tanh
 from collections import OrderedDict
 from ctrlnmod.layers.liplayers import SandwichLinear, SandwichLayer
-from ctrlnmod.linalg.utils import solveLipschitz
-from ctrlnmod.lmis.lipschitz import LipschitzLMI, LipschitzLMI2
+from ctrlnmod.lmis.lipschitz import LipschitzLMI
+from typing import Optional
+
 
 class FFNN(Module):
     '''
@@ -30,13 +31,13 @@ class FFNN(Module):
             a simple sequential feedforward model
     '''
 
-    def __init__(self, input_dim, hidden_dim, output_dim, 
-                 actF=Tanh(), n_hidden=1, bias=True) -> None:
+    def __init__(self, input_dim, hidden_dim, output_dim,
+                 act_f: Optional[Module] = Tanh(), n_hidden=1, bias=True) -> None:
         super(FFNN, self).__init__()
         self.nu = input_dim
         self.nh = hidden_dim
         self.ny = output_dim
-        self.actF = actF
+        self.act_f = act_f
         self.n_hid = n_hidden
         self.bias = bias
 
@@ -52,7 +53,7 @@ class FFNN(Module):
             tup = ('dense{}'.format(k), Linear(
                 hidden_dim, hidden_dim, bias=self.bias))
             layers.append(tup)
-            tupact = ('actF{}'.format(k+1), actF)
+            tupact = ('actF{}'.format(k + 1), act_f)
             layers.append(tupact)
 
         # Output layer
@@ -74,7 +75,7 @@ class Fxu(FFNN):
     '''
 
     def __init__(self, input_dim, hidden_dim, state_dim,
-                 actF=Tanh(), n_hidden=1, bias=True) -> None:
+                 actF: Module = Tanh(), n_hidden=1, bias=True) -> None:
         super(Fxu, self).__init__(input_dim + state_dim, hidden_dim, state_dim,
                                   actF, n_hidden, bias=bias)
         self.nx = state_dim
@@ -96,7 +97,7 @@ class Hx(FFNN):
     '''
 
     def __init__(self, state_dim, hidden_dim, output_dim,
-                 actF=Tanh(), n_hidden=1, bias=True) -> None:
+                 actF: Module = Tanh(), n_hidden=1, bias=True) -> None:
         super(Hx, self).__init__(state_dim, hidden_dim, output_dim,
                                  actF, n_hidden, bias=bias)
         self.nx = state_dim
@@ -118,7 +119,7 @@ class LBDN(Module):
         for simple scaling of the Lipschitz constants of each individual input
         signal.
 
-        See :     See https://github.com/acfr/LBDN for more details
+        See : https://github.com/acfr/LBDN for more details
 
         attributes
         ------
@@ -139,7 +140,7 @@ class LBDN(Module):
     '''
 
     def __init__(self, input_dim, hidden_dim, output_dim, scale,
-                 act_f=Tanh(), n_hidden=1, param: str = 'expm', bias=True) -> None:
+                 act_f: Module = Tanh(), n_hidden=1, param: str = 'expm', bias=True) -> None:
         super(LBDN, self).__init__()
 
         self.nu = input_dim
@@ -157,9 +158,11 @@ class LBDN(Module):
                                  bias=bias)  # type: ignore
         layers.append(('input_layer', self.Win))
         for k in range(self.n_hid - 1):
-            layer = SandwichLayer(self.nh, self.nh, act_f=act_f, param=param, bias=bias)  # type: ignore
+            layer = SandwichLayer(
+                self.nh, self.nh, act_f=act_f, param=param, bias=bias)  # type: ignore
             layers.append((f'hidden_layer_{k}', layer))
-        self.Wout = SandwichLinear(self.nh, self.ny, param=param)  # No bias on the output layer
+        # No bias on the output layer
+        self.Wout = SandwichLinear(self.nh, self.ny, param=param)
         layers.append(('output_layer', self.Wout))
 
         self.layers = Sequential(OrderedDict(layers))
@@ -180,8 +183,7 @@ class LBDN(Module):
 
         lip = torch.Tensor([lx] * self.nx + [lu] * self.nu)
 
-
-        infos = {'lipx' : round(lx.item(), 3), 'lipu': round(lu.item(), 3)}
+        infos = {'lipx': round(lx.item(), 3), 'lipu': round(lu.item(), 3)}
         if torch.all(self.scale - lip > 0):
             return True, infos
         else:

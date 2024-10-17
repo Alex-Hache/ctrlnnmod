@@ -3,7 +3,7 @@
     See https://github.com/acfr/LBDN for more details
 '''
 import torch
-from torch.nn import Linear, ReLU
+from torch.nn import Linear, ReLU, Module
 from torch.nn.parameter import Parameter
 import torch.nn.functional as F
 import geotorch_custom as geo
@@ -74,7 +74,7 @@ class SandwichLayer(Linear):
         the input tensor is multiplied by scale
     """
 
-    def __init__(self, in_features, out_features, scale=1.0, act_f=ReLU(), param='expm', bias=True, AB=True):
+    def __init__(self, in_features, out_features, scale=1.0, act_f: Module = ReLU(), param='expm', bias=True, AB=True):
         super().__init__(in_features + out_features, out_features, bias)
         self.param = param
         geo.orthogonal(self, 'weight', triv=param)  # let geotorch handle errors

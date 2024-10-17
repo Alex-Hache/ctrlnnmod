@@ -66,13 +66,13 @@ class L2BoundedLinear(Module):
         return "Hinf_Linear_ss" + f"_alpha_{self.alpha}" + f"_gamma_{self.gamma}"
 
     def forward(self, u, x):
-        A, B, C = self.frame()
+        A, B, C = self._frame()
 
         dx = x @ A.T + u @ B.T
         y = x @ C.T
         return dx, y
 
-    def frame(self):
+    def _frame(self) -> tuple[Tensor, Tensor, Tensor]:
         A = (-0.5 * (self.Q + self.G.T @ self.G + self.eps * self.Ix) + self.S) @ self.P - self.alpha * self.Ix
         B = self.gamma * sqrtm(self.Q) @ (self.scaleH * self.H)  # type: ignore
         C = self.G @ self.P
@@ -165,7 +165,7 @@ class L2BoundedLinear(Module):
         return L2BoundedLinear.copy(self)
 
     def check_(self):
-        W = self.frame()
+        W = self._frame()
         try:
             _, _, _, _, _, _, gamma = self.submersion_inv(*W, float(self.gamma), check=True)
             return True, gamma

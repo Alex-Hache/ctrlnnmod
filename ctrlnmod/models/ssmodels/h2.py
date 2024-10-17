@@ -59,13 +59,13 @@ class H2BoundedLinear(Module):
         return "H2_Linear_ss" + f"_gamma2_{self.gamma2}"
 
     def forward(self, u, x):
-        A, B, C = self.frame()
+        A, B, C = self._frame()
 
         dx = x @ A.T + u @ B.T
         y = x @ C.T
         return dx, y
 
-    def frame(self, tol=1e-6):
+    def _frame(self, tol=1e-6) -> tuple[Tensor, Tensor, Tensor]:
         """
             This function is the framing function from Parameter space to weights space.
         """
