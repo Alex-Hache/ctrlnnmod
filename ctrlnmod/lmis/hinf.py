@@ -6,21 +6,36 @@ from cvxpy.expressions.variable import Variable
 from cvxpy.atoms.affine.bmat import bmat
 from cvxpy.error import SolverError
 from .base import LMI
-from typing import Union, Tuple, Optional, List
+from typing import Union, Tuple, Optional, List, Callable
 import numpy as np
 
 class HInfBase(LMI):
-    def __init__(self, A: Tensor, B: Tensor, C: Tensor, D: Optional[Tensor] = None,
-                 gamma: Optional[Tensor] = None, P: Optional[Tensor] = None,
+    def __init__(self,  model: Optional[torch.nn.Module] = None, 
+                 extract_lmi_matrices: Optional[Callable] = None,
+                 A: Optional[Tensor] = None, 
+                 B: Optional[Tensor] = None, 
+                 C: Optional[Tensor] = None, 
+                 D: Optional[Tensor] = None,
+                 gamma: Optional[Tensor] = None, 
+                 P: Optional[Tensor] = None,
                  alpha: Tensor = torch.zeros((1))) -> None:
         super(HInfBase, self).__init__()
-        self.A = A
-        self.B = B
-        self.C = C
 
-        self.nu, self.nx, self.ny = B.shape[1], A.shape[0], C.shape[0]
 
-        self.D = D if D is not None else torch.zeros((self.ny, self.nu))
+        self.model = model
+        self.extract_lmi_matrices = extract_lmi_matrices
+
+        if model is not None and extract_lmi_matrices is not None:
+            self.update_matrices()
+            self.hook = self.register_forward_pre_hook(self.update_matrices())
+        else: 
+            self.A = A
+            self.B = B
+            self.C = C
+            self.D = D if D is not None else torch.zeros((self.ny, self.nu))
+
+            self.nu, self.nx, self.ny = B.shape[1], A.shape[0], C.shape[0]
+
 
         self.shape = self.nu + self.ny + self.nx
         self.alpha = alpha
@@ -40,6 +55,7 @@ class HInfBase(LMI):
             self.gamma = vars['gamma']
             self.P = vars['P'].requires_grad_(True)
 
+    
     @classmethod
     def solve(cls, A: Tensor, B: Tensor, C: Tensor, D: Tensor, alpha: Tensor,
               solver: str = "MOSEK", tol: float = 1e-6) -> Tuple[np.ndarray, float, dict]:
@@ -95,7 +111,17 @@ class HInfCont(HInfBase):
         M = torch.cat((torch.cat((M11, M12), 1), torch.cat((M12.T, M22), 1)), 0)
         return -M
 
+    def update_matrices(self, *args):
+        if self.extract_lmi_matrices is None:
+            raise ValueError("extract_lmi_matrices is not defined")
+        
+        A, B, C, D = self.extract_lmi_matrices()
+        self.A = A
+        self.B = B
+        self.C = C
+        self.D = D
 
+    
 class HInfDisc(HInfBase):
     def __init__(self, *args, **kwargs):
         super(HInfDisc, self).__init__(*args, **kwargs)
