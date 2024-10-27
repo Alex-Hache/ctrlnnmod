@@ -6,7 +6,7 @@ from .hinf import L2BoundedLinear
 from .linear import NnLinear
 from .renode import RENODE, DissipativeRENODE, ContractingRENODE
 from .rens import REN, DissipativeREN, ContractingREN
-
+from .feedbacklin import FLNSSM_Jordan
 
 __all__ = [
     "Grnssm",
@@ -21,5 +21,6 @@ __all__ = [
     "DissipativeRENODE",
     "REN", 
     "DissipativeREN", 
-    "ContractingREN"
+    "ContractingREN",
+    "FLNSSM_Jordan"
 ]

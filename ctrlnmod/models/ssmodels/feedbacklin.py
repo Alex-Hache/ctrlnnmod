@@ -221,7 +221,7 @@ class QFLNSSM(nn.Module):
         return copy
 
 
-class FLNSSM_Elman(nn.Module):
+class FLNSSM_Jordan(nn.Module):
     def __init__(
         self,
         input_dim: int,
@@ -238,7 +238,7 @@ class FLNSSM_Elman(nn.Module):
         lambda_alpha: Optional[float] = None
     ):
         r"""
-        Constructor for FLNSSM Elman models with optional bounded disturbances
+        Constructor for FLNSSM Jordan models with optional bounded disturbances
         z^+ = Az + B(u + \alpha(y,d)) + Gd
         y = Cz
 
@@ -255,7 +255,7 @@ class FLNSSM_Elman(nn.Module):
         * bias : whether to use bias in linear layers
         * alpha : alpha stability (only for L2 model)
         """
-        super(FLNSSM_Elman, self).__init__()
+        super(FLNSSM_Jordan, self).__init__()
 
         self.input_dim = input_dim
         self.state_dim = state_dim
@@ -451,13 +451,13 @@ class FLNSSM_Elman(nn.Module):
         elif isinstance(self.linmod, H2BoundedLinear):
             linear_type = "H2"
             gamma = self.linmod.gamma2
-        return (f"FLNSSM_Elman: input_dim={self.input_dim}, state_dim={self.state_dim}, "
+        return (f"FLNSSM_Jordan: input_dim={self.input_dim}, state_dim={self.state_dim}, "
                 f"hidden_dim={self.hidden_dim}, output_dim={self.output_dim}, "
                 f"n_hid_layers={self.n_hid_layers}, dist_dim={self.dist_dim}, "
                 f"activation={self.act_name}, linear_model={linear_type}, gamma={gamma}")
 
     def __str__(self):
-        return "FLNSSM_Elman"
+        return "FLNSSM_Jordan"
 
     def check(self):
         if not isinstance(self.linmod, NnLinear):
@@ -465,7 +465,7 @@ class FLNSSM_Elman(nn.Module):
         return True, None
 
 
-class FLNSSM_Elman_Dist(nn.Module):
+class FLNSSM_Jordan_Dist(nn.Module):
     def __init__(
         self,
         input_dim: int,
@@ -489,7 +489,7 @@ class FLNSSM_Elman_Dist(nn.Module):
             * output_dim : size of the output layer
             * actF : activation function for nonlienar residuals
         """
-        super(FLNSSM_Elman_Dist, self).__init__()
+        super(FLNSSM_Jordan_Dist, self).__init__()
 
         # Set network dimensions
         self.input_dim = input_dim
