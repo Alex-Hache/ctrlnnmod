@@ -10,7 +10,7 @@ from cvxpy.expressions.variable import Variable
 from cvxpy.problems.problem import Problem
 from cvxpy.problems.objective import Minimize
 from cvxpy.atoms.affine.bmat import bmat
-
+from ctrlnmod.utils import FrameCacheManager
 
 class L2BoundedLinear(Module):
     """
@@ -60,8 +60,9 @@ class L2BoundedLinear(Module):
         geo.positive_definite(self, 'P')
         geo.positive_definite(self, 'Q')
         geo.skew_symmetric(self, 'S')
-        geo.orthogonal(self, 'H')  # TODO relax constraint taking alpha * P into account
+        geo.orthogonal(self, 'H')
 
+        self._frame_cache = FrameCacheManager()
     def __repr__(self):
         return "Hinf_Linear_ss" + f"_alpha_{self.alpha}" + f"_gamma_{self.gamma}"
 
@@ -73,9 +74,18 @@ class L2BoundedLinear(Module):
         return dx, y
 
     def _frame(self) -> tuple[Tensor, Tensor, Tensor]:
+        # Si la mise en cache est active et qu'un cache existe, retourner le cache
+        if self._frame_cache.is_caching and self._frame_cache.cache is not None:
+            return self._frame_cache.cache
+        
         A = (-0.5 * (self.Q + self.G.T @ self.G + self.eps * self.Ix) + self.S) @ self.P - self.alpha * self.Ix
         B = self.gamma * sqrtm(self.Q) @ (self.scaleH * self.H)  # type: ignore
         C = self.G @ self.P
+
+        # Stocker dans le cache si la mise en cache est active
+        if self._frame_cache.is_caching:
+            self._frame_cache.cache = (A, B, C)
+            
         return A, B, C
 
     def right_inverse_(self, A, B, C, gamma: float, alpha):
@@ -138,15 +148,21 @@ class L2BoundedLinear(Module):
             else:
                 raise ValueError("SDP problem is infeasible or unbounded")
 
+
+
             # Now initialize
-            P_torch = Tensor(P.value)
+            P = Tensor(P.value)
+            A = Tensor(A)
+            B = Tensor(B)
+            C = Tensor(C)
+            # M_tilde = A.T @ P + P @ A + C.T @ C + (1/(gamma**2))* P @ B @ B.T @ P
             Q = Tensor(-M.value[:nx, :nx])  # type: ignore
-            S = Tensor(P.value) @ Tensor(A) + 0.5 * Q
-            G = Tensor(C) @ torch.inverse(P_torch)
-            H = Tensor(1 / self.gamma * (sqrtm(Q) @ B))
+            S = P @ Tensor(A) + 0.5 * Q
+            G = Tensor(C) @ torch.inverse(P)
+            H = Tensor(1 / self.gamma * (torch.inverse(sqrtm(Q)) @ B))
             H = H / torch.sqrt(torch.linalg.norm(H @ H.T, 2))  # We project onto Stiefeld Manifold
             alph = Tensor([alpha])
-        return Q, P_torch, S, G, H, alph, gmma_lmi
+        return Q, P, S, G, H, alph, gmma_lmi
 
     @classmethod
     def copy(cls, model):

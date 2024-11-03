@@ -27,7 +27,8 @@ class HInfBase(LMI):
 
         if model is not None and extract_lmi_matrices is not None:
             self.update_matrices()
-            self.hook = self.register_forward_pre_hook(self.update_matrices())
+            self.hook = self.register_forward_pre_hook(self.update_matrices)
+            self.nu, self.nx, self.ny = self.B.shape[1], self.A.shape[0], self.C.shape[0]
         else: 
             self.A = A
             self.B = B
@@ -51,9 +52,9 @@ class HInfBase(LMI):
             else:
                 raise ValueError(f"Given gamma: {gamma} is not feasible. Lowest gamma found: {vars['gamma']}")
         else:
-            _, obj, vars = self.solve(self.A, self.B, self.C, self.D, self.alpha)
-            self.gamma = vars['gamma']
-            self.P = vars['P'].requires_grad_(True)
+            _, gamma, P = self.solve(self.A, self.B, self.C, self.D, self.alpha)
+            self.gamma = gamma
+            self.P = torch.Tensor(P).requires_grad_(True)
 
     
     @classmethod
@@ -100,7 +101,7 @@ class HInfCont(HInfBase):
         if prob.status in ["infeasible", "unbounded"]:
             raise ValueError("SDP problem is infeasible or unbounded")
 
-        return M.value, prob.value, gam.value, P.value
+        return M.value, prob.value, P.value
 
     def forward(self) -> Tensor:
         P = self._symP()
@@ -109,7 +110,7 @@ class HInfCont(HInfBase):
         M22 = -self.gamma * torch.eye(self.nu, device=self.A.device)
 
         M = torch.cat((torch.cat((M11, M12), 1), torch.cat((M12.T, M22), 1)), 0)
-        return -M
+        return -M, P
 
     def update_matrices(self, *args):
         if self.extract_lmi_matrices is None:

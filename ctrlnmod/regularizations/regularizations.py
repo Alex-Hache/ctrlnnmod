@@ -58,7 +58,22 @@ class L2Regularization(Regularization):
             if self.verbose:
                 print(f"Updated L2 regularization lambda: {self.lambda_l2.item()}")
 
-
+class GammaRegularization(Regularization):
+    def __init__(self, model, lambda_gamma, factor, updatable = True, verbose = False):
+        super().__init__(model, factor, updatable, verbose)
+        self.lambda_gamma = Tensor([lambda_gamma])
+        
+    
+    def __call__(self):
+        return self.factor * self.model.gamma ** 2
+    
+    def update(self) -> None:
+        if self.updatable and self.lambda_logdet > self.min_weight:
+            old_lambda = self.lambda_logdet.item()
+            self.lambda_logdet *= self.factor
+            if self.verbose:
+                print(f"Updated Gamma regularization lambda: {old_lambda} -> {self.lambda_logdet.item()} \n")
+            
 class LogdetRegularization(Regularization):
     def __init__(self, lmi: LMI, lambda_logdet: float, update_factor: float, updatable: bool = True, min_weight: float = 1e-6, verbose: bool = False) -> None:
         super().__init__(lmi, update_factor, updatable, verbose)

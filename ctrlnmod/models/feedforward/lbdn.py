@@ -46,7 +46,7 @@ class FFNN(Module):
         # Input layer
         self.Win = Linear(self.nu, self.nh, bias=bias)
         layers.append(('input_layer', self.Win))
-        layers.append(('actF0', self.actF))
+        layers.append(('actF0', self.act_f))
 
         # Hidden layers
         for k in range(self.n_hid - 1):  # If more than 1 hidden layer
@@ -56,8 +56,8 @@ class FFNN(Module):
             tupact = ('actF{}'.format(k + 1), act_f)
             layers.append(tupact)
 
-        # Output layer
-        self.Wout = Linear(self.nh, self.ny, bias=self.bias)
+        # Output layer  -- no bias
+        self.Wout = Linear(self.nh, self.ny, bias=False)
         layers.append(('Out layer', self.Wout))
 
         self.layers = Sequential(OrderedDict(layers))
@@ -65,6 +65,16 @@ class FFNN(Module):
     def forward(self, x):
         return self.layers(x)
 
+    def init_weights_(self):
+        torch.nn.init.zeros_(self.Wout.weight)  # Initializing the output layer weights to 0
+
+    def get_weights(self):
+        weights = []
+        for layer in self.layers:
+            if hasattr(layer, 'weight'):
+                weights.append(layer.weight)
+        return weights
+    
 
 class Fxu(FFNN):
     r'''
@@ -162,32 +172,13 @@ class LBDN(Module):
                 self.nh, self.nh, act_f=act_f, param=param, bias=bias)  # type: ignore
             layers.append((f'hidden_layer_{k}', layer))
         # No bias on the output layer
-        self.Wout = SandwichLinear(self.nh, self.ny, param=param)
+        self.Wout = SandwichLinear(self.nh, self.ny, param=param, bias=False)
         layers.append(('output_layer', self.Wout))
 
         self.layers = Sequential(OrderedDict(layers))
 
     def forward(self, x):
         return self.layers(x)
-
-    def check(self):
-        weights = self.extractWeightsSandwich()
-        Wfx = weights[0][:, :self.nx]
-        Wfu = weights[0][:, self.nx:]
-
-        weights_x = [Wfx, *weights[1:]]
-        weights_u = [Wfu, *weights[1:]]
-
-        _, lx, _ = LipschitzLMI.solve(weights_x)
-        _, lu, _ = LipschitzLMI.solve(weights_u)
-
-        lip = torch.Tensor([lx] * self.nx + [lu] * self.nu)
-
-        infos = {'lipx': round(lx.item(), 3), 'lipu': round(lu.item(), 3)}
-        if torch.all(self.scale - lip > 0):
-            return True, infos
-        else:
-            return False, infos
 
     def extractWeightsSandwich(self):
         '''
@@ -230,7 +221,20 @@ class LBDN(Module):
 
         return weights
 
+    def check(self):
+        weights = self.extractWeightsSandwich()
 
+        _, l, _ = LipschitzLMI.solve(weights)
+
+        lip = torch.Tensor([l] * self.nu)
+
+        infos = {'lip': round(l.item(), 3)}
+        if torch.all(self.scale - lip > 0):
+            return True, infos
+        else:
+            return False, infos
+    def init_weights_(self):
+        pass
 class LipFxu(LBDN):
     def __init__(self, input_dim, hidden_dim, state_dim, scalex, scaleu,
                  act_f=Tanh(), n_hidden=1, param: str = 'expm', bias=True) -> None:
@@ -246,6 +250,24 @@ class LipFxu(LBDN):
         z = torch.cat((x, u), 1)
         return self.layers(z)
 
+    def check(self):
+        weights = self.extractWeightsSandwich()
+        Wfx = weights[0][:, :self.nx]
+        Wfu = weights[0][:, self.nx:]
+
+        weights_x = [Wfx, *weights[1:]]
+        weights_u = [Wfu, *weights[1:]]
+
+        _, lx, _ = LipschitzLMI.solve(weights_x)
+        _, lu, _ = LipschitzLMI.solve(weights_u)
+
+        lip = torch.Tensor([lx] * self.nx + [lu] * self.nu)
+
+        infos = {'lipx': round(lx.item(), 3), 'lipu': round(lu.item(), 3)}
+        if torch.all(self.scale - lip > 0):
+            return True, infos
+        else:
+            return False, infos
 
 class LipHx(LBDN):
     def __init__(self, state_dim, hidden_dim, output_dim, scalex,

@@ -77,7 +77,7 @@ class RK4Simulator(Simulator):
         Y_sim_list = []
         x_step = x0_batch
 
-        with P.cached():
+        with P.cached(), self.ss_model._frame_cache.cache_frame():
             for u_step in u_batch.split(1, dim=1):
                 u_step = u_step.squeeze(1)
                 X_sim_list += [x_step]
@@ -119,6 +119,7 @@ class RK4Simulator(Simulator):
 class RK45Simulator(Simulator):
     def __init__(self, ss_model, ts):
         super(RK45Simulator, self).__init__(ss_model=ss_model, ts=ts)
+        self.x_f = None
 
     def __repr__(self):
         return f"RK45 integrator : ts={self.ts}"
@@ -131,7 +132,7 @@ class RK45Simulator(Simulator):
         Y_sim_list = []
         x_step = x0_batch
 
-        with P.cached():
+        with P.cached(), self.ss_model._frame_cache.cache_frame():
             for u_step in u_batch.split(1, dim=1):
                 u_step = u_step.squeeze(1)
                 X_sim_list.append(x_step)
@@ -152,6 +153,7 @@ class RK45Simulator(Simulator):
 
             X_sim = torch.stack(X_sim_list, 1)
             Y_sim = torch.stack(Y_sim_list, 1)
+            self.x_f = x_step
         return X_sim, Y_sim
 
     def clone(self):

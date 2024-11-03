@@ -10,7 +10,7 @@ from cvxpy.expressions.variable import Variable
 from cvxpy.problems.problem import Problem
 from cvxpy.problems.objective import Minimize
 from cvxpy.atoms.affine.trace import trace
-
+from ctrlnmod.utils import FrameCacheManager
 
 class H2BoundedLinear(Module):
     """
@@ -55,6 +55,9 @@ class H2BoundedLinear(Module):
         geo.skew_symmetric(self, 'S')
         geo.positive_semidefinite_fixed_rank_fixed_trace(self, 'M', self.gamma2**2, self.nu)
 
+        # Ajouter le gestionnaire de cache
+        self._frame_cache = FrameCacheManager()
+
     def __repr__(self):
         return "H2_Linear_ss" + f"_gamma2_{self.gamma2}"
 
@@ -69,6 +72,11 @@ class H2BoundedLinear(Module):
         """
             This function is the framing function from Parameter space to weights space.
         """
+
+        # Si la mise en cache est active et qu'un cache existe, retourner le cache
+        if self._frame_cache.is_caching and self._frame_cache.cache is not None:
+            return self._frame_cache.cache
+        
         # Assuming M is parametrized
         M = getattr(self, 'M')  # We access to the parameterized fixed trace and rank M
         L, Q = torch.linalg.eigh(M)
@@ -90,7 +98,13 @@ class H2BoundedLinear(Module):
         Q = self.C.T @ self.C
         A = self.Wo_inv @ (-0.5 * Q + self.S)
         C = self.C
-        return A, B_full[:, -self.nu:], C
+        B = B_full[:, -self.nu:]
+        
+        # Stocker dans le cache si la mise en cache est active
+        if self._frame_cache.is_caching:
+            self._frame_cache.cache = (A, B, C)
+
+        return A, B, C
 
     @classmethod
     def copy(cls, model):

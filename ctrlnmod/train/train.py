@@ -11,7 +11,7 @@ from ..losses.losses import BaseLoss
 from ..utils.misc import is_legal, flatten_params, write_flat_params
 import lightning as pl
 from lightning.pytorch.loggers import TensorBoardLogger
-from lightning.pytorch.callbacks import EarlyStopping, Timer, Callback
+from lightning.pytorch.callbacks import EarlyStopping, Timer, Callback, ModelCheckpoint
 from ctrlnmod.optim import ProjectedOptimizer, BackTrackOptimizer, project_to_pos_def, is_positive_definite
 import os
 from typing import Callable, Optional, Dict, Any
@@ -246,10 +246,8 @@ class SSTrainer(Trainer):
 
 class StopTrainingCallback(Callback):
     def on_validation_epoch_end(self, trainer: pl.Trainer, pl_module: pl.LightningModule) -> None:
-        # Access the stop condition from the LightningModule
-        print(f'Stop training flag : {pl_module.stop_training_flag}')
         if pl_module.stop_training_flag:
-            print("Stopping training because the boolean condition is set to True.")
+            print("\n Stopping training because the boolean condition is set to True.")
             trainer.should_stop = True
 
 
@@ -265,7 +263,8 @@ class LitNode(pl.LightningModule):
         use_projection: bool = False,
         condition_fn: Optional[Callable] = None,
         custom_logging_fn: Optional[Callable] = None,
-        log_gradient_norms: bool = False
+        log_gradient_norms: bool = False,
+        val_idx_max = None
     ):
         super().__init__()
         self.model = model
@@ -282,8 +281,10 @@ class LitNode(pl.LightningModule):
         self.log_gradient_norms = log_gradient_norms
         self.timer = Timer()
         self.stop_training_flag = False
+        self.val_idx_max = val_idx_max
         if self.use_backtracking and self.use_projection:
             raise ValueError("Cannot use both backtracking and projection. Choose one or neither.")
+        self.save_hyperparameters(ignore=['model', 'criterion', 'val_criterion'])
 
     def configure_optimizers(self):
         optimizer = torch.optim.AdamW(self.parameters(), self.lr)
@@ -306,6 +307,9 @@ class LitNode(pl.LightningModule):
 
     def validation_step(self, batch, batch_idx):
         batch_u, batch_y_true, batch_x0 = batch
+        if self.val_idx_max is not None:
+            batch_u = batch_u[:,:self.val_idx_max, :]
+            batch_y_true = batch_y_true[:,:self.val_idx_max, :]
         with torch.no_grad():
             batch_x_sim, batch_y_sim = self(batch_u, batch_x0)
             val_loss = self.val_criterion(batch_y_true, batch_y_sim)
@@ -353,7 +357,7 @@ class LitNode(pl.LightningModule):
                 self.no_decrease_counter += 1
 
             if self.no_decrease_counter >= self.patience_soft:
-                if hasattr(self.criterion, 'update') and callable(self.criterion.update):
+                if self.criterion.regularizers and hasattr(self.criterion, 'update') and callable(self.criterion.update):
                     print("Updating criterion weights")
                     self.criterion.update()
                     self.no_decrease_counter = 0
@@ -362,12 +366,34 @@ class LitNode(pl.LightningModule):
         epoch_time = self.timer.time_elapsed('validate')
         self.log('val_epoch_time', epoch_time)
 
-def train_model(lit_model, data_module, logger, epochs):
-    early_stop_callback = EarlyStopping(monitor='val_loss', min_delta=0.0005, patience=50, verbose=True, mode='min')
+    @classmethod
+    def load_model(cls, checkpoint_path, model, criterion, val_criterion):
+        """Méthode helper pour charger le modèle plus facilement"""
+        return cls.load_from_checkpoint(
+            checkpoint_path,
+            model=model,
+            criterion=criterion,
+            val_criterion=val_criterion
+        )
+    
+
+def train_model(lit_model, data_module, logger, epochs, patience=100):
+
+    # Callbacks
+    early_stop_callback = EarlyStopping(monitor='val_loss', min_delta=0.00001, patience=patience, verbose=True, mode='min')
     timer_callback = Timer()
     break_callback = StopTrainingCallback()
+    checkpoint_callback = ModelCheckpoint(
+    monitor='val_loss',                # Métrique à surveiller
+    filename='best-model-{epoch:02d}',  # Format du nom
+    save_top_k=1,                      # Garde uniquement le meilleur
+    mode='min',                        # Car on minimise la loss
+    save_weights_only=False,           # Sauvegarde le modèle complet
+    save_last=False                    # Ne sauvegarde pas le dernier modèle
+)
+
     trainer = pl.Trainer(logger=logger, num_sanity_val_steps=0, max_epochs=epochs, log_every_n_steps=1,
-                         callbacks=[early_stop_callback, timer_callback, break_callback])
+                         callbacks=[early_stop_callback, timer_callback, break_callback, checkpoint_callback])
     trainer.fit(lit_model, datamodule=data_module)
     return trainer
 

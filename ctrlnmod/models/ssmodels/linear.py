@@ -4,7 +4,7 @@ import geotorch_custom as geo
 from geotorch_custom.parametrize import is_parametrized
 import torch
 from torch import Tensor
-
+from ctrlnmod.utils import FrameCacheManager
 
 class NnLinear(Module):
     """
@@ -31,6 +31,7 @@ class NnLinear(Module):
         if alpha is not None:
             geo.alpha_stable(self.A, 'weight', alpha=alpha)
 
+        self._frame_cache = FrameCacheManager()
     def __repr__(self):
         if is_parametrized(self.A):
             return "Stable_Linear_ss" + f"_{self.alpha}"
@@ -44,7 +45,14 @@ class NnLinear(Module):
         return dx, y
 
     def _frame(self) -> tuple[Tensor, Tensor, Tensor]:
-        return self.A.weight, self.B.weight, self.C.weight
+        if self._frame_cache.is_caching and self._frame_cache.cache is not None:
+            return self._frame_cache.cache
+
+        A, B, C = self.A.weight, self.B.weight, self.C.weight
+        # Stocker dans le cache si la mise en cache est active
+        if self._frame_cache.is_caching:
+            self._frame_cache.cache = (A, B, C)
+        return A, B, C
 
     def eval_(self):
         return self.A.weight, self.B.weight, self.C.weight

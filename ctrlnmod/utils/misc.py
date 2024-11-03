@@ -1,8 +1,29 @@
 import torch
 from functools import wraps
+from contextlib import contextmanager
+from typing import Optional, Tuple
+from torch import Tensor
 
 
-
+class FrameCacheManager:
+    def __init__(self):
+        self.cache: Optional[Tuple[Tensor, Tensor, Tensor]] = None
+        self.is_caching = False
+    
+    @contextmanager
+    def cache_frame(self):
+        """Context manager pour activer/désactiver la mise en cache"""
+        previous_cache_state = self.is_caching
+        # Activer la mise en cache seulement si elle n'est pas déjà active
+        if not previous_cache_state:
+            self.is_caching = True
+        try:
+            yield
+        finally:
+            # Restaurer l'état précédent et nettoyer le cache seulement si on était pas déjà en train de cacher
+            if not previous_cache_state:
+                self.is_caching = False
+                self.cache = None
 
 def rk4_discretize(A, h):
     I = torch.eye(A.size(0), dtype=A.dtype, device=A.device)

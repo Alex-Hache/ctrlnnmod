@@ -7,15 +7,16 @@ from typing import Optional, Literal
 from ctrlnmod.models.ssmodels import H2BoundedLinear, L2BoundedLinear
 from ctrlnmod.models.feedforward import LBDN, FFNN
 from torch import Tensor
+from ctrlnmod.utils import FrameCacheManager
 
 
 class FLNSSM_decoupling(nn.Module):
     def __init__(
         self,
-        input_dim: int,
-        hidden_dim: int,
+        nu: int,
+        nh: int,
         state_dim: int,
-        output_dim: int,
+        ny: int,
         n_hid_layers: int,
         actF=nn.Tanh(),
     ):
@@ -26,10 +27,10 @@ class FLNSSM_decoupling(nn.Module):
 
         params :
             * input_dim : size of control input
-            * hidden_dim : size of hidden layers
+            * nh : size of hidden layers
             * state_dim : size of the state-space (z state-space is assumed to be of the size of x)
             * n_hid_layers : number of hidden layers
-            * output_dim : size of the output layer
+            * ny : size of the output layer
             * actF : activation function for nonlienar residuals
         """
         super(FLNSSM_decoupling, self).__init__()
@@ -37,34 +38,34 @@ class FLNSSM_decoupling(nn.Module):
         # Set network dimensions
         self.input_dim = input_dim
         self.state_dim = state_dim
-        self.hidden_dim = hidden_dim
-        self.output_dim = output_dim
+        self.nh = nh
+        self.ny = ny
         self.n_hid_layers = n_hid_layers
 
         # Activation functions
         self.actF = actF
 
         # Linear part
-        self.linmod = NnLinear(self.input_dim, self.state_dim, self.output_dim)
+        self.linmod = NnLinear(self.input_dim, self.state_dim, self.ny)
         # Nonlinear part for the state beta(x)(u+alpha(x))
 
         # Beta layer initialized to I_nu
         self.beta = BetaLayer(
-            self.input_dim, self.state_dim, self.hidden_dim, self.actF
+            self.input_dim, self.state_dim, self.nh, self.actF
         )
 
         # Alpha layer
 
-        self.alpha_in = nn.Linear(self.state_dim, self.hidden_dim)
+        self.alpha_in = nn.Linear(self.state_dim, self.nh)
         if self.n_hid_layers > 1:
             paramsNLHidA = []
             for k in range(n_hid_layers - 1):
-                tup = ("dense{}".format(k), nn.Linear(hidden_dim, hidden_dim))
+                tup = ("dense{}".format(k), nn.Linear(nh, nh))
                 paramsNLHidA.append(tup)
                 tupact = ("actF{}".format(k), actF)
                 paramsNLHidA.append(tupact)
             self.alpha_hid = nn.Sequential(OrderedDict(paramsNLHidA))
-        self.alpha_out = nn.Linear(self.hidden_dim, self.state_dim, bias=False)
+        self.alpha_out = nn.Linear(self.nh, self.state_dim, bias=False)
 
         # Nonlinear part initialized to 0
         nn.init.zeros_(self.alpha_out.weight)
@@ -95,9 +96,9 @@ class FLNSSM_decoupling(nn.Module):
     def clone(self):
         copy = type(self)(
             self.input_dim,
-            self.hidden_dim,
+            self.nh,
             self.state_dim,
-            self.output_dim,
+            self.ny,
             self.n_hid_layers,
             self.actF,
         )
@@ -109,9 +110,9 @@ class QFLNSSM(nn.Module):
     def __init__(
         self,
         input_dim: int,
-        hidden_dim: int,
+        nh: int,
         state_dim: int,
-        output_dim: int,
+        ny: int,
         n_hid_layers: int,
         actF=nn.Tanh(),
     ):
@@ -122,10 +123,10 @@ class QFLNSSM(nn.Module):
 
         params :
             * input_dim : size of control input
-            * hidden_dim : size of hidden layers
+            * nh : size of hidden layers
             * state_dim : size of the state-space (z state-space is assumed to be of the size of x)
             * n_hid_layers : number of hidden layers
-            * output_dim : size of the output layer
+            * ny : size of the output layer
             * actF : activation function for nonlienar residuals
         """
         super(QFLNSSM, self).__init__()
@@ -133,50 +134,50 @@ class QFLNSSM(nn.Module):
         # Set network dimensions
         self.input_dim = input_dim
         self.state_dim = state_dim
-        self.hidden_dim = hidden_dim
-        self.output_dim = output_dim
+        self.nh = nh
+        self.ny = ny
         self.n_hid_layers = n_hid_layers
 
         # Activation functions
         self.actF = actF
 
         # Linear part
-        self.linmod = NnLinear(self.input_dim, self.state_dim, self.output_dim)
+        self.linmod = NnLinear(self.input_dim, self.state_dim, self.ny)
         # Nonlinear part for the state beta(x)(u+alpha(x))
 
         # Beta layer by default it is initialized to the identity
         self.beta = BetaLayer(
-            self.input_dim, self.state_dim, self.hidden_dim, self.actF
+            self.input_dim, self.state_dim, self.nh, self.actF
         )
 
         # Alpha layer
 
-        self.alpha_in = nn.Linear(self.state_dim, self.hidden_dim)
+        self.alpha_in = nn.Linear(self.state_dim, self.nh)
         if self.n_hid_layers > 1:
             paramsNLHidA = []
             for k in range(n_hid_layers - 1):
-                tup = ("dense{}".format(k), nn.Linear(hidden_dim, hidden_dim))
+                tup = ("dense{}".format(k), nn.Linear(nh, nh))
                 paramsNLHidA.append(tup)
                 tupact = ("actF{}".format(k), actF)
                 paramsNLHidA.append(tupact)
             self.alpha_hid = nn.Sequential(OrderedDict(paramsNLHidA))
-        self.alpha_out = nn.Linear(self.hidden_dim, self.input_dim, bias=False)
+        self.alpha_out = nn.Linear(self.nh, self.input_dim, bias=False)
 
         # Nonlinear part initialized to 0
         nn.init.zeros_(self.alpha_out.weight)
 
         # g(z,u)
-        self.g_in_z = nn.Linear(self.state_dim, self.hidden_dim)
-        self.g_in_u = nn.Linear(self.input_dim, self.hidden_dim)
+        self.g_in_z = nn.Linear(self.state_dim, self.nh)
+        self.g_in_u = nn.Linear(self.input_dim, self.nh)
         if self.n_hid_layers > 1:
             paramsNLHidG = []
             for k in range(n_hid_layers - 1):
-                tup = ("dense{}".format(k), nn.Linear(hidden_dim, hidden_dim))
+                tup = ("dense{}".format(k), nn.Linear(nh, nh))
                 paramsNLHidG.append(tup)
                 tupact = ("actF{}".format(k), actF)
                 paramsNLHidG.append(tupact)
             self.g_hid = nn.Sequential(OrderedDict(paramsNLHidG))
-        self.g_out = nn.Linear(self.hidden_dim, self.state_dim, bias=False)
+        self.g_out = nn.Linear(self.nh, self.state_dim, bias=False)
 
     def forward(self, input, state):
         """
@@ -211,9 +212,9 @@ class QFLNSSM(nn.Module):
     def clone(self):
         copy = type(self)(
             self.input_dim,
-            self.hidden_dim,
+            self.nh,
             self.state_dim,
-            self.output_dim,
+            self.ny,
             self.n_hid_layers,
             self.actF,
         )
@@ -224,10 +225,10 @@ class QFLNSSM(nn.Module):
 class FLNSSM_Jordan(nn.Module):
     def __init__(
         self,
-        input_dim: int,
-        hidden_dim: int,
-        state_dim: int,
-        output_dim: int,
+        nu: int,
+        nh: int,
+        nx: int,
+        ny: int,
         n_hid_layers: int,
         dist_dim: int = 0,
         linear_model: Optional[Literal["L2", "H2"]] = None,
@@ -235,7 +236,8 @@ class FLNSSM_Jordan(nn.Module):
         actF: str = 'tanh',
         bias: bool = True,
         alpha: float = 0.0,
-        lambda_alpha: Optional[float] = None
+        lambda_alpha: Optional[float] = None,
+        **kwargs
     ):
         r"""
         Constructor for FLNSSM Jordan models with optional bounded disturbances
@@ -244,9 +246,9 @@ class FLNSSM_Jordan(nn.Module):
 
         params:
         * input_dim : size of control input
-        * hidden_dim : size of hidden layers
+        * nh : size of hidden layers
         * state_dim : size of the state-space
-        * output_dim : size of the output layer
+        * ny : size of the output layer
         * n_hid_layers : number of hidden layers
         * dist_dim : size of disturbance input (optional)
         * linear_model : type of linear model for disturbances ("L2", "H2", or None for unconstrained)
@@ -257,12 +259,12 @@ class FLNSSM_Jordan(nn.Module):
         """
         super(FLNSSM_Jordan, self).__init__()
 
-        self.input_dim = input_dim
-        self.state_dim = state_dim
-        self.hidden_dim = hidden_dim
-        self.output_dim = output_dim
+        self.nu = nu
+        self.nx = nx
+        self.nh = nh
+        self.ny = ny
         self.n_hid_layers = n_hid_layers
-        self.dist_dim = dist_dim
+        self.nd = dist_dim
         self.bias = bias
 
         if actF.lower() == 'tanh':
@@ -273,44 +275,43 @@ class FLNSSM_Jordan(nn.Module):
             raise NotImplementedError(
                 f"Function {actF} not implemented. Choose 'tanh' or 'relu'.")
         self.act_name = actF
-
         # If there are disturbances
         if dist_dim > 0:
             # Linear part
             if linear_model is None:
                 self.linmod = NnLinear(
-                    input_dim + dist_dim, state_dim, output_dim)
+                    dist_dim, ny, nx)
             elif linear_model == "L2":
                 if gamma is not None:
                     self.linmod = L2BoundedLinear(
-                        dist_dim, output_dim, state_dim, gamma, alpha)
+                        dist_dim, ny, nx, gamma, alpha)
                 else:
                     raise ValueError("Please specify a value for gamma")
             elif linear_model == "H2":
                 if gamma is not None:
                     self.linmod = H2BoundedLinear(
-                        dist_dim, output_dim, state_dim, gamma)
+                        dist_dim, ny, nx, gamma)
                 else:
                     raise ValueError("Please specify a value for gamma")
             else:
                 raise ValueError(
                     "linear_model must be either 'L2', 'H2', or None")
             # Control input matrix
-            self.B = nn.Parameter(torch.randn(state_dim, input_dim))
+            self.B = nn.Parameter(torch.randn(nx, nu))
         elif dist_dim == 0:
             # Linear part
             if linear_model is None:
-                self.linmod = NnLinear(input_dim, state_dim, output_dim)
+                self.linmod = NnLinear(nu, nx, ny)
             elif linear_model == "L2":
                 if gamma is not None:
                     self.linmod = L2BoundedLinear(
-                        input_dim, output_dim, state_dim, gamma, alpha)
+                        nu, ny, nx, gamma, alpha)
                 else:
                     raise ValueError("Please specify a value for gamma")
             elif linear_model == "H2":
                 if gamma is not None:
                     self.linmod = H2BoundedLinear(
-                        input_dim, output_dim, state_dim, gamma)
+                        nu, ny, nx, gamma)
                 else:
                     raise ValueError("Please specify a value for gamma")
             else:
@@ -321,28 +322,41 @@ class FLNSSM_Jordan(nn.Module):
                 f"Distubrances dimensions must be nonnegative found {dist_dim}")
 
         if lambda_alpha is not None:  # An upper bound on the lipschitz constant is prescribed
-            self.alpha = LBDN(output_dim + dist_dim, hidden_dim, input_dim, torch.tensor(
-                [lambda_alpha] * (output_dim + dist_dim)), act_f=self.act_f)
+            self.alpha = LBDN(ny + dist_dim, nh, nu, torch.tensor(
+                [lambda_alpha] * (ny + dist_dim)), act_f=self.act_f, bias=bias)
         else:
 
-            self.alpha = FFNN(output_dim + dist_dim,
-                              hidden_dim, input_dim, act_f=self.act_f)
+            self.alpha = FFNN(ny + dist_dim,
+                              nh, nu, act_f=self.act_f, bias=bias)
 
         self.init_weights_()
 
+        self._frame_cache = FrameCacheManager()
+
+    def _frame(self):
+        if self._frame_cache.is_caching and self._frame_cache.cache is not None:
+            return self._frame_cache.cache
+
+        A, B, C, D = *self.linmod._frame(), torch.zeros((self.ny, self.nd))
+        # Stocker dans le cache si la mise en cache est active
+        if self._frame_cache.is_caching:
+            self._frame_cache.cache = (A, B, C, D)
+
+        return A, B, C, D 
+
+
     def forward(self, input: Tensor, state: Tensor):
-        u = input[:, :self.input_dim]
-        z = state
-
-        if self.dist_dim > 0:
-            d = input[:, :self.input_dim]
-            A, G, C = self.linmod._frame()
+        z = state            
+        u = input[:, :self.nu]
+        d = input[:, self.nu:]
+        if self.nd > 0:
+            A, G, C, D = self._frame()
         else:
-            A, B, C = self.linmod._frame()
+            A, B, C, D = self._frame()
 
-        y = C @ z
+        y = z @ C.T + d @ D.T
 
-        if self.dist_dim > 0:
+        if self.nd > 0 :
             alpha = self.alpha(torch.cat((y, d), dim=1))
             dz = z @ A.T + (u + alpha) @ self.B.T + d @ G.T
         else:
@@ -355,8 +369,7 @@ class FLNSSM_Jordan(nn.Module):
         # Initialisation des poids linéaires
         if A0 is not None and B0 is not None and C0 is not None:
             if isinstance(self.linmod, NnLinear):
-                self.linmod.init_model_(A0, torch.cat(
-                    (B0, G0), dim=1) if G0 is not None else B0, C0, requires_grad=isLinTrainable)
+                self.linmod.init_weights_(A0, G0, C0, requires_grad=isLinTrainable)
             elif isinstance(self.linmod, L2BoundedLinear):
                 self.linmod.right_inverse_(A0, G0, C0, float(
                     self.linmod.gamma), float(self.linmod.alpha))
@@ -364,37 +377,10 @@ class FLNSSM_Jordan(nn.Module):
                 self.linmod.right_inverse_(
                     A0, G0, C0, float(self.linmod.gamma2))
             self.B.data = B0
-            if isinstance(self.linmod, NnLinear) and self.dist_dim > 0 and G0 is not None:
-                self.G.data = G0
         else:
             # Initialisation par défaut si les matrices ne sont pas fournies
             nn.init.xavier_uniform_(self.B)
-            if isinstance(self.linmod, NnLinear) and self.dist_dim > 0:
-                nn.init.xavier_uniform_(self.G)
-
-        # Initialisation des poids non linéaires
-        if not self.use_lipschitz:
-            # Pour les réseaux standard
-            nn.init.xavier_uniform_(
-                self.alpha_in_d.weight, gain=nn.init.calculate_gain(self.act_name))
-            nn.init.xavier_uniform_(
-                self.alpha_in_y.weight, gain=nn.init.calculate_gain(self.act_name))
-
-            if self.n_hid_layers > 1:
-                # Exclure la couche d'entrée et de sortie
-                for m in self.alpha_hid[1:-1]:
-                    if isinstance(m, nn.Linear):
-                        nn.init.xavier_uniform_(
-                            m.weight, gain=nn.init.calculate_gain(self.act_name))
-
-            nn.init.zeros_(self.alpha_out.weight)
-            if self.alpha_out.bias is not None:
-                nn.init.zeros_(self.alpha_out.bias)
-        else:
-            # Pour les réseaux bornés par Lipschitz
-            # Ces réseaux ont généralement leur propre méthode d'initialisation
-            # qui respecte les contraintes de Lipschitz, donc nous ne les modifions pas ici
-            pass
+        self.alpha.init_weights_()
 
     def load_weights(self, params_dict):
         self.linmod.load_state_dict(params_dict["linmod"])
@@ -427,12 +413,12 @@ class FLNSSM_Jordan(nn.Module):
             gamma = float(self.linmod.gamma2)
 
         copy = type(self)(
-            self.input_dim,
-            self.hidden_dim,
-            self.state_dim,
-            self.output_dim,
+            self.nu,
+            self.nh,
+            self.nx,
+            self.ny,
             self.n_hid_layers,
-            self.dist_dim,
+            self.nd,
             linear_model,
             gamma,
             self.act_name,
@@ -451,9 +437,9 @@ class FLNSSM_Jordan(nn.Module):
         elif isinstance(self.linmod, H2BoundedLinear):
             linear_type = "H2"
             gamma = self.linmod.gamma2
-        return (f"FLNSSM_Jordan: input_dim={self.input_dim}, state_dim={self.state_dim}, "
-                f"hidden_dim={self.hidden_dim}, output_dim={self.output_dim}, "
-                f"n_hid_layers={self.n_hid_layers}, dist_dim={self.dist_dim}, "
+        return (f"FLNSSM_Jordan: nu={self.nu}, nx={self.nx}, "
+                f"nh={self.nh}, ny={self.ny}, "
+                f"n_hid_layers={self.n_hid_layers}, dist_dim={self.nd}, "
                 f"activation={self.act_name}, linear_model={linear_type}, gamma={gamma}")
 
     def __str__(self):
@@ -461,17 +447,17 @@ class FLNSSM_Jordan(nn.Module):
 
     def check(self):
         if not isinstance(self.linmod, NnLinear):
-            return self.linmod.check_()
+            return self.linmod.check()
         return True, None
 
 
 class FLNSSM_Jordan_Dist(nn.Module):
     def __init__(
         self,
-        input_dim: int,
-        hidden_dim: int,
-        state_dim: int,
-        output_dim: int,
+        nu: int,
+        nh: int,
+        nx: int,
+        ny: int,
         n_hid_layers: int,
         nd: int,
         actF=nn.Tanh(),
@@ -482,20 +468,20 @@ class FLNSSM_Jordan_Dist(nn.Module):
             y = Cz
 
         params :
-            * input_dim : size of control input
-            * hidden_dim : size of hidden layers
-            * state_dim : size of the state-space (z state-space is assumed to be of the size of x)
+            * nu : size of control input
+            * nh : size of hidden layers
+            * nx : size of the state-space (z state-space is assumed to be of the size of x)
             * n_hid_layers : number of hidden layers
-            * output_dim : size of the output layer
+            * ny : size of the output layer
             * actF : activation function for nonlienar residuals
         """
         super(FLNSSM_Jordan_Dist, self).__init__()
 
         # Set network dimensions
-        self.input_dim = input_dim
-        self.state_dim = state_dim
-        self.hidden_dim = hidden_dim
-        self.output_dim = output_dim
+        self.nu = nu
+        self.nx = nx
+        self.nh = nh
+        self.ny = ny
         self.n_hid_layers = n_hid_layers
         self.dist_dim = nd
 
@@ -504,24 +490,24 @@ class FLNSSM_Jordan_Dist(nn.Module):
 
         # Linear part
         self.linmod = NnLinear(
-            self.input_dim + self.dist_dim, self.state_dim, self.output_dim
+            self.nu + self.dist_dim, self.state_dim, self.ny
         )
         # Nonlinear part for the state beta(x)(u+alpha(x))
 
         # Alpha layer
         self.alpha_in_y = nn.Linear(
-            self.output_dim, self.hidden_dim, bias=True)
-        self.alpha_in_d = nn.Linear(self.dist_dim, self.hidden_dim, bias=False)
+            self.ny, self.nh, bias=True)
+        self.alpha_in_d = nn.Linear(self.dist_dim, self.nh, bias=False)
 
         if self.n_hid_layers > 1:
             paramsNLHidA = []
             for k in range(n_hid_layers - 1):
-                tup = ("dense{}".format(k), nn.Linear(hidden_dim, hidden_dim))
+                tup = ("dense{}".format(k), nn.Linear(nh, nh))
                 paramsNLHidA.append(tup)
                 tupact = ("actF{}".format(k), actF)
                 paramsNLHidA.append(tupact)
             self.alpha_hid = nn.Sequential(OrderedDict(paramsNLHidA))
-        self.alpha_out = nn.Linear(self.hidden_dim, self.input_dim, bias=False)
+        self.alpha_out = nn.Linear(self.nh, self.nu, bias=False)
 
     def forward(self, input, state):
         """
@@ -529,8 +515,8 @@ class FLNSSM_Jordan_Dist(nn.Module):
             - input = [u, d]
             - state =  state vector
         """
-        u = input[:, 0: self.input_dim]
-        d = input[:, self.input_dim: self.input_dim + self.dist_dim]
+        u = input[:, 0: self.nu]
+        d = input[:, self.nu: self.nu + self.dist_dim]
 
         z = state
         y = self.linmod.C(z)
@@ -586,10 +572,10 @@ class FLNSSM_Jordan_Dist(nn.Module):
 
     def clone(self):
         copy = type(self)(
-            self.input_dim,
-            self.hidden_dim,
+            self.nu,
+            self.nh,
             self.state_dim,
-            self.output_dim,
+            self.ny,
             self.n_hid_layers,
             self.dist_dim,
             self.actF,
