@@ -15,7 +15,7 @@ class FLNSSM_decoupling(nn.Module):
         self,
         nu: int,
         nh: int,
-        state_dim: int,
+        nx: int,
         ny: int,
         n_hid_layers: int,
         actF=nn.Tanh(),
@@ -26,9 +26,9 @@ class FLNSSM_decoupling(nn.Module):
             y = Cz
 
         params :
-            * input_dim : size of control input
+            * nu : size of control input
             * nh : size of hidden layers
-            * state_dim : size of the state-space (z state-space is assumed to be of the size of x)
+            * nx : size of the state-space (z state-space is assumed to be of the size of x)
             * n_hid_layers : number of hidden layers
             * ny : size of the output layer
             * actF : activation function for nonlienar residuals
@@ -36,8 +36,8 @@ class FLNSSM_decoupling(nn.Module):
         super(FLNSSM_decoupling, self).__init__()
 
         # Set network dimensions
-        self.input_dim = input_dim
-        self.state_dim = state_dim
+        self.nu = nu
+        self.nx = nx
         self.nh = nh
         self.ny = ny
         self.n_hid_layers = n_hid_layers
@@ -46,17 +46,17 @@ class FLNSSM_decoupling(nn.Module):
         self.actF = actF
 
         # Linear part
-        self.linmod = NnLinear(self.input_dim, self.state_dim, self.ny)
+        self.linmod = NnLinear(self.nu, self.nx, self.ny)
         # Nonlinear part for the state beta(x)(u+alpha(x))
 
         # Beta layer initialized to I_nu
         self.beta = BetaLayer(
-            self.input_dim, self.state_dim, self.nh, self.actF
+            self.nu, self.nx, self.nh, self.actF
         )
 
         # Alpha layer
 
-        self.alpha_in = nn.Linear(self.state_dim, self.nh)
+        self.alpha_in = nn.Linear(self.nx, self.nh)
         if self.n_hid_layers > 1:
             paramsNLHidA = []
             for k in range(n_hid_layers - 1):
@@ -65,7 +65,7 @@ class FLNSSM_decoupling(nn.Module):
                 tupact = ("actF{}".format(k), actF)
                 paramsNLHidA.append(tupact)
             self.alpha_hid = nn.Sequential(OrderedDict(paramsNLHidA))
-        self.alpha_out = nn.Linear(self.nh, self.state_dim, bias=False)
+        self.alpha_out = nn.Linear(self.nh, self.nx, bias=False)
 
         # Nonlinear part initialized to 0
         nn.init.zeros_(self.alpha_out.weight)
@@ -76,8 +76,8 @@ class FLNSSM_decoupling(nn.Module):
             - input = [u, x]
             - state =  state vector
         """
-        u = input[:, 0: self.input_dim]
-        x = input[:, self.input_dim: self.input_dim + self.state_dim]
+        u = input[:, 0: self.nu]
+        x = input[:, self.nu: self.nu + self.nx]
         z = state
 
         alpha = self.alpha_in(x)
@@ -95,9 +95,9 @@ class FLNSSM_decoupling(nn.Module):
 
     def clone(self):
         copy = type(self)(
-            self.input_dim,
+            self.nu,
             self.nh,
-            self.state_dim,
+            self.nx,
             self.ny,
             self.n_hid_layers,
             self.actF,
@@ -109,9 +109,9 @@ class FLNSSM_decoupling(nn.Module):
 class QFLNSSM(nn.Module):
     def __init__(
         self,
-        input_dim: int,
+        nu: int,
         nh: int,
-        state_dim: int,
+        nx: int,
         ny: int,
         n_hid_layers: int,
         actF=nn.Tanh(),
@@ -122,9 +122,9 @@ class QFLNSSM(nn.Module):
             y = Cz
 
         params :
-            * input_dim : size of control input
+            * nu : size of control input
             * nh : size of hidden layers
-            * state_dim : size of the state-space (z state-space is assumed to be of the size of x)
+            * nx : size of the state-space (z state-space is assumed to be of the size of x)
             * n_hid_layers : number of hidden layers
             * ny : size of the output layer
             * actF : activation function for nonlienar residuals
@@ -132,8 +132,8 @@ class QFLNSSM(nn.Module):
         super(QFLNSSM, self).__init__()
 
         # Set network dimensions
-        self.input_dim = input_dim
-        self.state_dim = state_dim
+        self.nu = nu
+        self.nx = nx
         self.nh = nh
         self.ny = ny
         self.n_hid_layers = n_hid_layers
@@ -142,17 +142,17 @@ class QFLNSSM(nn.Module):
         self.actF = actF
 
         # Linear part
-        self.linmod = NnLinear(self.input_dim, self.state_dim, self.ny)
+        self.linmod = NnLinear(self.nu, self.nx, self.ny)
         # Nonlinear part for the state beta(x)(u+alpha(x))
 
         # Beta layer by default it is initialized to the identity
         self.beta = BetaLayer(
-            self.input_dim, self.state_dim, self.nh, self.actF
+            self.nu, self.nx, self.nh, self.actF
         )
 
         # Alpha layer
 
-        self.alpha_in = nn.Linear(self.state_dim, self.nh)
+        self.alpha_in = nn.Linear(self.nx, self.nh)
         if self.n_hid_layers > 1:
             paramsNLHidA = []
             for k in range(n_hid_layers - 1):
@@ -161,14 +161,14 @@ class QFLNSSM(nn.Module):
                 tupact = ("actF{}".format(k), actF)
                 paramsNLHidA.append(tupact)
             self.alpha_hid = nn.Sequential(OrderedDict(paramsNLHidA))
-        self.alpha_out = nn.Linear(self.nh, self.input_dim, bias=False)
+        self.alpha_out = nn.Linear(self.nh, self.nu, bias=False)
 
         # Nonlinear part initialized to 0
         nn.init.zeros_(self.alpha_out.weight)
 
         # g(z,u)
-        self.g_in_z = nn.Linear(self.state_dim, self.nh)
-        self.g_in_u = nn.Linear(self.input_dim, self.nh)
+        self.g_in_z = nn.Linear(self.nx, self.nh)
+        self.g_in_u = nn.Linear(self.nu, self.nh)
         if self.n_hid_layers > 1:
             paramsNLHidG = []
             for k in range(n_hid_layers - 1):
@@ -177,7 +177,7 @@ class QFLNSSM(nn.Module):
                 tupact = ("actF{}".format(k), actF)
                 paramsNLHidG.append(tupact)
             self.g_hid = nn.Sequential(OrderedDict(paramsNLHidG))
-        self.g_out = nn.Linear(self.nh, self.state_dim, bias=False)
+        self.g_out = nn.Linear(self.nh, self.nx, bias=False)
 
     def forward(self, input, state):
         """
@@ -185,8 +185,8 @@ class QFLNSSM(nn.Module):
             - input = [u, x]
             - state =  state vector
         """
-        u = input[:, 0: self.input_dim]
-        x = input[:, self.input_dim: self.input_dim + self.state_dim]
+        u = input[:, 0: self.nu]
+        x = input[:, self.nu: self.nu + self.nx]
         z = state
 
         alpha = self.alpha_in(x)
@@ -211,9 +211,9 @@ class QFLNSSM(nn.Module):
 
     def clone(self):
         copy = type(self)(
-            self.input_dim,
+            self.nu,
             self.nh,
-            self.state_dim,
+            self.nx,
             self.ny,
             self.n_hid_layers,
             self.actF,
@@ -245,9 +245,9 @@ class FLNSSM_Jordan(nn.Module):
         y = Cz
 
         params:
-        * input_dim : size of control input
+        * nu : size of control input
         * nh : size of hidden layers
-        * state_dim : size of the state-space
+        * nx : size of the state-space
         * ny : size of the output layer
         * n_hid_layers : number of hidden layers
         * dist_dim : size of disturbance input (optional)
@@ -490,7 +490,7 @@ class FLNSSM_Jordan_Dist(nn.Module):
 
         # Linear part
         self.linmod = NnLinear(
-            self.nu + self.dist_dim, self.state_dim, self.ny
+            self.nu + self.dist_dim, self.nx, self.ny
         )
         # Nonlinear part for the state beta(x)(u+alpha(x))
 
@@ -574,7 +574,7 @@ class FLNSSM_Jordan_Dist(nn.Module):
         copy = type(self)(
             self.nu,
             self.nh,
-            self.state_dim,
+            self.nx,
             self.ny,
             self.n_hid_layers,
             self.dist_dim,

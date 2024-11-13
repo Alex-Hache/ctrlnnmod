@@ -57,7 +57,7 @@ class FFNN(Module):
             layers.append(tupact)
 
         # Output layer  -- no bias
-        self.Wout = Linear(self.nh, self.ny, bias=False)
+        self.Wout = Linear(self.nh, self.ny, bias=True)
         layers.append(('Out layer', self.Wout))
 
         self.layers = Sequential(OrderedDict(layers))

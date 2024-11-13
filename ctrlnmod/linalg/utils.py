@@ -10,6 +10,8 @@ from cvxpy.atoms.affine.bmat import bmat
 from cvxpy.atoms.affine.hstack import hstack
 from cvxpy.atoms.affine.vstack import vstack
 from typing import Union
+from scipy.linalg import polar
+
 
 def get_lyap_exp(A):
     return -torch.max(torch.real(torch.linalg.eigvals(A)))
@@ -337,3 +339,31 @@ class Logm(torch.autograd.Function):
 
 
 logm = Logm.apply
+
+
+def project_onto_stiefel(A: torch.Tensor):
+    """
+    Projects a rectangular matrix A onto the Stiefel manifold.
+    
+    Parameters:
+    -----------
+    A : ndarray
+        Input matrix of shape (n, p)
+        
+    Returns:
+    --------
+    U : ndarray
+        Projected matrix on Stiefel manifold of shape (n, p)
+        with orthonormal columns
+    """
+    A = A.detach().numpy()
+    # Perform polar decomposition
+    U, H = polar(A)
+    
+    # Verify orthogonality (for debugging)
+    UTU = U.T @ U
+    deviation = np.max(np.abs(UTU - np.eye(U.shape[1])))
+    if deviation > 1e-10:
+        print(f"Warning: Maximum deviation from orthonormality: {deviation}")
+    
+    return U

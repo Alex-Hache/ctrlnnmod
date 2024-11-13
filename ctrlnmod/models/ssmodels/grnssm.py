@@ -7,6 +7,7 @@ from torch import Tensor, real, min
 from typing import Tuple
 from ctrlnmod.models.ssmodels.linear import NnLinear
 from ctrlnmod.models.ssmodels.hinf import L2BoundedLinear
+from ctrlnmod.utils import FrameCacheManager
 import torch
 import torch.nn as nn
 from math import sqrt
@@ -65,6 +66,7 @@ class Grnssm(Module):
             self.hx = Hx(self.nx, self.nh, self.ny, actF=self.actF,
                          n_hidden=n_hidden_layers, bias=bias)
 
+        self._frame_cache = FrameCacheManager()
     def __repr__(self):
         return f"GRNSSM : nu={self.nu} nx={self.nx} nh={self.nh} ny={self.ny} activation={self.act_name}"
 

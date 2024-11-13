@@ -8,6 +8,7 @@ from .utils import (
     MatrixSquareRoot,
     adjoint,
     Logm,
+    project_onto_stiefel,
 )
 
 __all__ = [
@@ -18,5 +19,6 @@ __all__ = [
     'cayley',
     'MatrixSquareRoot',
     'adjoint',
-    'Logm'
+    'Logm',
+    'project_onto_stiefel'
 ]

@@ -11,6 +11,10 @@ from cvxpy.problems.problem import Problem
 from cvxpy.problems.objective import Minimize
 from cvxpy.atoms.affine.bmat import bmat
 from ctrlnmod.utils import FrameCacheManager
+from ctrlnmod.linalg import project_onto_stiefel
+from typing import Dict, Union
+from ctrlnmod.lmis.hinf import HInfCont
+
 
 class L2BoundedLinear(Module):
     """
@@ -88,8 +92,8 @@ class L2BoundedLinear(Module):
             
         return A, B, C
 
-    def right_inverse_(self, A, B, C, gamma: float, alpha):
-        Q, P_torch, S, G, H, alph, _ = self.submersion_inv(A, B, C, float(gamma), alpha)
+    def right_inverse_lmi(self, A, B, C, gamma: float, alpha):
+        Q, P_torch, S, G, H, alph, _ = self.submersion_inv_lmi(A, B, C, float(gamma), alpha)
         self.P = P_torch
         self.Q = Q
         self.S = S
@@ -97,7 +101,7 @@ class L2BoundedLinear(Module):
         self.H = H
         self.alpha = alph
 
-    def submersion_inv(self, A, B, C, gamma: float, alpha=0.0, epsilon=1e-8, solver="MOSEK", check=False):
+    def submersion_inv_lmi(self, A, B, C, gamma: float, alpha=0.0, epsilon=1e-8, solver="MOSEK", check=False):
         """
             Function from weights space to parameter space.
 
@@ -156,14 +160,188 @@ class L2BoundedLinear(Module):
             B = Tensor(B)
             C = Tensor(C)
             # M_tilde = A.T @ P + P @ A + C.T @ C + (1/(gamma**2))* P @ B @ B.T @ P
-            Q = Tensor(-M.value[:nx, :nx])  # type: ignore
-            S = P @ Tensor(A) + 0.5 * Q
+            # A = (-0.5 * (self.Q + self.G.T @ self.G + self.eps * self.Ix) + self.S) @ self.P - self.alpha * self.Ix
+
+            '''
+                Version Riccati
+            '''
+
             G = Tensor(C) @ torch.inverse(P)
+            Q = Tensor(-M.value[:nx, :nx])  # type: ignore
+            S = torch.inverse(P) @ Tensor(A) + 0.5 *(Q)
             H = Tensor(1 / self.gamma * (torch.inverse(sqrtm(Q)) @ B))
-            H = H / torch.sqrt(torch.linalg.norm(H @ H.T, 2))  # We project onto Stiefeld Manifold
+            H = Tensor(project_onto_stiefel(H))
             alph = Tensor([alpha])
         return Q, P, S, G, H, alph, gmma_lmi
 
+
+    def right_inverse_(self, A, B, C, gamma: float, alpha):
+        _, gamma, _ = HInfCont.solve(A, B, C, torch.zeros((C.shape[0], B.shape[1])), alpha = torch.Tensor([0.0]))
+        Q, P_torch, S, G, H = self.submersion_inv_(A, B, C, float(gamma), alpha)
+        self.P = P_torch
+        self.Q = Q
+        self.S = S
+        self.G = Parameter(G)
+        self.H = H
+        self.alpha = alpha
+
+    def submersion_inv_(self, A, B, C, gamma: float, epsilon=1e-8 ):
+        """
+            Function from weights space to parameter space.
+
+        """
+
+
+        # Now initialize
+        A = Tensor(A)
+        B = Tensor(B)
+        C = Tensor(C)
+        # M_tilde = A.T @ P + P @ A + C.T @ C + (1/(gamma**2))* P @ B @ B.T @ P
+        # A = (-0.5 * (self.Q + self.G.T @ self.G + self.eps * self.Ix) + self.S) @ self.P - self.alpha * self.Ix
+
+        '''
+            Version Riccati
+        '''
+
+        U, S, Vt = torch.linalg.svd(1 / gamma * B)
+        epsilon = 1e-6
+        Q = U @ torch.block_diag(torch.diag(S)**2, epsilon*torch.eye(self.nx-self.nu)) @ U.T
+        H = (1/gamma) * (torch.inverse(sqrtm(Q))) @ B
+        # Consistency check
+        P, infos = self.solve_riccati_torch(A, B, C, gamma)
+        G = Tensor(C) @ torch.inverse(P)
+
+        S = Tensor(A) @ torch.inverse(P) + 0.5 *(Q + G.T @ G)
+
+        return Q, P, S, G, H
+    
+
+    def solve_riccati_torch(self, A: torch.Tensor, 
+                        B: torch.Tensor, 
+                        C: torch.Tensor, 
+                        gamma: float,
+                        tol: float = 1e-10) -> Dict[str, Union[torch.Tensor, bool, float]]:
+        """
+        Résout l'équation de Riccati pour la norme H∞ en utilisant la méthode hamiltonienne
+        A^T P + PA + PBB^T P/γ² + C^T C = 0
+        
+        Args:
+            A: Tensor de taille (nx, nx)
+            B: Tensor de taille (nx, nu)
+            C: Tensor de taille (ny, nx)
+            gamma: Valeur scalaire > 0
+            tol: Tolérance pour la stabilité
+        
+        Returns:
+            Dict contenant:
+                - 'P': Solution de l'équation de Riccati
+                - 'success': Bool indiquant si la résolution a réussi
+                - 'eigvals': Valeurs propres de la matrice hamiltonienne
+                - 'residual_norm': Norme du résidu
+        """
+        nx = A.shape[0]
+        gamma_sq_inv = 1/(gamma**2)
+        
+        # Construction de la matrice hamiltonienne
+        H_11 = A
+        H_12 = gamma_sq_inv * (B @ B.T)
+        H_21 = -(C.T @ C)
+        H_22 = -A.T
+        
+        H = torch.block_diag(H_11, H_22)
+        H[:nx, nx:] = H_12
+        H[nx:, :nx] = H_21
+        
+        # Calcul des valeurs et vecteurs propres
+        # Note: torch.linalg.eig retourne les valeurs complexes même pour matrices réelles
+        eigvals, eigvecs = torch.linalg.eig(H)
+        
+        # Conversion en valeurs réelles pour le tri
+        real_parts = eigvals.real
+        
+        # Tri des valeurs propres par partie réelle
+        sorted_indices = torch.argsort(real_parts)
+        eigvals = eigvals[sorted_indices]
+        eigvecs = eigvecs[:, sorted_indices]
+        
+        # Vérification du nombre de valeurs propres stables
+        n_stable = torch.sum(real_parts[sorted_indices] < -tol).item()
+        
+        if n_stable != nx:
+            # Ajuster le seuil si nécessaire
+            alternative_tol = abs(real_parts[nx-1].item()) * 10
+            print(f"Adjusting tolerance from {tol} to {alternative_tol}")
+            stable_indices = real_parts < alternative_tol
+        else:
+            stable_indices = real_parts < -tol
+        
+        # Extraire les vecteurs propres stables
+        stable_eigvecs = eigvecs[:, stable_indices]
+        
+        if stable_eigvecs.shape[1] != nx:
+            return {
+                'success': False,
+                'eigvals': eigvals,
+                'error': f"Got {stable_eigvecs.shape[1]} stable eigenvectors, expected {nx}"
+            }
+        
+        # Extraction de X et Y
+        X = stable_eigvecs[:nx, :]
+        Y = stable_eigvecs[nx:, :]
+        
+        # Vérifier le conditionnement de X
+        try:
+            cond_X = torch.linalg.cond(X).item()
+        except:
+            cond_X = float('inf')
+        
+        if cond_X > 1e12:  # seuil arbitraire
+            print(f"Warning: X is poorly conditioned (cond = {cond_X:.2e})")
+        
+        try:
+            # Utiliser la pseudo-inverse si X est mal conditionné
+            if cond_X > 1e12:
+                # Calcul manuel de la pseudo-inverse pour plus de contrôle
+                U, S, Vh = torch.linalg.svd(X)
+                S_pinv = torch.where(S > tol * S[0], 1/S, torch.zeros_like(S))
+                X_pinv = (Vh.T.conj() * S_pinv.unsqueeze(0)) @ U.T.conj()
+                P = Y @ X_pinv
+            else:
+                P = Y @ torch.linalg.inv(X)
+                
+            # Prendre la partie réelle et symétriser
+            P = P.real
+            P = (P + P.T)/2
+            
+            # Vérifier que P est définie positive
+            try:
+                L = torch.linalg.cholesky(P)
+                is_positive = True
+            except:
+                is_positive = False
+                print("Warning: P is not positive definite")
+            
+            # Calculer le résidu
+            riccati_residual = (A.T @ P + P @ A + 
+                            gamma_sq_inv * P @ B @ B.T @ P +
+                            C.T @ C)
+            residual_norm = torch.norm(riccati_residual).item()
+            
+            return P, {
+                'success': True,
+                'eigvals': eigvals,
+                'residual_norm': residual_norm,
+                'is_positive': is_positive,
+                'cond_X': cond_X
+            }
+            
+        except Exception as e:
+            return {
+                'success': False,
+                'eigvals': eigvals,
+                'error': str(e)
+            }
+    
     @classmethod
     def copy(cls, model):
 
