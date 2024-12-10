@@ -57,7 +57,7 @@ class FFNN(Module):
             layers.append(tupact)
 
         # Output layer  -- no bias
-        self.Wout = Linear(self.nh, self.ny, bias=True)
+        self.Wout = Linear(self.nh, self.ny, bias=False)
         layers.append(('Out layer', self.Wout))
 
         self.layers = Sequential(OrderedDict(layers))
@@ -234,7 +234,8 @@ class LBDN(Module):
         else:
             return False, infos
     def init_weights_(self):
-        pass
+        pass 
+
 class LipFxu(LBDN):
     def __init__(self, input_dim, hidden_dim, state_dim, scalex, scaleu,
                  act_f=Tanh(), n_hidden=1, param: str = 'expm', bias=True) -> None:
