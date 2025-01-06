@@ -75,12 +75,29 @@ class Experiment(Dataset):
 
     def _apply_scaling(self):
         """Applique la normalisation aux données"""
-        self.u = (self.u - self.scaling_factors['u']['min']) / (
-            self.scaling_factors['u']['max'] - self.scaling_factors['u']['min'])
-        self.y = (self.y - self.scaling_factors['y']['min']) / (
-            self.scaling_factors['y']['max'] - self.scaling_factors['y']['min'])
-        self.x = (self.x - self.scaling_factors['x']['min']) / (
-            self.scaling_factors['x']['max'] - self.scaling_factors['x']['min'])
+
+        
+        for key in ['u', 'y', 'x']:
+            data = getattr(self, key)
+            min_vals = self.scaling_factors[key]['min']
+            max_vals = self.scaling_factors[key]['max']
+            
+            # Clone des données pour préserver requires_grad si nécessaire
+            scaled_data = data.clone()
+            
+            # Traitement colonne par colonne
+            for i in range(data.shape[1]):
+                denominateur = max_vals[i] - min_vals[i]
+                if denominateur == 0:  # Variable constante
+                    scaled_data[:, i] = data[:, i] - min_vals[i]
+                else:
+                    scaled_data[:, i] = (data[:, i] - min_vals[i]) / denominateur
+                    
+            # Préservation de requires_grad si nécessaire
+            if getattr(data, 'requires_grad', False):
+                scaled_data.requires_grad = True
+                
+            setattr(self, key, scaled_data)
 
 
     def __getitem__(self, idx, seq_len):
@@ -178,13 +195,23 @@ class ExperimentsDataset(Dataset):
     coming from several experiments and from different length.
     """
 
-    def __init__(self, exps: List[Experiment], seq_len: int = 1) -> None:
+    def __init__(self, exps: List[Experiment], seq_len: int = 1, scaled = False) -> None:
         super(ExperimentsDataset, self).__init__()
 
         self.experiments = exps
         self.set_seq_len(seq_len)
         self._set_index_map()  # Setting a map for generating indices
         self.n_exp = len(exps)
+
+        self.scaled = scaled
+
+        # Vérification de la cohérence des données
+        self._check_consistency()
+        
+        # Calcul des facteurs d'échelle globaux si nécessaire
+        if self.scaled:
+            self._compute_global_scaling_factors()
+            self._apply_global_scaling()
 
     def __getitem__(self, index: int):
         exp_index, sample_index = self.index_map[index]
@@ -208,20 +235,109 @@ class ExperimentsDataset(Dataset):
         self.n_exp_samples_avl = index  # Number of total data points available
         self.n_exp_samples = n_exp_samples
 
+    def _apply_global_scaling(self) -> None:
+        """Applique la normalisation globale à toutes les expériences"""
+        for exp in self.experiments:
+            for key in ['u', 'y', 'x']:
+                data = getattr(exp, key)
+                min_vals = self.scaling_factors[key]['min']
+                max_vals = self.scaling_factors[key]['max']
+                
+                # Gestion des variables constantes
+                denominateur = max_vals - min_vals
+                scaled_data = data.clone()
+                
+                for i in range(data.shape[1]):
+                    if denominateur[i] == 0:  # Variable constante
+                        scaled_data[:, i] = data[:, i] - min_vals[i]
+                    else:
+                        scaled_data[:, i] = (data[:, i] - min_vals[i]) / denominateur[i]
+
+                setattr(exp, key, scaled_data)
+                if getattr(data, 'requires_grad', True):
+                    new_data = getattr(exp, key)
+                    new_data.requires_grad_(True)
+
+
+
+    def _check_consistency(self) -> None:
+        """Vérifie la cohérence des expériences"""
+        if not self.experiments:
+            return
+
+        base_exp = self.experiments[0]
+        for exp in self.experiments[1:]:
+            assert exp.nu == base_exp.nu, "All experiments must have same number of inputs"
+            assert exp.ny == base_exp.ny, "All experiments must have same number of outputs"
+            assert exp.nx == base_exp.nx, "All experiments must have same number of states"
+            assert exp.ts == base_exp.ts, "All experiments must have same sampling time"
+
+    def _compute_global_scaling_factors(self) -> None:
+        """Calcule les facteurs d'échelle globaux pour toutes les expériences"""
+        # Initialisation des min/max globaux
+        self.scaling_factors = {
+            'u': {'min': None, 'max': None},
+            'y': {'min': None, 'max': None},
+            'x': {'min': None, 'max': None}
+        }
+
+        # Calcul des min/max globaux
+        for key in ['u', 'y', 'x']:
+            all_data = torch.cat([getattr(exp, key) for exp in self.experiments], dim=0)
+            self.scaling_factors[key]['min'] = all_data.min(dim=0).values
+            self.scaling_factors[key]['max'] = all_data.max(dim=0).values       
+
+
     def append(self, exp: Experiment) -> None:
+        """Ajoute une nouvelle expérience au dataset"""
+        # Vérification de la cohérence
+        if self.experiments:
+            base_exp = self.experiments[0]
+            assert exp.nu == base_exp.nu, "New experiment must have same number of inputs"
+            assert exp.ny == base_exp.ny, "New experiment must have same number of outputs"
+            assert exp.nx == base_exp.nx, "New experiment must have same number of states"
+            assert exp.ts == base_exp.ts, "New experiment must have same sampling time"
+
+        # Si scaled, application de la normalisation à la nouvelle expérience
+        if self.scaled:
+            self._update_scaling_factors(exp)
+            self._apply_scaling_to_experiment(exp)
+
         self.experiments.append(exp)
-        self._set_index_map()  # Update index map
-        self.n_exp += 1  # Updater number of experiments
+        self._set_index_map()
+        self.n_exp += 1
 
-        # Assert if all experiments have same sampling period
-        ts_list = [experiment.ts for experiment in self.experiments]
+    def _update_scaling_factors(self, new_exp: Experiment) -> None:
+        """Met à jour les facteurs d'échelle avec une nouvelle expérience"""
+        for key in ['u', 'y', 'x']:
+            data = getattr(new_exp, key)
+            curr_min = self.scaling_factors[key]['min']
+            curr_max = self.scaling_factors[key]['max']
+            
+            new_min = torch.minimum(curr_min, data.min(dim=0).values)
+            new_max = torch.maximum(curr_max, data.max(dim=0).values)
+            
+            self.scaling_factors[key]['min'] = new_min
+            self.scaling_factors[key]['max'] = new_max
 
-        if not all([ts == ts_list[0] for ts in ts_list]):
-            raise NotImplementedError("All sampling times must be identical")
+    def _apply_scaling_to_experiment(self, exp: Experiment) -> None:
+        """Applique la normalisation à une seule expérience"""
+        for key in ['u', 'y', 'x']:
+            data = getattr(exp, key)
+            min_vals = self.scaling_factors[key]['min']
+            max_vals = self.scaling_factors[key]['max']
+            
+            denominateur = max_vals - min_vals
+            scaled_data = data.clone()
+            
+            for i in range(data.shape[1]):
+                if denominateur[i] == 0:
+                    scaled_data[:, i] = data[:, i] - min_vals[i]
+                else:
+                    scaled_data[:, i] = (data[:, i] - min_vals[i]) / denominateur[i]
+            
+            setattr(exp, key, scaled_data)
 
-        nx_list = [experiment.nx for experiment in self.experiments]
-        if not all([nx == nx_list[0] for nx in nx_list]):
-            raise (NotImplementedError("All state orders must be identical"))
 
     def __repr__(self) -> str:
         return f"Dataset of {self.n_exp} experiments -- Total number of samples : {self.n_exp_samples}"
