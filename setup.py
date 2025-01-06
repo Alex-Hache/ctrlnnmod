@@ -26,7 +26,7 @@ with open("README.md", "r", encoding="utf8") as fh:
     long_description = fh.read()
 
 
-VERSION = "0.2.1"
+VERSION = "0.2.4"
 
 setup(
     name="ctrlnmod",

@@ -22,13 +22,15 @@ class Experiment(Dataset):
         * x : state data -- optional but necessary for training state-space models
     """
 
-    def __init__(self, u: np.ndarray, y: np.ndarray, ts: float = 1, x=None, nx=None, x_trainable: bool = False) -> None:
+    def __init__(self, u: np.ndarray, y: np.ndarray, ts: float = 1, x=None, nx=None,
+                 x_trainable: bool = False, scaled: bool = False) -> None:
         super(Experiment, self).__init__()
         self.u = Tensor(u)
         self.y = Tensor(y)
         self.ts = ts
         self.nu = u.shape[1]
         self.ny = y.shape[1]
+        self.scaled = scaled
 
         assert u.shape[0] == y.shape[0], ValueError(
             f"u and y do not have the same number or samples found {u.shape[0]} vs {y.shape[0]}")
@@ -48,6 +50,39 @@ class Experiment(Dataset):
         else:
             raise ValueError("Please specify a size for state vector")
 
+        # Si scaled est True, on normalise directement les données
+        if self.scaled:
+            self._compute_scaling_factors()
+            self._apply_scaling()
+
+
+    def _compute_scaling_factors(self):
+        """Calcule les facteurs d'échelle"""
+        self.scaling_factors = {
+            'u': {
+                'min': self.u.min(dim=0).values,
+                'max': self.u.max(dim=0).values
+            },
+            'y': {
+                'min': self.y.min(dim=0).values,
+                'max': self.y.max(dim=0).values
+            },
+            'x': {
+                'min': self.x.min(dim=0).values,
+                'max': self.x.max(dim=0).values
+            }
+        }
+
+    def _apply_scaling(self):
+        """Applique la normalisation aux données"""
+        self.u = (self.u - self.scaling_factors['u']['min']) / (
+            self.scaling_factors['u']['max'] - self.scaling_factors['u']['min'])
+        self.y = (self.y - self.scaling_factors['y']['min']) / (
+            self.scaling_factors['y']['max'] - self.scaling_factors['y']['min'])
+        self.x = (self.x - self.scaling_factors['x']['min']) / (
+            self.scaling_factors['x']['max'] - self.scaling_factors['x']['min'])
+
+
     def __getitem__(self, idx, seq_len):
         """
             Returns a Tuple composed of u_idx, y_idx, x_idx
@@ -64,17 +99,77 @@ class Experiment(Dataset):
     def __str__(self) -> str:
         return f"Exp_nu={self.nu}_ny={self.ny}_dt={self.ts}"
 
-    def get_data(self, idx=None):
+    def denormalize(self, u=None, y=None, x=None):
+        """Dénormalise les données si nécessaire"""
+        if not self.scaled:
+            return u, y, x
+            
+        results = []
+        for data, key in zip([u, y, x], ['u', 'y', 'x']):
+            if data is not None:
+                factors = self.scaling_factors[key]
+                denorm_data = data * (factors['max'] - factors['min']) + factors['min']
+                results.append(denorm_data)
+            else:
+                results.append(None)
+                
+        return results
+    
+    def get_data(self, idx=None, unscaled=False):
         '''
-            Return the experiment values up to the idx index if idx is not None
+        Return the experiment values up to the idx index if idx is not None
+        Args:
+            idx: Optional[int] - Index jusqu'auquel récupérer les données
+            unscaled: bool - Si True et si scaled=True dans l'initialisation, 
+                            retourne les données dénormalisées
+        Returns:
+            Tuple[Tensor, Tensor, Tensor] - (u, y, x) normalisés ou non
         '''
         if idx is not None:
             if idx >= self.n_samples:
                 idx = self.n_samples - 1
-            return self.u[:idx, :], self.y[:idx, :], self.x[:idx, :]
+            u, y, x = self.u[:idx, :], self.y[:idx, :], self.x[:idx, :]
         else:
-            return self.u, self.y, self.x
+            u, y, x = self.u, self.y, self.x
 
+        if self.scaled and unscaled:
+            u, y, x = self.denormalize(u, y, x) 
+        return u.numpy(), y.numpy(), x.detach().numpy()
+    
+    def plot(self, idx=None, unscaled=False):
+        """
+        Affiche les données de l'expérience jusqu'à l'index idx
+        """
+        u, y, x = self.get_data(idx, unscaled)
+        t = np.linspace(0, (u.shape[0]-1)*self.ts, u.shape[0])
+        
+        fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(12, 8), sharex=True)
+        fig.suptitle('Experiment Data Visualization')
+        
+        # Plot des entrées
+        for i in range(self.nu):
+            ax1.plot(t, u[:, i], label=f'u{i+1}')
+        ax1.set_ylabel('Inputs')
+        ax1.grid(True)
+        ax1.legend()
+        
+        # Plot des sorties
+        for i in range(self.ny):
+            ax2.plot(t, y[:, i], label=f'y{i+1}')
+        ax2.set_ylabel('Outputs')
+        ax2.grid(True)
+        ax2.legend()
+        
+        # Plot des états
+        for i in range(self.nx):
+            ax3.plot(t, x[:, i], label=f'x{i+1}')
+        ax3.set_xlabel('Time [s]')
+        ax3.set_ylabel('States')
+        ax3.grid(True)
+        ax3.legend()
+        
+        plt.tight_layout()
+        return fig, (ax1, ax2, ax3)
 
 @typechecked
 class ExperimentsDataset(Dataset):
