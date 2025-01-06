@@ -3,12 +3,12 @@ import torch
 from collections import OrderedDict
 from .linear import NnLinear
 from ...layers.layers import BetaLayer
-from typing import Optional, Literal
+from typing import Optional, Literal, Tuple
 from ctrlnmod.models.ssmodels import H2BoundedLinear, L2BoundedLinear
 from ctrlnmod.models.feedforward import LBDN, FFNN
 from torch import Tensor
 from ctrlnmod.utils import FrameCacheManager
-
+from abc import ABC, abstractmethod
 
 class FLNSSM_decoupling(nn.Module):
     def __init__(
@@ -222,13 +222,176 @@ class QFLNSSM(nn.Module):
         return copy
 
 
+
+class FLNSSM_Base(nn.Module, ABC):
+    def __init__(
+        self,
+        nu: int,
+        ny: int,
+        nx: int,
+        nh: int,
+        n_hid_layers: int,
+        linear_model: Optional[Literal["L2", "H2"]] = None,
+        gamma: Optional[float] = None,
+        actF: str = 'tanh',
+        bias: bool = True,
+        alpha: float = 0.0,
+        lambda_alpha: Optional[float] = None,
+    ):
+        super().__init__()
+        self.nu = nu
+        self.nx = nx
+        self.nh = nh
+        self.ny = ny
+        self.n_hid_layers = n_hid_layers
+        self.bias = bias
+        
+        # Activation function setup
+        if actF.lower() == 'tanh':
+            self.act_f = nn.Tanh()
+        elif actF.lower() == 'relu':
+            self.act_f = nn.ReLU()
+        else:
+            raise NotImplementedError(f"Function {actF} not implemented. Choose 'tanh' or 'relu'.")
+        self.act_name = actF
+        
+        # Setup linear model based on type
+        self._setup_linear_model(linear_model, gamma, alpha)
+        
+        # Setup alpha network
+        self._setup_alpha_network(lambda_alpha)
+        
+        self._frame_cache = FrameCacheManager()
+    
+    @abstractmethod
+    def _setup_linear_model(self, linear_model, gamma, alpha):
+        pass
+    
+    @abstractmethod
+    def _setup_alpha_network(self, lambda_alpha):
+        pass
+    
+    @abstractmethod
+    def forward(self, input: Tensor, state: Tensor) -> Tuple[Tensor, Tensor]:
+        pass
+    
+    @abstractmethod
+    def _frame(self) -> Tuple[Tensor, ...]:
+        pass
+
+
+class FLNSSM_Jordan_Standard(FLNSSM_Base):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+    
+    def _setup_linear_model(self, linear_model, gamma, alpha):
+        if linear_model is None:
+            self.linmod = NnLinear(self.nu, self.nx, self.ny)
+        elif linear_model == "L2":
+            if gamma is None:
+                raise ValueError("Please specify a value for gamma")
+            self.linmod = L2BoundedLinear(self.nu, self.ny, self.nx, gamma, alpha)
+        elif linear_model == "H2":
+            if gamma is None:
+                raise ValueError("Please specify a value for gamma")
+            self.linmod = H2BoundedLinear(self.nu, self.ny, self.nx, gamma)
+        else:
+            raise ValueError("linear_model must be either 'L2', 'H2', or None")
+    
+    def _setup_alpha_network(self, lambda_alpha):
+        if lambda_alpha is not None:
+            self.alpha = LBDN(self.ny, self.nh, self.nu, 
+                            torch.tensor([lambda_alpha] * self.ny),
+                            act_f=self.act_f, bias=self.bias)
+        else:
+            self.alpha = FFNN(self.ny, self.nh, self.nu,
+                            act_f=self.act_f, bias=self.bias)
+    
+    def forward(self, input: Tensor, state: Tensor):
+        z = state
+        u = input
+        A, B, C, _ = self._frame()
+        
+        y = z @ C.T
+        alpha = self.alpha(y)
+        dz = z @ A.T + (u + alpha) @ B.T
+        
+        return dz, y
+    
+    def _frame(self):
+        if self._frame_cache.is_caching and self._frame_cache.cache is not None:
+            return self._frame_cache.cache
+        
+        A, B, C = self.linmod._frame()
+        if self._frame_cache.is_caching:
+            self._frame_cache.cache = (A, B, C, torch.zeros((self.ny, self.nu)))
+        
+        return A, B, C, torch.zeros((self.ny, self.nu))
+
+class FLNSSM_Jordan_Disturbed(FLNSSM_Base):
+    def __init__(self, *args, dist_dim: int, **kwargs):
+        self.nd = dist_dim
+        if dist_dim <= 0:
+            raise ValueError(f"Disturbance dimension must be positive, found {dist_dim}")
+        super().__init__(*args, **kwargs)
+        self.B = nn.Parameter(torch.randn(self.nx, self.nu))
+    
+    def _setup_linear_model(self, linear_model, gamma, alpha):
+        if linear_model is None:
+            self.linmod = NnLinear(self.nd, self.ny, self.nx)
+        elif linear_model == "L2":
+            if gamma is None:
+                raise ValueError("Please specify a value for gamma")
+            self.linmod = L2BoundedLinear(self.nd, self.ny, self.nx, gamma, alpha)
+        elif linear_model == "H2":
+            if gamma is None:
+                raise ValueError("Please specify a value for gamma")
+            self.linmod = H2BoundedLinear(self.nd, self.ny, self.nx, gamma)
+        else:
+            raise ValueError("linear_model must be either 'L2', 'H2', or None")
+    
+    def _setup_alpha_network(self, lambda_alpha):
+        input_dim = self.ny + self.nd
+        if lambda_alpha is not None:
+            self.alpha = LBDN(input_dim, self.nh, self.nu,
+                            torch.tensor([lambda_alpha] * input_dim),
+                            act_f=self.act_f, bias=self.bias)
+        else:
+            self.alpha = FFNN(input_dim, self.nh, self.nu,
+                            act_f=self.act_f, bias=self.bias)
+    
+    def forward(self, input: Tensor, state: Tensor):
+        z = state
+        u = input[:, :self.nu]
+        d = input[:, self.nu:]
+        
+        assert d.shape[1] == self.nd
+        
+        A, G, C = self._frame()
+        
+        y = z @ C.T
+        alpha = self.alpha(torch.cat((y, d), dim=1))
+        dz = z @ A.T + (u + alpha) @ self.B.T + d @ G.T
+        
+        return dz, y
+    
+    def _frame(self):
+        if self._frame_cache.is_caching and self._frame_cache.cache is not None:
+            return self._frame_cache.cache
+        
+        A, G, C = self.linmod._frame()
+        if self._frame_cache.is_caching:
+            self._frame_cache.cache = (A, G, C)
+        
+        return A, G, C
+
 class FLNSSM_Jordan(nn.Module):
     def __init__(
         self,
         nu: int,
-        nh: int,
-        nx: int,
         ny: int,
+        nx: int,
+        nh: int,
         n_hid_layers: int,
         dist_dim: int = 0,
         linear_model: Optional[Literal["L2", "H2"]] = None,
