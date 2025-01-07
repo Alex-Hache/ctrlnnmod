@@ -8,10 +8,10 @@ from typeguard import typechecked
 from typing import (
     List,
     TypeVar,
+    Optional
 )
 T_co = TypeVar('T_co', covariant=True)
 import lightning as pl
-
 
 @typechecked
 class Experiment(Dataset):
@@ -23,14 +23,13 @@ class Experiment(Dataset):
     """
 
     def __init__(self, u: np.ndarray, y: np.ndarray, ts: float = 1, x=None, nx=None,
-                 x_trainable: bool = False, scaled: bool = False) -> None:
+                 x_trainable: bool = False) -> None:
         super(Experiment, self).__init__()
         self.u = Tensor(u)
         self.y = Tensor(y)
         self.ts = ts
         self.nu = u.shape[1]
         self.ny = y.shape[1]
-        self.scaled = scaled
 
         assert u.shape[0] == y.shape[0], ValueError(
             f"u and y do not have the same number or samples found {u.shape[0]} vs {y.shape[0]}")
@@ -50,56 +49,6 @@ class Experiment(Dataset):
         else:
             raise ValueError("Please specify a size for state vector")
 
-        # Si scaled est True, on normalise directement les données
-        if self.scaled:
-            self._compute_scaling_factors()
-            self._apply_scaling()
-
-
-    def _compute_scaling_factors(self):
-        """Calcule les facteurs d'échelle"""
-        self.scaling_factors = {
-            'u': {
-                'min': self.u.min(dim=0).values,
-                'max': self.u.max(dim=0).values
-            },
-            'y': {
-                'min': self.y.min(dim=0).values,
-                'max': self.y.max(dim=0).values
-            },
-            'x': {
-                'min': self.x.min(dim=0).values,
-                'max': self.x.max(dim=0).values
-            }
-        }
-
-    def _apply_scaling(self):
-        """Applique la normalisation aux données"""
-
-        
-        for key in ['u', 'y', 'x']:
-            data = getattr(self, key)
-            min_vals = self.scaling_factors[key]['min']
-            max_vals = self.scaling_factors[key]['max']
-            
-            # Clone des données pour préserver requires_grad si nécessaire
-            scaled_data = data.clone()
-            
-            # Traitement colonne par colonne
-            for i in range(data.shape[1]):
-                denominateur = max_vals[i] - min_vals[i]
-                if denominateur == 0:  # Variable constante
-                    scaled_data[:, i] = data[:, i] - min_vals[i]
-                else:
-                    scaled_data[:, i] = (data[:, i] - min_vals[i]) / denominateur
-                    
-            # Préservation de requires_grad si nécessaire
-            if getattr(data, 'requires_grad', False):
-                scaled_data.requires_grad = True
-                
-            setattr(self, key, scaled_data)
-
-
     def __getitem__(self, idx, seq_len):
         """
             Returns a Tuple composed of u_idx, y_idx, x_idx
@@ -116,29 +65,34 @@ class Experiment(Dataset):
     def __str__(self) -> str:
         return f"Exp_nu={self.nu}_ny={self.ny}_dt={self.ts}"
 
-    def denormalize(self, u=None, y=None, x=None):
-        """Dénormalise les données si nécessaire"""
-        if not self.scaled:
+    def denormalize(self, u: Optional[Tensor] = None, y:Optional[Tensor] =None, x: Optional[Tensor]=None, scaler =None):
+        """Dénormalise les données si un scaler est fourni"""
+        if scaler is None:
             return u, y, x
             
         results = []
-        for data, key in zip([u, y, x], ['u', 'y', 'x']):
-            if data is not None:
-                factors = self.scaling_factors[key]
-                denorm_data = data * (factors['max'] - factors['min']) + factors['min']
-                results.append(denorm_data)
-            else:
-                results.append(None)
-                
-        return results
+        temp_exp = Experiment(
+            u=u.numpy() if u is not None else np.zeros((1, self.nu)),
+            y=y.numpy() if y is not None else np.zeros((1, self.ny)),
+            x=x.numpy() if x is not None else np.zeros((1, self.nx)),
+            ts=self.ts
+        )
+        
+        scaler.inverse_transform(temp_exp)
+        
+        return (
+            temp_exp.u if u is not None else None,
+            temp_exp.y if y is not None else None,
+            temp_exp.x if x is not None else None
+        )
     
-    def get_data(self, idx=None, unscaled=False):
+    def get_data(self, idx=None, unscaled=False, scaler=None):
         '''
         Return the experiment values up to the idx index if idx is not None
         Args:
             idx: Optional[int] - Index jusqu'auquel récupérer les données
-            unscaled: bool - Si True et si scaled=True dans l'initialisation, 
-                            retourne les données dénormalisées
+            unscaled: bool - Si True et si un scaler est fourni, retourne les données dénormalisées
+            scaler: Optional[BaseScaler] - Scaler pour la dénormalisation
         Returns:
             Tuple[Tensor, Tensor, Tensor] - (u, y, x) normalisés ou non
         '''
@@ -149,15 +103,20 @@ class Experiment(Dataset):
         else:
             u, y, x = self.u, self.y, self.x
 
-        if self.scaled and unscaled:
-            u, y, x = self.denormalize(u, y, x) 
-        return u.numpy(), y.numpy(), x.detach().numpy()
+        if unscaled and scaler is not None:
+            u, y, x = self.denormalize(u, y, x, scaler) 
+        
+        return (
+            u.numpy(),
+            y.numpy(),
+            x.detach().numpy()
+        )
     
-    def plot(self, idx=None, unscaled=False):
+    def plot(self, idx=None, unscaled=False, scaler = None):
         """
         Affiche les données de l'expérience jusqu'à l'index idx
         """
-        u, y, x = self.get_data(idx, unscaled)
+        u, y, x = self.get_data(idx, unscaled, scaler)
         t = np.linspace(0, (u.shape[0]-1)*self.ts, u.shape[0])
         
         fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(12, 8), sharex=True)
@@ -195,7 +154,7 @@ class ExperimentsDataset(Dataset):
     coming from several experiments and from different length.
     """
 
-    def __init__(self, exps: List[Experiment], seq_len: int = 1, scaled = False) -> None:
+    def __init__(self, exps: List[Experiment], seq_len: int = 1, scaler = None) -> None:
         super(ExperimentsDataset, self).__init__()
 
         self.experiments = exps
@@ -203,15 +162,16 @@ class ExperimentsDataset(Dataset):
         self._set_index_map()  # Setting a map for generating indices
         self.n_exp = len(exps)
 
-        self.scaled = scaled
+        self.scaler = scaler
 
         # Vérification de la cohérence des données
         self._check_consistency()
         
         # Calcul des facteurs d'échelle globaux si nécessaire
-        if self.scaled:
-            self._compute_global_scaling_factors()
-            self._apply_global_scaling()
+        if self.scaler is not None:
+            self.scaler.fit(self.experiments)
+            for exp in self.experiments:
+                self.scaler.transform(exp)
 
     def __getitem__(self, index: int):
         exp_index, sample_index = self.index_map[index]
@@ -235,30 +195,6 @@ class ExperimentsDataset(Dataset):
         self.n_exp_samples_avl = index  # Number of total data points available
         self.n_exp_samples = n_exp_samples
 
-    def _apply_global_scaling(self) -> None:
-        """Applique la normalisation globale à toutes les expériences"""
-        for exp in self.experiments:
-            for key in ['u', 'y', 'x']:
-                data = getattr(exp, key)
-                min_vals = self.scaling_factors[key]['min']
-                max_vals = self.scaling_factors[key]['max']
-                
-                # Gestion des variables constantes
-                denominateur = max_vals - min_vals
-                scaled_data = data.clone()
-                
-                for i in range(data.shape[1]):
-                    if denominateur[i] == 0:  # Variable constante
-                        scaled_data[:, i] = data[:, i] - min_vals[i]
-                    else:
-                        scaled_data[:, i] = (data[:, i] - min_vals[i]) / denominateur[i]
-
-                setattr(exp, key, scaled_data)
-                if getattr(data, 'requires_grad', True):
-                    new_data = getattr(exp, key)
-                    new_data.requires_grad_(True)
-
-
 
     def _check_consistency(self) -> None:
         """Vérifie la cohérence des expériences"""
@@ -270,22 +206,7 @@ class ExperimentsDataset(Dataset):
             assert exp.nu == base_exp.nu, "All experiments must have same number of inputs"
             assert exp.ny == base_exp.ny, "All experiments must have same number of outputs"
             assert exp.nx == base_exp.nx, "All experiments must have same number of states"
-            assert exp.ts == base_exp.ts, "All experiments must have same sampling time"
-
-    def _compute_global_scaling_factors(self) -> None:
-        """Calcule les facteurs d'échelle globaux pour toutes les expériences"""
-        # Initialisation des min/max globaux
-        self.scaling_factors = {
-            'u': {'min': None, 'max': None},
-            'y': {'min': None, 'max': None},
-            'x': {'min': None, 'max': None}
-        }
-
-        # Calcul des min/max globaux
-        for key in ['u', 'y', 'x']:
-            all_data = torch.cat([getattr(exp, key) for exp in self.experiments], dim=0)
-            self.scaling_factors[key]['min'] = all_data.min(dim=0).values
-            self.scaling_factors[key]['max'] = all_data.max(dim=0).values       
+            assert exp.ts == base_exp.ts, "All experiments must have same sampling time" 
 
 
     def append(self, exp: Experiment) -> None:
@@ -299,45 +220,13 @@ class ExperimentsDataset(Dataset):
             assert exp.ts == base_exp.ts, "New experiment must have same sampling time"
 
         # Si scaled, application de la normalisation à la nouvelle expérience
-        if self.scaled:
-            self._update_scaling_factors(exp)
-            self._apply_scaling_to_experiment(exp)
+        # Application du scaler si présent
+        if self.scaler is not None and self.scaler.is_fitted:
+            self.scaler.transform(exp)
 
         self.experiments.append(exp)
         self._set_index_map()
         self.n_exp += 1
-
-    def _update_scaling_factors(self, new_exp: Experiment) -> None:
-        """Met à jour les facteurs d'échelle avec une nouvelle expérience"""
-        for key in ['u', 'y', 'x']:
-            data = getattr(new_exp, key)
-            curr_min = self.scaling_factors[key]['min']
-            curr_max = self.scaling_factors[key]['max']
-            
-            new_min = torch.minimum(curr_min, data.min(dim=0).values)
-            new_max = torch.maximum(curr_max, data.max(dim=0).values)
-            
-            self.scaling_factors[key]['min'] = new_min
-            self.scaling_factors[key]['max'] = new_max
-
-    def _apply_scaling_to_experiment(self, exp: Experiment) -> None:
-        """Applique la normalisation à une seule expérience"""
-        for key in ['u', 'y', 'x']:
-            data = getattr(exp, key)
-            min_vals = self.scaling_factors[key]['min']
-            max_vals = self.scaling_factors[key]['max']
-            
-            denominateur = max_vals - min_vals
-            scaled_data = data.clone()
-            
-            for i in range(data.shape[1]):
-                if denominateur[i] == 0:
-                    scaled_data[:, i] = data[:, i] - min_vals[i]
-                else:
-                    scaled_data[:, i] = (data[:, i] - min_vals[i]) / denominateur[i]
-            
-            setattr(exp, key, scaled_data)
-
 
     def __repr__(self) -> str:
         return f"Dataset of {self.n_exp} experiments -- Total number of samples : {self.n_exp_samples}"
@@ -354,7 +243,7 @@ class ExperimentsDataset(Dataset):
         self.seq_len = seq_len
         self._set_index_map()  # Update index map
 
-    def plot(self, figsize=(15, 10), max_exp_to_plot=4):
+    def plot(self, figsize=(15, 10), max_exp_to_plot=4, unscaled=False):
         num_experiments = len(self.experiments)
         num_figures = min(max_exp_to_plot, math.ceil(num_experiments / 4))
 
@@ -372,7 +261,7 @@ class ExperimentsDataset(Dataset):
                 exp = self.experiments[exp_idx]
                 ax = axs[i]
 
-                u, y, _ = exp.get_data()
+                u, y, _ = exp.get_data(unscaled=unscaled, scaler=self.scaler)
                 time = torch.arange(0, len(u)) * exp.ts
 
                 for j in range(exp.nu):
@@ -404,18 +293,51 @@ class ExperimentsDataModule(pl.LightningDataModule):
         if self.max_idx_val is None:
             self.max_idx_val = min(exp.n_samples for exp in self.val_set.experiments)
 
-    def val_dataloader(self):
-        batch_u = torch.stack([exp.u[:self.max_idx_val] for exp in self.val_set.experiments])
-        batch_y_true = torch.stack([exp.y[:self.max_idx_val] for exp in self.val_set.experiments])
-        batch_x0 = torch.stack([exp.x[0] for exp in self.val_set.experiments])
+    def val_dataloader(self, unscaled=False):
+        if unscaled and self.val_set.scaler is not None:
+            # Créer une copie temporaire des expériences
+            temp_experiments = []
+            for exp in self.val_set.experiments:
+                temp_exp = Experiment(
+                    u=exp.u.clone().numpy(),
+                    y=exp.y.clone().numpy(),
+                    x=exp.x.clone().numpy(),
+                    ts=exp.ts
+                )
+                self.val_set.scaler.inverse_transform(temp_exp)
+                temp_experiments.append(temp_exp)
+        else:
+            temp_experiments = self.val_set.experiments
+
+        batch_u = torch.stack([exp.u[:self.max_idx_val] for exp in temp_experiments])
+        batch_y_true = torch.stack([exp.y[:self.max_idx_val] for exp in temp_experiments])
+        batch_x0 = torch.stack([exp.x[0] for exp in temp_experiments])
         
         dataset = torch.utils.data.TensorDataset(batch_u, batch_y_true, batch_x0)
         return torch.utils.data.DataLoader(dataset, batch_size=len(self.val_set.experiments))
 
-    def train_dataloader(self):
+    def train_dataloader(self, unscaled=False):
+        if unscaled:
+            # Créer un dataloader temporaire avec données dénormalisées
+            temp_dataset = ExperimentsDataset(
+                [Experiment(
+                    u=exp.u.clone().numpy(),
+                    y=exp.y.clone().numpy(),
+                    x=exp.x.clone().numpy(),
+                    ts=exp.ts
+                ) for exp in self.train_set.experiments],
+                seq_len=self.train_set.seq_len
+            )
+            if self.train_set.scaler is not None:
+                for exp in temp_dataset.experiments:
+                    self.train_set.scaler.inverse_transform(exp)
+            dataset = temp_dataset
+        else:
+            dataset = self.train_set
+            
         return torch.utils.data.DataLoader(
-            self.train_set, 
-            batch_size=self.batch_size, 
+            dataset,
+            batch_size=self.batch_size,
             shuffle=True,
             num_workers=self.num_workers
         )
