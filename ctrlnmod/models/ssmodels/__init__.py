@@ -3,7 +3,7 @@
 from .grnssm import Grnssm, LipGrnssm, L2IncGrNSSM, StableGNSSM
 from .h2 import H2BoundedLinear
 from .hinf import L2BoundedLinear
-from .linear import NnLinear
+from .linear import SSLinear
 from .renode import RENODE, DissipativeRENODE, ContractingRENODE
 from .rens import REN, DissipativeREN, ContractingREN
 from .feedbacklin import FLNSSM_Jordan_Disturbed, FLNSSM_Jordan_Standard
@@ -15,7 +15,7 @@ __all__ = [
     "StableGNSSM",
     "H2BoundedLinear",
     "L2BoundedLinear",
-    "NnLinear",
+    "SSLinear",
     "RENODE",
     "ContractingRENODE",
     "DissipativeRENODE",

@@ -5,7 +5,7 @@ from torch.nn.init import zeros_
 from torch.linalg import eigvals
 from torch import Tensor, real, min
 from typing import Tuple
-from ctrlnmod.models.ssmodels.linear import NnLinear
+from .linear import SSLinear
 from ctrlnmod.models.ssmodels.hinf import L2BoundedLinear
 from ctrlnmod.utils import FrameCacheManager
 import torch
@@ -58,7 +58,7 @@ class Grnssm(Module):
             raise NotImplementedError(
                 f"Function {actF} not yet implemented. Please choose 'tanh' or 'relu'.")
 
-        self.linmod = NnLinear(self.nu, self.ny, self.nx, alpha=alpha)
+        self.linmod = SSLinear(self.nu, self.ny, self.nx, alpha=alpha)
         self.fx = Fxu(self.nu, self.nh, self.nx, actF=self.actF,
                       n_hidden=n_hidden_layers, bias=self.bias)
 

@@ -14,12 +14,15 @@ from ctrlnmod.utils import FrameCacheManager
 from ctrlnmod.linalg import project_onto_stiefel
 from typing import Dict, Union
 from ctrlnmod.lmis.hinf import HInfCont
+from .linear import SSLinear
 
-
-class L2BoundedLinear(Module):
-    """
+class L2BoundedLinear(SSLinear):
+    r"""
         Create a linear continuous-time state-space model with a prescribed L2 gain and alpha stability.
+            \dot{x} = Ax + Bu + Gd
+            y = Cx
 
+        if there are exogenous signals we parameterize only the triplet (A,G,C)
         attributes
         ----------
 
@@ -30,9 +33,9 @@ class L2BoundedLinear(Module):
             * nx : int
                 state dimension
             * gamma : Tensor
-                precribed H2 norm
-            * alpha : Tensor
-                inverse of observability grammian
+                precribed L2 gain
+            * alpha: float
+                uuper bound on linear decay rate
             * Q : Tensor
                 Positive definite matrix
             * S : Tensor
@@ -42,9 +45,9 @@ class L2BoundedLinear(Module):
             * H : Tensor
                 Semi-orthogonal matrix
     """
-    def __init__(self, nu: int, ny: int, nx: int, gamma: float, alpha: float = 0.0,
-                 scaleH=1.0, epsilon=0.0) -> None:
-        super(L2BoundedLinear, self).__init__()
+    def __init__(self, nu: int, ny: int, nx: int, gamma: float, nd: int = 0,
+                 alpha: float = 0.0, scaleH=1.0, epsilon=0.0) -> None:
+        super(L2BoundedLinear, self).__init__(nu, ny, nx, nd, alpha)
         self.nu = nu
         self.ny = ny
         self.nx = nx
@@ -53,27 +56,41 @@ class L2BoundedLinear(Module):
         self.Ix = torch.eye(nx)
         self.scaleH = scaleH
         self.eps = epsilon
+        self.nd = nd
 
         self.Q = Parameter(nn.init.xavier_normal_(torch.empty(self.nx, self.nx)))
         self.P = Parameter(nn.init.xavier_normal_(torch.empty(self.nx, self.nx)))
         self.S = Parameter(nn.init.xavier_normal_(torch.empty(self.nx, self.nx)))
         self.G = Parameter(nn.init.xavier_normal_(torch.empty(self.ny, self.nx)))
-        self.H = Parameter(nn.init.xavier_normal_(torch.empty(self.nx, self.nu)))
+        
 
         # Register relevant manifolds
         geo.positive_definite(self, 'P')
         geo.positive_definite(self, 'Q')
         geo.skew_symmetric(self, 'S')
+        
+
+        if self.nd > 0:
+            self.B = Parameter(nn.init.xavier_normal_(torch.empty(self.nx, self.nu)))
+            self.H = Parameter(nn.init.xavier_normal_(torch.empty(self.nx, self.nd)))
+        else:
+            self.H = Parameter(nn.init.xavier_normal_(torch.empty(self.nx, self.nu)))
         geo.orthogonal(self, 'H')
 
         self._frame_cache = FrameCacheManager()
+    
     def __repr__(self):
         return "Hinf_Linear_ss" + f"_alpha_{self.alpha}" + f"_gamma_{self.gamma}"
 
-    def forward(self, u, x):
-        A, B, C = self._frame()
+    def forward(self, u, x, d=None):
+        if self.nd > 0 and d is not None:
+            A, G, C = self._frame()
+            B = self.B
+            dx = x @ A.T + u @ B.T + d @ G.T
+        else:
+            A, B, C = self._frame()
+            dx = x @ A.T + u @ B.T
 
-        dx = x @ A.T + u @ B.T
         y = x @ C.T
         return dx, y
 
@@ -168,7 +185,7 @@ class L2BoundedLinear(Module):
 
             G = Tensor(C) @ torch.inverse(P)
             Q = Tensor(-M.value[:nx, :nx])  # type: ignore
-            S = torch.inverse(P) @ Tensor(A) + 0.5 *(Q)
+            S = Tensor(A) @ torch.inverse(P) + 0.5 *(Q +G.T@G + self.eps * self.Ix) 
             H = Tensor(1 / self.gamma * (torch.inverse(sqrtm(Q)) @ B))
             H = Tensor(project_onto_stiefel(H))
             alph = Tensor([alpha])
@@ -185,6 +202,13 @@ class L2BoundedLinear(Module):
         self.H = H
         self.alpha = alpha
 
+    def init_weights_(self, A0, B0, C0, gamma: float, alpha, G0=None):
+        if self.nd > 0  and G0 is not None:
+            self.right_inverse_lmi(A0, G0, C0, gamma, alpha)
+            self.B.data = B0
+        else:
+            self.right_inverse_lmi(A0, B0, C0, gamma, alpha)
+    
     def submersion_inv_(self, A, B, C, gamma: float, epsilon=1e-8 ):
         """
             Function from weights space to parameter space.
@@ -350,6 +374,7 @@ class L2BoundedLinear(Module):
             model.ny,
             model.nx,
             float(model.gamma),
+            model.nd,
             float(model.alpha)
         )
         copy.load_state_dict(model.state_dict())

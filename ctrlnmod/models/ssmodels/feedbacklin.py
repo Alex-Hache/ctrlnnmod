@@ -1,7 +1,7 @@
 import torch.nn as nn
 import torch
 from collections import OrderedDict
-from .linear import NnLinear
+from .linear import SSLinear
 from ...layers.layers import BetaLayer
 from typing import Optional, Literal, Tuple
 from ctrlnmod.models.ssmodels import H2BoundedLinear, L2BoundedLinear
@@ -10,6 +10,8 @@ from torch import Tensor
 from ctrlnmod.utils import FrameCacheManager
 from abc import ABC, abstractmethod
 
+
+# TODO : make a base class for linearizable nn with or without decouplig matrix decoupling matrix construction must be optional.
 class FLNSSM_decoupling(nn.Module):
     def __init__(
         self,
@@ -46,7 +48,7 @@ class FLNSSM_decoupling(nn.Module):
         self.actF = actF
 
         # Linear part
-        self.linmod = NnLinear(self.nu, self.nx, self.ny)
+        self.linmod = SSLinear(self.nu, self.nx, self.ny)
         # Nonlinear part for the state beta(x)(u+alpha(x))
 
         # Beta layer initialized to I_nu
@@ -142,7 +144,7 @@ class QFLNSSM(nn.Module):
         self.actF = actF
 
         # Linear part
-        self.linmod = NnLinear(self.nu, self.nx, self.ny)
+        self.linmod = SSLinear(self.nu, self.nx, self.ny)
         # Nonlinear part for the state beta(x)(u+alpha(x))
 
         # Beta layer by default it is initialized to the identity
@@ -281,12 +283,26 @@ class FLNSSM_Base(nn.Module, ABC):
 
 
 class FLNSSM_Jordan_Standard(FLNSSM_Base):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(
+        self,
+        nu: int,
+        ny: int,
+        nx: int,
+        nh: int,
+        n_hid_layers: int,
+        linear_model: Optional[Literal["L2", "H2"]] = None,
+        gamma: Optional[float] = None,
+        actF: str = 'tanh',
+        bias: bool = True,
+        alpha: float = 0.0,
+        lambda_alpha: Optional[float] = None,
+    ):
+        super().__init__(nu, ny, nx, nh, n_hid_layers,linear_model,
+                         gamma, actF, bias, alpha, lambda_alpha)
     
     def _setup_linear_model(self, linear_model, gamma, alpha):
         if linear_model is None:
-            self.linmod = NnLinear(self.nu, self.nx, self.ny)
+            self.linmod = SSLinear(self.nu, self.nx, self.ny)
         elif linear_model == "L2":
             if gamma is None:
                 raise ValueError("Please specify a value for gamma")
@@ -302,10 +318,10 @@ class FLNSSM_Jordan_Standard(FLNSSM_Base):
         if lambda_alpha is not None:
             self.alpha = LBDN(self.ny, self.nh, self.nu, 
                             torch.tensor([lambda_alpha] * self.ny),
-                            act_f=self.act_f, bias=self.bias)
+                            act_f=self.act_f, bias=self.bias, n_hidden=self.n_hid_layers)
         else:
             self.alpha = FFNN(self.ny, self.nh, self.nu,
-                            act_f=self.act_f, bias=self.bias)
+                            act_f=self.act_f, bias=self.bias, n_hidden=self.n_hid_layers)
     
     def forward(self, input: Tensor, state: Tensor):
         z = state
@@ -338,11 +354,11 @@ class FLNSSM_Jordan_Disturbed(FLNSSM_Base):
     
     def _setup_linear_model(self, linear_model, gamma, alpha):
         if linear_model is None:
-            self.linmod = NnLinear(self.nd, self.ny, self.nx)
+            self.linmod = SSLinear(self.nd, self.ny, self.nx)
         elif linear_model == "L2":
             if gamma is None:
                 raise ValueError("Please specify a value for gamma")
-            self.linmod = L2BoundedLinear(self.nd, self.ny, self.nx, gamma, alpha)
+            self.linmod = L2BoundedLinear(self.nu, self.ny, self.nx, gamma=gamma, alpha=alpha, nd =self.nd,)
         elif linear_model == "H2":
             if gamma is None:
                 raise ValueError("Please specify a value for gamma")
@@ -355,10 +371,10 @@ class FLNSSM_Jordan_Disturbed(FLNSSM_Base):
         if lambda_alpha is not None:
             self.alpha = LBDN(input_dim, self.nh, self.nu,
                             torch.tensor([lambda_alpha] * input_dim),
-                            act_f=self.act_f, bias=self.bias)
+                            act_f=self.act_f, bias=self.bias, n_hidden=self.n_hid_layers)
         else:
             self.alpha = FFNN(input_dim, self.nh, self.nu,
-                            act_f=self.act_f, bias=self.bias)
+                            act_f=self.act_f, bias=self.bias, n_hidden=self.n_hid_layers)
     
     def forward(self, input: Tensor, state: Tensor):
         z = state
@@ -384,6 +400,15 @@ class FLNSSM_Jordan_Disturbed(FLNSSM_Base):
             self._frame_cache.cache = (A, G, C)
         
         return A, G, C
+
+    def init_weights_(self, A0, B0, C0, gamma, alpha, G0=None):
+        # Initializing linear weights
+        self.linmod.init_weights_(A0, B0, C0, gamma=gamma, alpha=alpha, G0=G0)
+
+        # Initializing nonlinear output weights to 0
+        nn.init.zeros_(self.alpha.Wout.weight)
+        if self.alpha.Wout.bias is not None:
+            nn.init.zeros_(self.alpha.Wout.bias)
 
 class FLNSSM_Jordan(nn.Module):
     def __init__(
@@ -652,7 +677,7 @@ class FLNSSM_Jordan_Dist(nn.Module):
         self.actF = actF
 
         # Linear part
-        self.linmod = NnLinear(
+        self.linmod = SSLinear(
             self.nu + self.dist_dim, self.nx, self.ny
         )
         # Nonlinear part for the state beta(x)(u+alpha(x))
@@ -697,7 +722,7 @@ class FLNSSM_Jordan_Dist(nn.Module):
 
     def init_weights(self, A0, B0, C0, isLinTrainable=True):
         # Initializing linear weights
-        self.linmod.init_model_(A0, B0, C0, requires_grad=isLinTrainable)
+        self.linmod.init_weights_(A0, B0, C0, requires_grad=isLinTrainable)
 
         # Initializing nonlinear output weights to 0
         nn.init.zeros_(self.alpha_out.weight)

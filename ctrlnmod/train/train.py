@@ -380,7 +380,7 @@ class LitNode(pl.LightningModule):
 def train_model(lit_model, data_module, logger, epochs, patience=100):
 
     # Callbacks
-    early_stop_callback = EarlyStopping(monitor='val_loss', min_delta=0.00001, patience=patience, verbose=True, mode='min')
+    early_stop_callback = EarlyStopping(monitor='val_loss', min_delta=1e-7, patience=patience, verbose=True, mode='min')
     timer_callback = Timer()
     break_callback = StopTrainingCallback()
     checkpoint_callback = ModelCheckpoint(

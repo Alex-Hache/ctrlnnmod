@@ -115,8 +115,11 @@ class HInfCont(HInfBase):
     def update_matrices(self, *args):
         if self.extract_lmi_matrices is None:
             raise ValueError("extract_lmi_matrices is not defined")
-        
-        A, B, C, D = self.extract_lmi_matrices()
+        try:
+            A, B, C, D = self.extract_lmi_matrices()
+        except:
+            A, B, C = self.extract_lmi_matrices()
+            D = torch.zeros(C.shape[0], B.shape[1])
         self.A = A
         self.B = B
         self.C = C

@@ -32,7 +32,7 @@ class ScaledSoftmax(nn.Softmax):
 
 class BetaLayer(nn.Module):
     def __init__(
-        self, n_inputs, n_states, n_hidden, actF=nn.Tanh(), func="softplus", tol=0.01
+        self, nu: int, nx: int, nh: int, act_f: nn.Module = nn.Tanh(), func="softplus", tol=0.01, scale=1.0
     ) -> None:
 
         r"""
@@ -46,10 +46,11 @@ class BetaLayer(nn.Module):
         """
         super(BetaLayer, self).__init__()
 
-        self.nu = n_inputs
-        self.nx = n_states
-        self.nh = n_hidden
-        self.actF = actF
+        self.nu = nu
+        self.nx = nx
+        self.nh = nh
+        
+        self.act_f = act_f
         self.U = nn.Linear(self.nu, self.nx, bias=False)
         nn.init.eye_(self.U.weight)
         geo.orthogonal(self.U, "weight")
@@ -70,11 +71,13 @@ class BetaLayer(nn.Module):
         else:
             raise NotImplementedError("Not implemented yet")
 
+        self.scale = scale
+
     def forward(self, x):
         sig = self.W_beta_in(x)
-        sig = self.actF(sig)
+        sig = self.act_f(sig)
         sig = self.W_beta_out(sig)
-        sig = self.pos_func(x)
+        sig = self.pos_func(x)/self.scale  # Scaling of the singular values of the matrix
         return self.U(sig.unsqueeze(-2) @ torch.transpose(self.V.weight, -2, -1))
 
 
