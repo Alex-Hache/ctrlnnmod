@@ -16,8 +16,6 @@ def load_pendulum(files: List[str], scaled: bool = False) -> Tuple:
     if d_train.shape[0] < d_train.shape[1]:
         d_train = np.transpose(d_test)
 
-    u_train = np.concatenate((u_train, d_train), axis=1)
-    u_test = np.concatenate((u_test, d_test), axis=1)
 
     # Scale data
     u_max = np.max(u_train, axis=0)
@@ -27,9 +25,11 @@ def load_pendulum(files: List[str], scaled: bool = False) -> Tuple:
     if scaled:
         u_train_scl = u_train / u_max
         y_train_scl = y_train / y_max
+        d_train_scl = d_train / y_max
         u_test_scl = u_test / u_max
         y_test_scl = y_test / y_max
+        d_test_scl = d_test / y_max
 
-        return (u_train_scl, y_train_scl, u_test_scl, y_test_scl), ts
+        return u_train_scl, y_train_scl, u_test_scl, y_test_scl, d_train_scl, d_test_scl, ts
     else:
-        return u_train, y_train, u_test, y_test, ts
+        return u_train, y_train, u_test, y_test, d_train, d_test, ts

@@ -1,0 +1,548 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ctrlnmod.optim package &mdash; ctrlnmod 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=01f34227"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="ctrlnmod.plot package" href="ctrlnmod.plot.html" />
+    <link rel="prev" title="ctrlnmod.models.ssmodels.continuous.linearization package" href="ctrlnmod.models.ssmodels.continuous.linearization.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            ctrlnmod
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">ctrlnmod</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="ctrlnmod.html">ctrlnmod package</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="ctrlnmod.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.integrators.html">ctrlnmod.integrators package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.layers.html">ctrlnmod.layers package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.linalg.html">ctrlnmod.linalg package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.lmis.html">ctrlnmod.lmis package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.losses.html">ctrlnmod.losses package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.matlab.html">ctrlnmod.matlab package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.html">ctrlnmod.models package</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">ctrlnmod.optim package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.plot.html">ctrlnmod.plot package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.postprocessing.html">ctrlnmod.postprocessing package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.preprocessing.html">ctrlnmod.preprocessing package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.regularizations.html">ctrlnmod.regularizations package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.train.html">ctrlnmod.train package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.utils.html">ctrlnmod.utils package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.html#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.html#module-ctrlnmod.constraints">ctrlnmod.constraints module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.html#module-ctrlnmod">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">ctrlnmod</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">ctrlnmod</a></li>
+          <li class="breadcrumb-item"><a href="ctrlnmod.html">ctrlnmod package</a></li>
+      <li class="breadcrumb-item active">ctrlnmod.optim package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/ctrlnmod.optim.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="ctrlnmod-optim-package">
+<h1>ctrlnmod.optim package<a class="headerlink" href="#ctrlnmod-optim-package" title="Link to this heading"></a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
+</section>
+<section id="module-ctrlnmod.optim.backtracking">
+<span id="ctrlnmod-optim-backtracking-module"></span><h2>ctrlnmod.optim.backtracking module<a class="headerlink" href="#module-ctrlnmod.optim.backtracking" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="ctrlnmod.optim.backtracking.BackTrackOptimizer">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ctrlnmod.optim.backtracking.</span></span><span class="sig-name descname"><span class="pre">BackTrackOptimizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">optimizer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">condition_fn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ctrlnmod/optim/backtracking.html#BackTrackOptimizer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ctrlnmod.optim.backtracking.BackTrackOptimizer" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Wrapper optimizer implementing backtracking line search to enforce a condition on updated parameters.</p>
+<p>This optimizer wraps a PyTorch optimizer and performs a backtracking line search after each step.
+After performing the step, it checks a user-provided condition function on the updated model parameters.
+If the condition is not satisfied, it rolls back the parameters and reduces the learning rate by
+multiplying it by <cite>beta</cite>, then retries the step. This process repeats until the condition is met or
+the maximum number of backtracking iterations is reached.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>optimizer</strong> (<em>torch.optim.Optimizer</em>) – The base optimizer to wrap.</p></li>
+<li><p><strong>module</strong> (<em>nn.Module</em>) – The model whose parameters are being optimized.</p></li>
+<li><p><strong>condition_fn</strong> (<em>Callable</em><em>[</em><em>[</em><em>nn.Module</em><em>]</em><em>, </em><em>bool</em><em>]</em>) – A callable that receives the model and returns
+True if the updated parameters satisfy the acceptance condition.</p></li>
+<li><p><strong>beta</strong> (<em>float</em><em>, </em><em>optional</em>) – Multiplicative factor to decrease learning rate during backtracking (default: 0.5).</p></li>
+<li><p><strong>max_iter</strong> (<em>int</em><em>, </em><em>optional</em>) – Maximum number of backtracking iterations (default: 20).</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ctrlnmod.optim.backtracking.BackTrackOptimizer.n_backtrack_iter">
+<span class="sig-name descname"><span class="pre">n_backtrack_iter</span></span><a class="headerlink" href="#ctrlnmod.optim.backtracking.BackTrackOptimizer.n_backtrack_iter" title="Link to this definition"></a></dt>
+<dd><p>The number of backtracking iterations performed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">torch.nn</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">nn</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">torch.optim</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">optim</span>
+<span class="gp">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">MyModel</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">criterion</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">MSELoss</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">base_optimizer</span> <span class="o">=</span> <span class="n">optim</span><span class="o">.</span><span class="n">SGD</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span><span class="w"> </span><span class="nf">condition_fn</span><span class="p">(</span><span class="n">mod</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="c1"># Example condition: loss decreases after step</span>
+<span class="gp">... </span>    <span class="n">output</span> <span class="o">=</span> <span class="n">mod</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="n">loss</span> <span class="o">=</span> <span class="n">criterion</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="k">return</span> <span class="n">loss</span><span class="o">.</span><span class="n">item</span><span class="p">()</span> <span class="o">&lt;</span> <span class="n">old_loss</span>
+<span class="gp">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">optimizer</span> <span class="o">=</span> <span class="n">BackTrackOptimizer</span><span class="p">(</span><span class="n">base_optimizer</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">condition_fn</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span><span class="w"> </span><span class="nf">closure</span><span class="p">():</span>
+<span class="gp">... </span>    <span class="n">optimizer</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()</span>
+<span class="gp">... </span>    <span class="n">output</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="n">loss</span> <span class="o">=</span> <span class="n">criterion</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="n">loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
+<span class="gp">... </span>    <span class="k">return</span> <span class="n">loss</span>
+<span class="gp">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="nb">input</span><span class="p">,</span> <span class="n">target</span> <span class="ow">in</span> <span class="n">data_loader</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">old_loss</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s1">&#39;inf&#39;</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="n">optimizer</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">closure</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="ctrlnmod.optim.backtracking.BackTrackOptimizer.step">
+<span class="sig-name descname"><span class="pre">step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">closure</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ctrlnmod/optim/backtracking.html#BackTrackOptimizer.step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ctrlnmod.optim.backtracking.BackTrackOptimizer.step" title="Link to this definition"></a></dt>
+<dd><p>Performs a single optimization step with backtracking line search.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>closure</strong> (<em>callable</em>) – A closure that reevaluates the model and returns the loss.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The loss returned by the closure after the accepted step.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ctrlnmod.optim.backtracking.BackTrackOptimizer.zero_grad">
+<span class="sig-name descname"><span class="pre">zero_grad</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/ctrlnmod/optim/backtracking.html#BackTrackOptimizer.zero_grad"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ctrlnmod.optim.backtracking.BackTrackOptimizer.zero_grad" title="Link to this definition"></a></dt>
+<dd><p>Clears the gradients of all optimized parameters.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-ctrlnmod.optim.pgd">
+<span id="ctrlnmod-optim-pgd-module"></span><h2>ctrlnmod.optim.pgd module<a class="headerlink" href="#module-ctrlnmod.optim.pgd" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="ctrlnmod.optim.pgd.ProjectedOptimizer">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ctrlnmod.optim.pgd.</span></span><span class="sig-name descname"><span class="pre">ProjectedOptimizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">optimizer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modules</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ctrlnmod/optim/pgd.html#ProjectedOptimizer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ctrlnmod.optim.pgd.ProjectedOptimizer" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Optimizer</span></code></p>
+<p>Optimizer wrapper that applies a projection function on specified model parameters
+after each optimization step.</p>
+<p>This optimizer delegates optimization to a wrapped PyTorch optimizer and then
+applies a user-defined projection function (e.g. projection onto positive definite matrices)
+on selected parameters to enforce constraints.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>optimizer</strong> (<em>torch.optim.Optimizer</em>) – The base optimizer to wrap.</p></li>
+<li><p><strong>project</strong> (<em>Callable</em><em>[</em><em>[</em><em>torch.Tensor</em><em>]</em><em>, </em><em>torch.Tensor</em><em>]</em>) – Projection function applied
+to the selected parameters after each step.</p></li>
+<li><p><strong>model</strong> (<em>torch.nn.Module</em>) – The model whose parameters are being optimized.</p></li>
+<li><p><strong>modules</strong> (<em>Optional</em><em>[</em><em>List</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>torch.nn.Module</em><em>]</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – List of parameter
+names or submodules to which projection is applied. If None, no projection
+is applied. Defaults to None.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">torch.nn</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">nn</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">torch.optim</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">optim</span>
+<span class="gp">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">MyModel</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">base_optimizer</span> <span class="o">=</span> <span class="n">optim</span><span class="o">.</span><span class="n">Adam</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Project parameters with names &#39;layer1.weight&#39; and &#39;layer2.weight&#39; to positive definite matrices</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">proj_opt</span> <span class="o">=</span> <span class="n">ProjectedOptimizer</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">base_optimizer</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">project</span><span class="o">=</span><span class="n">project_to_pos_def</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">modules</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;layer1.weight&#39;</span><span class="p">,</span> <span class="s1">&#39;layer2.weight&#39;</span><span class="p">]</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span><span class="w"> </span><span class="nf">closure</span><span class="p">():</span>
+<span class="gp">... </span>    <span class="n">proj_opt</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()</span>
+<span class="gp">... </span>    <span class="n">output</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="n">loss</span> <span class="o">=</span> <span class="n">criterion</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="n">loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
+<span class="gp">... </span>    <span class="k">return</span> <span class="n">loss</span>
+<span class="gp">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="nb">input</span><span class="p">,</span> <span class="n">target</span> <span class="ow">in</span> <span class="n">data_loader</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">proj_opt</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">closure</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="ctrlnmod.optim.pgd.ProjectedOptimizer.add_param_group">
+<span class="sig-name descname"><span class="pre">add_param_group</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">param_group</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ctrlnmod/optim/pgd.html#ProjectedOptimizer.add_param_group"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ctrlnmod.optim.pgd.ProjectedOptimizer.add_param_group" title="Link to this definition"></a></dt>
+<dd><p>Add a param group to the <code class="xref py py-class docutils literal notranslate"><span class="pre">Optimizer</span></code> s <cite>param_groups</cite>.</p>
+<p>This can be useful when fine tuning a pre-trained network as frozen layers can be made
+trainable and added to the <code class="xref py py-class docutils literal notranslate"><span class="pre">Optimizer</span></code> as training progresses.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>param_group</strong> (<em>dict</em>) – Specifies what Tensors should be optimized along with group
+specific optimization options.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ctrlnmod.optim.pgd.ProjectedOptimizer.param_groups">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">param_groups</span></span><a class="headerlink" href="#ctrlnmod.optim.pgd.ProjectedOptimizer.param_groups" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ctrlnmod.optim.pgd.ProjectedOptimizer.state">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">state</span></span><a class="headerlink" href="#ctrlnmod.optim.pgd.ProjectedOptimizer.state" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ctrlnmod.optim.pgd.ProjectedOptimizer.step">
+<span class="sig-name descname"><span class="pre">step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">closure</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ctrlnmod/optim/pgd.html#ProjectedOptimizer.step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ctrlnmod.optim.pgd.ProjectedOptimizer.step" title="Link to this definition"></a></dt>
+<dd><p>Performs a single optimization step, then applies the projection function
+to the selected parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>closure</strong> (<em>callable</em><em>, </em><em>optional</em>) – A closure that reevaluates the model
+and returns the loss.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The loss returned by the closure, if any.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ctrlnmod.optim.pgd.ProjectedOptimizer.zero_grad">
+<span class="sig-name descname"><span class="pre">zero_grad</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/ctrlnmod/optim/pgd.html#ProjectedOptimizer.zero_grad"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ctrlnmod.optim.pgd.ProjectedOptimizer.zero_grad" title="Link to this definition"></a></dt>
+<dd><p>Clears the gradients of all optimized parameters.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ctrlnmod.optim.pgd.project_to_pos_def">
+<span class="sig-prename descclassname"><span class="pre">ctrlnmod.optim.pgd.</span></span><span class="sig-name descname"><span class="pre">project_to_pos_def</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">matrix</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ctrlnmod/optim/pgd.html#project_to_pos_def"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ctrlnmod.optim.pgd.project_to_pos_def" title="Link to this definition"></a></dt>
+<dd><p>Projects a symmetric matrix to the closest positive definite matrix.</p>
+<p>This function symmetrizes the input matrix, then performs an eigen-decomposition,
+clips the eigenvalues to a minimum positive threshold (1e-6), and reconstructs
+the matrix to ensure positive definiteness.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>matrix</strong> (<em>torch.Tensor</em>) – A square matrix (assumed symmetric or nearly symmetric).</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The closest positive definite matrix.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>torch.Tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-ctrlnmod.optim">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-ctrlnmod.optim" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="ctrlnmod.optim.BackTrackOptimizer">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ctrlnmod.optim.</span></span><span class="sig-name descname"><span class="pre">BackTrackOptimizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">optimizer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">condition_fn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ctrlnmod/optim/backtracking.html#BackTrackOptimizer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ctrlnmod.optim.BackTrackOptimizer" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Wrapper optimizer implementing backtracking line search to enforce a condition on updated parameters.</p>
+<p>This optimizer wraps a PyTorch optimizer and performs a backtracking line search after each step.
+After performing the step, it checks a user-provided condition function on the updated model parameters.
+If the condition is not satisfied, it rolls back the parameters and reduces the learning rate by
+multiplying it by <cite>beta</cite>, then retries the step. This process repeats until the condition is met or
+the maximum number of backtracking iterations is reached.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>optimizer</strong> (<em>torch.optim.Optimizer</em>) – The base optimizer to wrap.</p></li>
+<li><p><strong>module</strong> (<em>nn.Module</em>) – The model whose parameters are being optimized.</p></li>
+<li><p><strong>condition_fn</strong> (<em>Callable</em><em>[</em><em>[</em><em>nn.Module</em><em>]</em><em>, </em><em>bool</em><em>]</em>) – A callable that receives the model and returns
+True if the updated parameters satisfy the acceptance condition.</p></li>
+<li><p><strong>beta</strong> (<em>float</em><em>, </em><em>optional</em>) – Multiplicative factor to decrease learning rate during backtracking (default: 0.5).</p></li>
+<li><p><strong>max_iter</strong> (<em>int</em><em>, </em><em>optional</em>) – Maximum number of backtracking iterations (default: 20).</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ctrlnmod.optim.BackTrackOptimizer.n_backtrack_iter">
+<span class="sig-name descname"><span class="pre">n_backtrack_iter</span></span><a class="headerlink" href="#ctrlnmod.optim.BackTrackOptimizer.n_backtrack_iter" title="Link to this definition"></a></dt>
+<dd><p>The number of backtracking iterations performed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">torch.nn</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">nn</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">torch.optim</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">optim</span>
+<span class="gp">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">MyModel</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">criterion</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">MSELoss</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">base_optimizer</span> <span class="o">=</span> <span class="n">optim</span><span class="o">.</span><span class="n">SGD</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span><span class="w"> </span><span class="nf">condition_fn</span><span class="p">(</span><span class="n">mod</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="c1"># Example condition: loss decreases after step</span>
+<span class="gp">... </span>    <span class="n">output</span> <span class="o">=</span> <span class="n">mod</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="n">loss</span> <span class="o">=</span> <span class="n">criterion</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="k">return</span> <span class="n">loss</span><span class="o">.</span><span class="n">item</span><span class="p">()</span> <span class="o">&lt;</span> <span class="n">old_loss</span>
+<span class="gp">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">optimizer</span> <span class="o">=</span> <span class="n">BackTrackOptimizer</span><span class="p">(</span><span class="n">base_optimizer</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">condition_fn</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span><span class="w"> </span><span class="nf">closure</span><span class="p">():</span>
+<span class="gp">... </span>    <span class="n">optimizer</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()</span>
+<span class="gp">... </span>    <span class="n">output</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="n">loss</span> <span class="o">=</span> <span class="n">criterion</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="n">loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
+<span class="gp">... </span>    <span class="k">return</span> <span class="n">loss</span>
+<span class="gp">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="nb">input</span><span class="p">,</span> <span class="n">target</span> <span class="ow">in</span> <span class="n">data_loader</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">old_loss</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s1">&#39;inf&#39;</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="n">optimizer</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">closure</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="ctrlnmod.optim.BackTrackOptimizer.step">
+<span class="sig-name descname"><span class="pre">step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">closure</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ctrlnmod/optim/backtracking.html#BackTrackOptimizer.step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ctrlnmod.optim.BackTrackOptimizer.step" title="Link to this definition"></a></dt>
+<dd><p>Performs a single optimization step with backtracking line search.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>closure</strong> (<em>callable</em>) – A closure that reevaluates the model and returns the loss.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The loss returned by the closure after the accepted step.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ctrlnmod.optim.BackTrackOptimizer.zero_grad">
+<span class="sig-name descname"><span class="pre">zero_grad</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/ctrlnmod/optim/backtracking.html#BackTrackOptimizer.zero_grad"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ctrlnmod.optim.BackTrackOptimizer.zero_grad" title="Link to this definition"></a></dt>
+<dd><p>Clears the gradients of all optimized parameters.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ctrlnmod.optim.ProjectedOptimizer">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ctrlnmod.optim.</span></span><span class="sig-name descname"><span class="pre">ProjectedOptimizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">optimizer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modules</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ctrlnmod/optim/pgd.html#ProjectedOptimizer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ctrlnmod.optim.ProjectedOptimizer" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Optimizer</span></code></p>
+<p>Optimizer wrapper that applies a projection function on specified model parameters
+after each optimization step.</p>
+<p>This optimizer delegates optimization to a wrapped PyTorch optimizer and then
+applies a user-defined projection function (e.g. projection onto positive definite matrices)
+on selected parameters to enforce constraints.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>optimizer</strong> (<em>torch.optim.Optimizer</em>) – The base optimizer to wrap.</p></li>
+<li><p><strong>project</strong> (<em>Callable</em><em>[</em><em>[</em><em>torch.Tensor</em><em>]</em><em>, </em><em>torch.Tensor</em><em>]</em>) – Projection function applied
+to the selected parameters after each step.</p></li>
+<li><p><strong>model</strong> (<em>torch.nn.Module</em>) – The model whose parameters are being optimized.</p></li>
+<li><p><strong>modules</strong> (<em>Optional</em><em>[</em><em>List</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>torch.nn.Module</em><em>]</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – List of parameter
+names or submodules to which projection is applied. If None, no projection
+is applied. Defaults to None.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">torch.nn</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">nn</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">torch.optim</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">optim</span>
+<span class="gp">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">MyModel</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">base_optimizer</span> <span class="o">=</span> <span class="n">optim</span><span class="o">.</span><span class="n">Adam</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Project parameters with names &#39;layer1.weight&#39; and &#39;layer2.weight&#39; to positive definite matrices</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">proj_opt</span> <span class="o">=</span> <span class="n">ProjectedOptimizer</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">base_optimizer</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">project</span><span class="o">=</span><span class="n">project_to_pos_def</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">modules</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;layer1.weight&#39;</span><span class="p">,</span> <span class="s1">&#39;layer2.weight&#39;</span><span class="p">]</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span><span class="w"> </span><span class="nf">closure</span><span class="p">():</span>
+<span class="gp">... </span>    <span class="n">proj_opt</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()</span>
+<span class="gp">... </span>    <span class="n">output</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="n">loss</span> <span class="o">=</span> <span class="n">criterion</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="n">loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
+<span class="gp">... </span>    <span class="k">return</span> <span class="n">loss</span>
+<span class="gp">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="nb">input</span><span class="p">,</span> <span class="n">target</span> <span class="ow">in</span> <span class="n">data_loader</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">proj_opt</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">closure</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="ctrlnmod.optim.ProjectedOptimizer.add_param_group">
+<span class="sig-name descname"><span class="pre">add_param_group</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">param_group</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ctrlnmod/optim/pgd.html#ProjectedOptimizer.add_param_group"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ctrlnmod.optim.ProjectedOptimizer.add_param_group" title="Link to this definition"></a></dt>
+<dd><p>Add a param group to the <code class="xref py py-class docutils literal notranslate"><span class="pre">Optimizer</span></code> s <cite>param_groups</cite>.</p>
+<p>This can be useful when fine tuning a pre-trained network as frozen layers can be made
+trainable and added to the <code class="xref py py-class docutils literal notranslate"><span class="pre">Optimizer</span></code> as training progresses.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>param_group</strong> (<em>dict</em>) – Specifies what Tensors should be optimized along with group
+specific optimization options.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ctrlnmod.optim.ProjectedOptimizer.param_groups">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">param_groups</span></span><a class="headerlink" href="#ctrlnmod.optim.ProjectedOptimizer.param_groups" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ctrlnmod.optim.ProjectedOptimizer.state">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">state</span></span><a class="headerlink" href="#ctrlnmod.optim.ProjectedOptimizer.state" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ctrlnmod.optim.ProjectedOptimizer.step">
+<span class="sig-name descname"><span class="pre">step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">closure</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ctrlnmod/optim/pgd.html#ProjectedOptimizer.step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ctrlnmod.optim.ProjectedOptimizer.step" title="Link to this definition"></a></dt>
+<dd><p>Performs a single optimization step, then applies the projection function
+to the selected parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>closure</strong> (<em>callable</em><em>, </em><em>optional</em>) – A closure that reevaluates the model
+and returns the loss.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The loss returned by the closure, if any.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ctrlnmod.optim.ProjectedOptimizer.zero_grad">
+<span class="sig-name descname"><span class="pre">zero_grad</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/ctrlnmod/optim/pgd.html#ProjectedOptimizer.zero_grad"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ctrlnmod.optim.ProjectedOptimizer.zero_grad" title="Link to this definition"></a></dt>
+<dd><p>Clears the gradients of all optimized parameters.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ctrlnmod.optim.project_to_pos_def">
+<span class="sig-prename descclassname"><span class="pre">ctrlnmod.optim.</span></span><span class="sig-name descname"><span class="pre">project_to_pos_def</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">matrix</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ctrlnmod/optim/pgd.html#project_to_pos_def"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ctrlnmod.optim.project_to_pos_def" title="Link to this definition"></a></dt>
+<dd><p>Projects a symmetric matrix to the closest positive definite matrix.</p>
+<p>This function symmetrizes the input matrix, then performs an eigen-decomposition,
+clips the eigenvalues to a minimum positive threshold (1e-6), and reconstructs
+the matrix to ensure positive definiteness.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>matrix</strong> (<em>torch.Tensor</em>) – A square matrix (assumed symmetric or nearly symmetric).</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The closest positive definite matrix.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>torch.Tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="ctrlnmod.models.ssmodels.continuous.linearization.html" class="btn btn-neutral float-left" title="ctrlnmod.models.ssmodels.continuous.linearization package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="ctrlnmod.plot.html" class="btn btn-neutral float-right" title="ctrlnmod.plot package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Alexandre Hache.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

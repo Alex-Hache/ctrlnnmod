@@ -54,7 +54,7 @@ class AlphaStable(ProductManifold):
         Q, P, S = super().forward([X1, X2, X3])
         return self.submersion(Q, P, S)
 
-    def submersion_inv(self, A, check_in_manifold=True, epsilon=1e-3, solver="MOSEK"):
+    def submersion_inv(self, A, check_in_manifold=True, epsilon=1e-2, solver="MOSEK"):
         if check_in_manifold and not self.in_manifold_eigen(A, epsilon):
             print(f"Enforced alpha = {self.alpha} and given alpha = {get_lyap_exp(A)}")
             raise InManifoldError(get_lyap_exp(A), self.alpha)

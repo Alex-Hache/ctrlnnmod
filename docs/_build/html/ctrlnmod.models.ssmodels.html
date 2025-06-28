@@ -1,0 +1,367 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ctrlnmod.models.ssmodels package &mdash; ctrlnmod 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=01f34227"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="ctrlnmod.models.ssmodels.continuous package" href="ctrlnmod.models.ssmodels.continuous.html" />
+    <link rel="prev" title="ctrlnmod.models.feedforward package" href="ctrlnmod.models.feedforward.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            ctrlnmod
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">ctrlnmod</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="ctrlnmod.html">ctrlnmod package</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="ctrlnmod.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.integrators.html">ctrlnmod.integrators package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.layers.html">ctrlnmod.layers package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.linalg.html">ctrlnmod.linalg package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.lmis.html">ctrlnmod.lmis package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.losses.html">ctrlnmod.losses package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.matlab.html">ctrlnmod.matlab package</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="ctrlnmod.models.html">ctrlnmod.models package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.optim.html">ctrlnmod.optim package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.plot.html">ctrlnmod.plot package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.postprocessing.html">ctrlnmod.postprocessing package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.preprocessing.html">ctrlnmod.preprocessing package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.regularizations.html">ctrlnmod.regularizations package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.train.html">ctrlnmod.train package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.utils.html">ctrlnmod.utils package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.html#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.html#module-ctrlnmod.constraints">ctrlnmod.constraints module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.html#module-ctrlnmod">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">ctrlnmod</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">ctrlnmod</a></li>
+          <li class="breadcrumb-item"><a href="ctrlnmod.html">ctrlnmod package</a></li>
+          <li class="breadcrumb-item"><a href="ctrlnmod.models.html">ctrlnmod.models package</a></li>
+      <li class="breadcrumb-item active">ctrlnmod.models.ssmodels package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/ctrlnmod.models.ssmodels.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="ctrlnmod-models-ssmodels-package">
+<h1>ctrlnmod.models.ssmodels package<a class="headerlink" href="#ctrlnmod-models-ssmodels-package" title="Link to this heading"></a></h1>
+<section id="subpackages">
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Link to this heading"></a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html">ctrlnmod.models.ssmodels.continuous package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.general.html">ctrlnmod.models.ssmodels.continuous.general package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.general.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.general.html#module-ctrlnmod.models.ssmodels.continuous.general.gnssm">ctrlnmod.models.ssmodels.continuous.general.gnssm module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.general.html#module-ctrlnmod.models.ssmodels.continuous.general.renode">ctrlnmod.models.ssmodels.continuous.general.renode module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.general.html#ctrlnmod-models-ssmodels-continuous-general-rens-module">ctrlnmod.models.ssmodels.continuous.general.rens module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.general.html#module-ctrlnmod.models.ssmodels.continuous.general">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.linear.html">ctrlnmod.models.ssmodels.continuous.linear package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.linear.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.linear.html#module-ctrlnmod.models.ssmodels.continuous.linear.base">ctrlnmod.models.ssmodels.continuous.linear.base module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.linear.html#module-ctrlnmod.models.ssmodels.continuous.linear.h2">ctrlnmod.models.ssmodels.continuous.linear.h2 module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.linear.html#module-ctrlnmod.models.ssmodels.continuous.linear.hinf">ctrlnmod.models.ssmodels.continuous.linear.hinf module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.linear.html#module-ctrlnmod.models.ssmodels.continuous.linear.implicit">ctrlnmod.models.ssmodels.continuous.linear.implicit module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.linear.html#module-ctrlnmod.models.ssmodels.continuous.linear">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.linearization.html">ctrlnmod.models.ssmodels.continuous.linearization package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.linearization.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.linearization.html#ctrlnmod-models-ssmodels-continuous-linearization-feedbacklin-module">ctrlnmod.models.ssmodels.continuous.linearization.feedbacklin module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.linearization.html#module-ctrlnmod.models.ssmodels.continuous.linearization.feedbacklin2">ctrlnmod.models.ssmodels.continuous.linearization.feedbacklin2 module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.linearization.html#module-ctrlnmod.models.ssmodels.continuous.linearization">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#module-ctrlnmod.models.ssmodels.continuous">Module contents</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.BetaILOFController"><code class="docutils literal notranslate"><span class="pre">BetaILOFController</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.BetaILOFController.clone"><code class="docutils literal notranslate"><span class="pre">BetaILOFController.clone()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.BetaILOFController.forward"><code class="docutils literal notranslate"><span class="pre">BetaILOFController.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.BetaILSFController"><code class="docutils literal notranslate"><span class="pre">BetaILSFController</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.BetaILSFController.clone"><code class="docutils literal notranslate"><span class="pre">BetaILSFController.clone()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.BetaILSFController.forward"><code class="docutils literal notranslate"><span class="pre">BetaILSFController.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.ExoH2Linear"><code class="docutils literal notranslate"><span class="pre">ExoH2Linear</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.ExoH2Linear.nu"><code class="docutils literal notranslate"><span class="pre">ExoH2Linear.nu</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.ExoH2Linear.ny"><code class="docutils literal notranslate"><span class="pre">ExoH2Linear.ny</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.ExoH2Linear.nx"><code class="docutils literal notranslate"><span class="pre">ExoH2Linear.nx</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.ExoH2Linear.nd"><code class="docutils literal notranslate"><span class="pre">ExoH2Linear.nd</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.ExoH2Linear.gamma_2"><code class="docutils literal notranslate"><span class="pre">ExoH2Linear.gamma_2</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.ExoH2Linear.clone"><code class="docutils literal notranslate"><span class="pre">ExoH2Linear.clone()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.ExoH2Linear.copy"><code class="docutils literal notranslate"><span class="pre">ExoH2Linear.copy()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.ExoH2Linear.forward"><code class="docutils literal notranslate"><span class="pre">ExoH2Linear.forward()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.ExoH2Linear.init_weights_"><code class="docutils literal notranslate"><span class="pre">ExoH2Linear.init_weights_()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.ExoH2Linear.right_inverse_"><code class="docutils literal notranslate"><span class="pre">ExoH2Linear.right_inverse_()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.ExoH2Linear.submersion_inv"><code class="docutils literal notranslate"><span class="pre">ExoH2Linear.submersion_inv()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.ExoL2BoundedLinear"><code class="docutils literal notranslate"><span class="pre">ExoL2BoundedLinear</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.ExoL2BoundedLinear.nu"><code class="docutils literal notranslate"><span class="pre">ExoL2BoundedLinear.nu</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.ExoL2BoundedLinear.ny"><code class="docutils literal notranslate"><span class="pre">ExoL2BoundedLinear.ny</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.ExoL2BoundedLinear.nx"><code class="docutils literal notranslate"><span class="pre">ExoL2BoundedLinear.nx</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.ExoL2BoundedLinear.nd"><code class="docutils literal notranslate"><span class="pre">ExoL2BoundedLinear.nd</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.ExoL2BoundedLinear.gamma"><code class="docutils literal notranslate"><span class="pre">ExoL2BoundedLinear.gamma</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.ExoL2BoundedLinear.alpha"><code class="docutils literal notranslate"><span class="pre">ExoL2BoundedLinear.alpha</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.ExoL2BoundedLinear.param"><code class="docutils literal notranslate"><span class="pre">ExoL2BoundedLinear.param</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.ExoL2BoundedLinear.epsilon"><code class="docutils literal notranslate"><span class="pre">ExoL2BoundedLinear.epsilon</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.ExoL2BoundedLinear.check"><code class="docutils literal notranslate"><span class="pre">ExoL2BoundedLinear.check()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.ExoL2BoundedLinear.clone"><code class="docutils literal notranslate"><span class="pre">ExoL2BoundedLinear.clone()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.ExoL2BoundedLinear.copy"><code class="docutils literal notranslate"><span class="pre">ExoL2BoundedLinear.copy()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.ExoL2BoundedLinear.forward"><code class="docutils literal notranslate"><span class="pre">ExoL2BoundedLinear.forward()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.ExoL2BoundedLinear.init_weights_"><code class="docutils literal notranslate"><span class="pre">ExoL2BoundedLinear.init_weights_()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.ExoL2BoundedLinear.submersion_inv_lmi"><code class="docutils literal notranslate"><span class="pre">ExoL2BoundedLinear.submersion_inv_lmi()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.ExoL2BoundedLinear.submersion_inv_riccati"><code class="docutils literal notranslate"><span class="pre">ExoL2BoundedLinear.submersion_inv_riccati()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.ExoSSLinear"><code class="docutils literal notranslate"><span class="pre">ExoSSLinear</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.ExoSSLinear.clone"><code class="docutils literal notranslate"><span class="pre">ExoSSLinear.clone()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.ExoSSLinear.eval_"><code class="docutils literal notranslate"><span class="pre">ExoSSLinear.eval_()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.ExoSSLinear.forward"><code class="docutils literal notranslate"><span class="pre">ExoSSLinear.forward()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.ExoSSLinear.init_weights_"><code class="docutils literal notranslate"><span class="pre">ExoSSLinear.init_weights_()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.ExoSSLinear.to_hinf"><code class="docutils literal notranslate"><span class="pre">ExoSSLinear.to_hinf()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.FLNSSM"><code class="docutils literal notranslate"><span class="pre">FLNSSM</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.FLNSSM.clone"><code class="docutils literal notranslate"><span class="pre">FLNSSM.clone()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.FLNSSM.forward"><code class="docutils literal notranslate"><span class="pre">FLNSSM.forward()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.FLNSSM.init_weights_"><code class="docutils literal notranslate"><span class="pre">FLNSSM.init_weights_()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.GNSSM"><code class="docutils literal notranslate"><span class="pre">GNSSM</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.GNSSM.nu"><code class="docutils literal notranslate"><span class="pre">GNSSM.nu</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.GNSSM.ny"><code class="docutils literal notranslate"><span class="pre">GNSSM.ny</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.GNSSM.nx"><code class="docutils literal notranslate"><span class="pre">GNSSM.nx</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.GNSSM.hidden_layers"><code class="docutils literal notranslate"><span class="pre">GNSSM.hidden_layers</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.GNSSM.act_f"><code class="docutils literal notranslate"><span class="pre">GNSSM.act_f</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.GNSSM.out_eq_nl"><code class="docutils literal notranslate"><span class="pre">GNSSM.out_eq_nl</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.GNSSM.alpha"><code class="docutils literal notranslate"><span class="pre">GNSSM.alpha</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.GNSSM.bias"><code class="docutils literal notranslate"><span class="pre">GNSSM.bias</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.GNSSM.linmod"><code class="docutils literal notranslate"><span class="pre">GNSSM.linmod</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.GNSSM.clone"><code class="docutils literal notranslate"><span class="pre">GNSSM.clone()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.GNSSM.forward"><code class="docutils literal notranslate"><span class="pre">GNSSM.forward()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.GNSSM.init_weights_"><code class="docutils literal notranslate"><span class="pre">GNSSM.init_weights_()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.GNSSM.to_lure"><code class="docutils literal notranslate"><span class="pre">GNSSM.to_lure()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.H2Linear"><code class="docutils literal notranslate"><span class="pre">H2Linear</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.H2Linear.nu"><code class="docutils literal notranslate"><span class="pre">H2Linear.nu</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.H2Linear.ny"><code class="docutils literal notranslate"><span class="pre">H2Linear.ny</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.H2Linear.nx"><code class="docutils literal notranslate"><span class="pre">H2Linear.nx</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.H2Linear.gamma_2"><code class="docutils literal notranslate"><span class="pre">H2Linear.gamma_2</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.H2Linear.check_"><code class="docutils literal notranslate"><span class="pre">H2Linear.check_()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.H2Linear.clone"><code class="docutils literal notranslate"><span class="pre">H2Linear.clone()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.H2Linear.copy"><code class="docutils literal notranslate"><span class="pre">H2Linear.copy()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.H2Linear.forward"><code class="docutils literal notranslate"><span class="pre">H2Linear.forward()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.H2Linear.init_weights_"><code class="docutils literal notranslate"><span class="pre">H2Linear.init_weights_()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.H2Linear.right_inverse_"><code class="docutils literal notranslate"><span class="pre">H2Linear.right_inverse_()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.H2Linear.submersion_inv"><code class="docutils literal notranslate"><span class="pre">H2Linear.submersion_inv()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.ILOFController"><code class="docutils literal notranslate"><span class="pre">ILOFController</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.ILOFController.clone"><code class="docutils literal notranslate"><span class="pre">ILOFController.clone()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.ILOFController.forward"><code class="docutils literal notranslate"><span class="pre">ILOFController.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.ILSFController"><code class="docutils literal notranslate"><span class="pre">ILSFController</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.ILSFController.clone"><code class="docutils literal notranslate"><span class="pre">ILSFController.clone()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.ILSFController.forward"><code class="docutils literal notranslate"><span class="pre">ILSFController.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.L2BoundedLinear"><code class="docutils literal notranslate"><span class="pre">L2BoundedLinear</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.L2BoundedLinear.nu"><code class="docutils literal notranslate"><span class="pre">L2BoundedLinear.nu</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.L2BoundedLinear.ny"><code class="docutils literal notranslate"><span class="pre">L2BoundedLinear.ny</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.L2BoundedLinear.nx"><code class="docutils literal notranslate"><span class="pre">L2BoundedLinear.nx</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.L2BoundedLinear.gamma"><code class="docutils literal notranslate"><span class="pre">L2BoundedLinear.gamma</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.L2BoundedLinear.alpha"><code class="docutils literal notranslate"><span class="pre">L2BoundedLinear.alpha</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.L2BoundedLinear.param"><code class="docutils literal notranslate"><span class="pre">L2BoundedLinear.param</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.L2BoundedLinear.epsilon"><code class="docutils literal notranslate"><span class="pre">L2BoundedLinear.epsilon</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.L2BoundedLinear.check"><code class="docutils literal notranslate"><span class="pre">L2BoundedLinear.check()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.L2BoundedLinear.clone"><code class="docutils literal notranslate"><span class="pre">L2BoundedLinear.clone()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.L2BoundedLinear.copy"><code class="docutils literal notranslate"><span class="pre">L2BoundedLinear.copy()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.L2BoundedLinear.forward"><code class="docutils literal notranslate"><span class="pre">L2BoundedLinear.forward()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.L2BoundedLinear.init_weights_"><code class="docutils literal notranslate"><span class="pre">L2BoundedLinear.init_weights_()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.L2BoundedLinear.submersion_inv_lmi"><code class="docutils literal notranslate"><span class="pre">L2BoundedLinear.submersion_inv_lmi()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.L2BoundedLinear.submersion_inv_riccati"><code class="docutils literal notranslate"><span class="pre">L2BoundedLinear.submersion_inv_riccati()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.SSLinear"><code class="docutils literal notranslate"><span class="pre">SSLinear</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.SSLinear.check_"><code class="docutils literal notranslate"><span class="pre">SSLinear.check_()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.SSLinear.clone"><code class="docutils literal notranslate"><span class="pre">SSLinear.clone()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.SSLinear.forward"><code class="docutils literal notranslate"><span class="pre">SSLinear.forward()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.SSLinear.init_weights_"><code class="docutils literal notranslate"><span class="pre">SSLinear.init_weights_()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.continuous.html#ctrlnmod.models.ssmodels.continuous.SSLinear.to_hinf"><code class="docutils literal notranslate"><span class="pre">SSLinear.to_hinf()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
+</section>
+<section id="module-ctrlnmod.models.ssmodels.base">
+<span id="ctrlnmod-models-ssmodels-base-module"></span><h2>ctrlnmod.models.ssmodels.base module<a class="headerlink" href="#module-ctrlnmod.models.ssmodels.base" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="ctrlnmod.models.ssmodels.base.SSModel">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ctrlnmod.models.ssmodels.base.</span></span><span class="sig-name descname"><span class="pre">SSModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nu</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ny</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nd</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ctrlnmod/models/ssmodels/base.html#SSModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ctrlnmod.models.ssmodels.base.SSModel" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
+<p>Abstract base class for state-space models.</p>
+<dl class="simple">
+<dt>Attributes :</dt><dd><p>nu (int) : number of inputs
+ny (int) : number of outputs
+nx (int) : number of states
+nd (int, optional) : number of disturbances/exogenous signals</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>nu</strong> (<em>int</em>)</p></li>
+<li><p><strong>ny</strong> (<em>int</em>)</p></li>
+<li><p><strong>nx</strong> (<em>int</em>)</p></li>
+<li><p><strong>nd</strong> (<em>int</em><em> | </em><em>None</em>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="ctrlnmod.models.ssmodels.base.SSModel.clone">
+<em class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">clone</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/ctrlnmod/models/ssmodels/base.html#SSModel.clone"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ctrlnmod.models.ssmodels.base.SSModel.clone" title="Link to this definition"></a></dt>
+<dd><p>Clone the model, it has to be implemented to be compliant with simulator classes.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ctrlnmod.models.ssmodels.base.SSModel.forward">
+<em class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">d</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ctrlnmod/models/ssmodels/base.html#SSModel.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ctrlnmod.models.ssmodels.base.SSModel.forward" title="Link to this definition"></a></dt>
+<dd><p>Forward pass of the model. This method should be implemented by subclasses.
+:type u: 
+:param u: Input tensor.
+:type u: Tensor
+:type x: 
+:param x: State tensor.
+:type x: Tensor
+:type d: 
+:param d: Disturbance tensor. Defaults to None.
+:type d: Tensor, optional</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Output tensor.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ctrlnmod.models.ssmodels.base.SSModel.init_weights_">
+<em class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">init_weights_</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ctrlnmod/models/ssmodels/base.html#SSModel.init_weights_"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ctrlnmod.models.ssmodels.base.SSModel.init_weights_" title="Link to this definition"></a></dt>
+<dd><p>This method enables to initialize the weights it is both a wrapper for irght_inverse and
+the not parameterized weights of the module</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-ctrlnmod.models.ssmodels">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-ctrlnmod.models.ssmodels" title="Link to this heading"></a></h2>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="ctrlnmod.models.feedforward.html" class="btn btn-neutral float-left" title="ctrlnmod.models.feedforward package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="ctrlnmod.models.ssmodels.continuous.html" class="btn btn-neutral float-right" title="ctrlnmod.models.ssmodels.continuous package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Alexandre Hache.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

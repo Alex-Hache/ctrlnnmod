@@ -1,28 +1,7 @@
 # __init__.py
 
-from .grnssm import Grnssm, LipGrnssm, L2IncGrNSSM, StableGNSSM
-from .h2 import H2BoundedLinear
-from .hinf import L2BoundedLinear
-from .linear import SSLinear
-from .renode import RENODE, DissipativeRENODE, ContractingRENODE
-from .rens import REN, DissipativeREN, ContractingREN
-from .feedbacklin import FLNSSM_Jordan_Disturbed, FLNSSM_Jordan_Standard
-
-__all__ = [
-    "Grnssm",
-    "LipGrnssm",
-    "L2IncGrNSSM",
-    "StableGNSSM",
-    "H2BoundedLinear",
-    "L2BoundedLinear",
-    "SSLinear",
-    "RENODE",
-    "ContractingRENODE",
-    "DissipativeRENODE",
-    "REN", 
-    "DissipativeREN", 
-    "ContractingREN",
-    "FLNSSM_Jordan",
-    "FLNSSM_Jordan_Disturbed",
-    "FLNSSM_Jordan_Standard"
-]
+from .continuous import (
+    linear,
+    linearization,
+    general
+)

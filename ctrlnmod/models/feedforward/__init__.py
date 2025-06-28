@@ -1,13 +1,9 @@
 # __init__.py
 
-from .lbdn import FFNN, Fxu, LBDN, LipHx, Hx, LipFxu
-from .linearizers import *
+from .lbdn import FFNN, LBDN, LipFxu
 
 __all__ = [
     "FFNN",
     "LBDN",
-    "Fxu",
-    "Hx",
-    "LipHx",
     "LipFxu"
 ]

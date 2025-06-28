@@ -55,7 +55,7 @@ class PSSDFixedRankTrace(SymF):
                 "Should be one of {}. Found {}".format(list(PSSDFixedRankTrace.fs.keys()), f)
             )
 
-    def in_manifold_eigen(self, L, eps=1e-4):
+    def in_manifold_eigen(self, L, eps=1e-6):
         r"""
         Checks that an ascending ordered vector of eigenvalues is in the manifold.
 
@@ -67,7 +67,7 @@ class PSSDFixedRankTrace(SymF):
         """
         bSym = super().in_manifold_eigen(L, eps)
         bZero = (L[..., -self.rank:] >= eps).all().item()
-        bTrace = (torch.dist(L[..., -self.rank:].sum(), self.trace) <= eps).item()
+        bTrace = (torch.dist(L[..., -self.rank:].sum(), self.trace) <= 1e-4).item()
         if bSym and bZero and bTrace:
             return True
         else:

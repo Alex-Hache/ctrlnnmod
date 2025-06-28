@@ -1,0 +1,626 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ctrlnmod.models.ssmodels.continuous.linearization.feedbacklin2 &mdash; ctrlnmod 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../../../_static/documentation_options.js?v=01f34227"></script>
+      <script src="../../../../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../../../index.html" class="icon icon-home">
+            ctrlnmod
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules.html">ctrlnmod</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../../index.html">ctrlnmod</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">ctrlnmod.models.ssmodels.continuous.linearization.feedbacklin2</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for ctrlnmod.models.ssmodels.continuous.linearization.feedbacklin2</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch.nn</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">nn</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">OrderedDict</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tensor</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ctrlnmod.layers</span><span class="w"> </span><span class="kn">import</span> <span class="n">BetaLayer</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ctrlnmod.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">FrameCacheManager</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ctrlnmod.models.ssmodels.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">SSModel</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">ctrlnmod.models.ssmodels.continuous.linear</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">lin</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ctrlnmod.models.feedforward</span><span class="w"> </span><span class="kn">import</span> <span class="n">FFNN</span><span class="p">,</span> <span class="n">LBDN</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ctrlnmod.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">FrameCacheManager</span><span class="p">,</span> <span class="n">parse_act_f</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
+<span class="sd">&quot;&quot;&quot; </span>
+
+<span class="sd">This module implements different architectures for learning approximately linearizing controllers for a system, given I-O pairs of data.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    First we define the inverse of linearizing controllers, which will be included into the network&#39;s architecture</span>
+<span class="sd">    in conjunction with a linear part which will be the target reference model for the closed-loop system.</span>
+<span class="sd">    The linearizing controllers are defined as follows:</span>
+<span class="sd">    - ILOFController: Inverse of a Linearizing Output Feedback controller :</span>
+<span class="sd">        .. math::</span>
+<span class="sd">            v = u + \alpha(y)</span>
+<span class="sd">        or</span>
+<span class="sd">        .. math::</span>
+<span class="sd">            v = u + \alpha(y, d)</span>
+<span class="sd">        if disturbances/exogenous signals are present.</span>
+<span class="sd">    - ILSFController: Inverse of a Linearizing State Feedback controller :</span>
+<span class="sd">        .. math::</span>
+<span class="sd">            v = u + \alpha(x)</span>
+<span class="sd">        or</span>
+<span class="sd">        .. math::</span>
+<span class="sd">            v = u + \alpha(x, d)</span>
+<span class="sd">        if disturbances/exogenous signals are present.</span>
+
+<span class="sd">    - BetaILOFController: Inverse of a Linearizing Output Feedback controller with a Beta decoupling matrix function :</span>
+<span class="sd">        .. math::</span>
+<span class="sd">            v = \beta(y)(u + \alpha(y))</span>
+<span class="sd">        with :math:`\beta` is invertible. </span>
+<span class="sd">    - BetaILSFController: Inverse of a Linearizing State Feedback controller with a Beta decoupling matrix function :</span>
+<span class="sd">        .. math::</span>
+<span class="sd">            v = \beta(x)(u + \alpha(x))</span>
+<span class="sd">        with :math:`\beta` is invertible.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="ILOFController">
+<a class="viewcode-back" href="../../../../../../ctrlnmod.models.ssmodels.continuous.linearization.html#ctrlnmod.models.ssmodels.continuous.ILOFController">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ILOFController</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Inverse of a Linearizing Output Feedback (ILOF) controller : </span>
+<span class="sd">    .. math::</span>
+<span class="sd">        v = u + \alpha(y)</span>
+<span class="sd">    or</span>
+<span class="sd">    .. math::</span>
+<span class="sd">        v = u + \alpha(y, d)</span>
+<span class="sd">    if disturbances are present.</span>
+
+<span class="sd">    :math:`\alpha` is a function approximating the linearizing controller.</span>
+<span class="sd">    and v is the new virtual input to the closed-loop system.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        nu (int): Number of inputs.</span>
+<span class="sd">        ny (int): Number of outputs.</span>
+<span class="sd">        hidden_layers (List[int]): List of integers specifying the number of neurons in each hidden layer</span>
+<span class="sd">        act_f (str, optional): Activation function to use in the hidden layers. Defaults to &#39;relu&#39;.</span>
+<span class="sd">        nd (Optional[int], optional): Number of disturbances/exogenous signals. Defaults to</span>
+<span class="sd">        lip (optional): Lipschitz constant upper bound for the controller. Defaults to None.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nu</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">ny</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">hidden_layers</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> 
+                 <span class="n">act_f</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;relu&#39;</span><span class="p">,</span> <span class="n">nd</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">lip</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">]]</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">ILOFController</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nu</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">or</span> <span class="n">nu</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;nu must be a non-negative integer&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ny</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">or</span> <span class="n">ny</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;ny must be a non-negative integer&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">nd</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="p">(</span><span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nd</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">or</span> <span class="n">nd</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;nd must be a non-negative integer or None&quot;</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">nu</span> <span class="o">=</span> <span class="n">nu</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ny</span> <span class="o">=</span> <span class="n">ny</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hidden_layers</span> <span class="o">=</span> <span class="n">hidden_layers</span>
+
+        <span class="k">if</span> <span class="n">nd</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nd</span> <span class="o">=</span> <span class="n">nd</span>
+            <span class="n">n_inputs</span> <span class="o">=</span> <span class="n">ny</span> <span class="o">+</span> <span class="n">nd</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">n_inputs</span> <span class="o">=</span>  <span class="n">ny</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">act_f</span> <span class="o">=</span> <span class="n">parse_act_f</span><span class="p">(</span><span class="n">act_f</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">act_f_str</span> <span class="o">=</span> <span class="n">act_f</span>
+
+        <span class="k">if</span> <span class="n">lip</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span> <span class="o">=</span> <span class="n">FFNN</span><span class="p">(</span><span class="n">n_in</span><span class="o">=</span><span class="n">n_inputs</span><span class="p">,</span> <span class="n">n_out</span><span class="o">=</span><span class="n">nu</span><span class="p">,</span> <span class="n">hidden_layers</span><span class="o">=</span><span class="n">hidden_layers</span><span class="p">,</span> <span class="n">act_f</span><span class="o">=</span><span class="n">act_f</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span> <span class="o">=</span> <span class="n">LBDN</span><span class="p">(</span><span class="n">n_in</span><span class="o">=</span><span class="n">n_inputs</span><span class="p">,</span> <span class="n">n_out</span><span class="o">=</span><span class="n">nu</span><span class="p">,</span> <span class="n">hidden_layers</span><span class="o">=</span><span class="n">hidden_layers</span><span class="p">,</span> <span class="n">act_f</span><span class="o">=</span><span class="n">act_f</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">lip</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ILOFController.forward">
+<a class="viewcode-back" href="../../../../../../ctrlnmod.models.ssmodels.continuous.linearization.html#ctrlnmod.models.ssmodels.continuous.ILOFController.forward">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">d</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Forward pass of the ILOF controller.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            u (Tensor): Input tensor of shape (batch_size, nu).</span>
+<span class="sd">            y (Tensor): Output tensor of shape (batch_size, ny).</span>
+<span class="sd">            d (Optional[Tensor]): Disturbance tensor of shape (batch_size, nd). Defaults to None.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Tensor: Output tensor of shape (batch_size, nu), which is the new virtual input.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">d</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">inputs</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">((</span><span class="n">y</span><span class="p">,</span> <span class="n">d</span><span class="p">),</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">inputs</span> <span class="o">=</span> <span class="n">y</span>
+        
+        <span class="n">alpha_y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">u</span> <span class="o">+</span> <span class="n">alpha_y</span></div>
+
+
+<div class="viewcode-block" id="ILOFController.clone">
+<a class="viewcode-back" href="../../../../../../ctrlnmod.models.ssmodels.continuous.linearization.html#ctrlnmod.models.ssmodels.continuous.ILOFController.clone">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">clone</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;ILOFController&#39;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Clone the ILOF controller.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            ILOFController: A new instance of the ILOF controller with the same parameters.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cloned_controller</span> <span class="o">=</span> <span class="n">ILOFController</span><span class="p">(</span><span class="n">nu</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nu</span><span class="p">,</span> <span class="n">ny</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ny</span><span class="p">,</span> <span class="n">hidden_layers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">hidden_layers</span><span class="p">,</span> 
+                                           <span class="n">act_f</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">act_f_str</span><span class="p">,</span> <span class="n">nd</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nd</span><span class="p">)</span>
+        <span class="n">cloned_controller</span><span class="o">.</span><span class="n">alpha</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">cloned_controller</span></div>
+</div>
+
+    
+<div class="viewcode-block" id="BetaILOFController">
+<a class="viewcode-back" href="../../../../../../ctrlnmod.models.ssmodels.continuous.linearization.html#ctrlnmod.models.ssmodels.continuous.BetaILOFController">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">BetaILOFController</span><span class="p">(</span><span class="n">ILOFController</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Inverse of a Linearizing Output Feedback (ILOF) controller with a Beta decoupling matrix function.</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        v = \beta(y)(u + alpha(y))</span>
+<span class="sd">    </span>
+<span class="sd">    with :math:`\beta` is invertible.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nu</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">ny</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">hidden_layers</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> 
+                 <span class="n">act_f</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;relu&#39;</span><span class="p">,</span> <span class="n">nd</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">lip</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">]]</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Args:</span>
+<span class="sd">            nu (int): Number of inputs.</span>
+<span class="sd">            ny (int): Number of outputs.</span>
+<span class="sd">            hidden_layers (List[int]): List of integers specifying the number of neurons in each hidden layer.</span>
+<span class="sd">            act_f (str, optional): Activation function to use in the hidden layers. Defaults to &#39;relu&#39;.</span>
+<span class="sd">            nd (Optional[int], optional): Number of disturbances/exogenous signals. Defaults to None.</span>
+<span class="sd">            lip (optional): Lipschitz constant upper bound for the MLP. Defaults to None.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">BetaILOFController</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">nu</span><span class="p">,</span> <span class="n">ny</span><span class="p">,</span> <span class="n">hidden_layers</span><span class="p">,</span> <span class="n">act_f</span><span class="p">,</span> <span class="n">nd</span><span class="p">,</span> <span class="n">lip</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">nd</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">n_inputs</span> <span class="o">=</span> <span class="n">ny</span> <span class="o">+</span> <span class="n">nd</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">n_inputs</span> <span class="o">=</span> <span class="n">ny</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">act_f</span> <span class="o">=</span> <span class="n">parse_act_f</span><span class="p">(</span><span class="n">act_f</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">beta</span> <span class="o">=</span> <span class="n">BetaLayer</span><span class="p">(</span><span class="n">n_in</span><span class="o">=</span><span class="n">n_inputs</span><span class="p">,</span> <span class="n">n_out</span><span class="o">=</span><span class="n">nu</span><span class="p">,</span> <span class="n">hidden_layers</span><span class="o">=</span><span class="n">hidden_layers</span><span class="p">,</span> <span class="n">act_f</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">act_f</span><span class="p">)</span>
+
+<div class="viewcode-block" id="BetaILOFController.forward">
+<a class="viewcode-back" href="../../../../../../ctrlnmod.models.ssmodels.continuous.linearization.html#ctrlnmod.models.ssmodels.continuous.BetaILOFController.forward">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">d</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Forward pass of the Beta ILOF controller.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            u (Tensor): Input tensor of shape (batch_size, nu).</span>
+<span class="sd">            y (Tensor): Output tensor of shape (batch_size, ny).</span>
+<span class="sd">            d (Optional[Tensor]): Disturbance tensor of shape (batch_size, nd). Defaults to None.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Tensor: Output tensor of shape (batch_size, nu), which is the new virtual input.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">d</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">inputs</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">((</span><span class="n">y</span><span class="p">,</span> <span class="n">d</span><span class="p">),</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">inputs</span> <span class="o">=</span> <span class="n">y</span>
+        
+        <span class="n">beta_y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">beta</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+        <span class="n">alpha_y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">beta_y</span><span class="p">,</span> <span class="p">(</span><span class="n">u</span> <span class="o">+</span> <span class="n">alpha_y</span><span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span></div>
+
+    
+<div class="viewcode-block" id="BetaILOFController.clone">
+<a class="viewcode-back" href="../../../../../../ctrlnmod.models.ssmodels.continuous.linearization.html#ctrlnmod.models.ssmodels.continuous.BetaILOFController.clone">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">clone</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;BetaILOFController&#39;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Clone the Beta ILOF controller.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            BetaILOFController: A new instance of the Beta ILOF controller with the same parameters.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cloned_controller</span> <span class="o">=</span> <span class="n">BetaILOFController</span><span class="p">(</span><span class="n">nu</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nu</span><span class="p">,</span> <span class="n">ny</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ny</span><span class="p">,</span> <span class="n">hidden_layers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">hidden_layers</span><span class="p">,</span> 
+                                               <span class="n">act_f</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">act_f_str</span><span class="p">,</span> <span class="n">nd</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nd</span><span class="p">)</span>
+        <span class="n">cloned_controller</span><span class="o">.</span><span class="n">alpha</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
+        <span class="n">cloned_controller</span><span class="o">.</span><span class="n">beta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">beta</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">cloned_controller</span></div>
+</div>
+
+    
+<div class="viewcode-block" id="ILSFController">
+<a class="viewcode-back" href="../../../../../../ctrlnmod.models.ssmodels.continuous.linearization.html#ctrlnmod.models.ssmodels.continuous.ILSFController">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ILSFController</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Inverse of a Linearizing State Feedback (ILSF) controller : </span>
+<span class="sd">    .. math::</span>
+<span class="sd">        v = u + \alpha(x)</span>
+<span class="sd">    or</span>
+<span class="sd">    .. math::</span>
+<span class="sd">        v = u + \alpha(x, d)</span>
+<span class="sd">    if disturbances are present.</span>
+
+<span class="sd">    :math:`\alpha` is a function approximating the linearizing controller.</span>
+<span class="sd">    and v is the new virtual input to the closed-loop system.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        nu (int): Number of inputs.</span>
+<span class="sd">        nx (int): Number of states.</span>
+<span class="sd">        hidden_layers (List[int]): List of integers specifying the number of neurons in each hidden layer</span>
+<span class="sd">        act_f (str, optional): Activation function to use in the hidden layers. Defaults to &#39;relu&#39;.</span>
+<span class="sd">        nd (Optional[int], optional): Number of disturbances/exogenous signals. Defaults to None.</span>
+<span class="sd">        lip (optional): Lipschitz constant upper bound for the controller. Defaults to None.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nu</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">nx</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">hidden_layers</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> 
+                 <span class="n">act_f</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;relu&#39;</span><span class="p">,</span> <span class="n">nd</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">lip</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">]]</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">ILSFController</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nu</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">or</span> <span class="n">nu</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;nu must be a non-negative integer&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nx</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">or</span> <span class="n">nx</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;nx must be a non-negative integer&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">nd</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="p">(</span><span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nd</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">or</span> <span class="n">nd</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;nd must be a non-negative integer or None&quot;</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">nu</span> <span class="o">=</span> <span class="n">nu</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nx</span> <span class="o">=</span> <span class="n">nx</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hidden_layers</span> <span class="o">=</span> <span class="n">hidden_layers</span>
+
+        <span class="k">if</span> <span class="n">nd</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nd</span> <span class="o">=</span> <span class="n">nd</span>
+            <span class="n">n_inputs</span> <span class="o">=</span> <span class="n">nx</span> <span class="o">+</span> <span class="n">nd</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">n_inputs</span> <span class="o">=</span>  <span class="n">nx</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">act_f</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">act_f_str</span> <span class="o">=</span> <span class="n">parse_act_f</span><span class="p">(</span><span class="n">act_f</span><span class="p">),</span> <span class="n">act_f</span>
+
+        <span class="k">if</span> <span class="n">lip</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span> <span class="o">=</span> <span class="n">FFNN</span><span class="p">(</span><span class="n">n_in</span><span class="o">=</span><span class="n">n_inputs</span><span class="p">,</span> <span class="n">n_out</span><span class="o">=</span><span class="n">nu</span><span class="p">,</span> <span class="n">hidden_layers</span><span class="o">=</span><span class="n">hidden_layers</span><span class="p">,</span> <span class="n">act_f</span><span class="o">=</span><span class="n">act_f</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span> <span class="o">=</span> <span class="n">LBDN</span><span class="p">(</span><span class="n">n_in</span><span class="o">=</span><span class="n">n_inputs</span><span class="p">,</span> <span class="n">n_out</span><span class="o">=</span><span class="n">nu</span><span class="p">,</span> <span class="n">hidden_layers</span><span class="o">=</span><span class="n">hidden_layers</span><span class="p">,</span> <span class="n">act_f</span><span class="o">=</span><span class="n">act_f</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">lip</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ILSFController.forward">
+<a class="viewcode-back" href="../../../../../../ctrlnmod.models.ssmodels.continuous.linearization.html#ctrlnmod.models.ssmodels.continuous.ILSFController.forward">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">d</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Forward pass of the ILSF controller.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            u (Tensor): Input tensor of shape (batch_size, nu).</span>
+<span class="sd">            x (Tensor): State tensor of shape (batch_size, nx).</span>
+<span class="sd">            d (Optional[Tensor]): Disturbance tensor of shape (batch_size, nd). Defaults to None.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Tensor: Output tensor of shape (batch_size, nu), which is the new virtual input.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">d</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">inputs</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">d</span><span class="p">),</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">inputs</span> <span class="o">=</span> <span class="n">x</span>
+        
+        <span class="n">alpha_x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">u</span> <span class="o">+</span> <span class="n">alpha_x</span></div>
+
+    
+
+<div class="viewcode-block" id="ILSFController.clone">
+<a class="viewcode-back" href="../../../../../../ctrlnmod.models.ssmodels.continuous.linearization.html#ctrlnmod.models.ssmodels.continuous.ILSFController.clone">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">clone</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;ILSFController&#39;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Clone the ILSF controller.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            ILSFController: A new instance of the ILSF controller with the same parameters.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cloned_controller</span> <span class="o">=</span> <span class="n">ILSFController</span><span class="p">(</span><span class="n">nu</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nu</span><span class="p">,</span> <span class="n">nx</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nx</span><span class="p">,</span> <span class="n">hidden_layers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">hidden_layers</span><span class="p">,</span> 
+                                           <span class="n">act_f</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">act_f_str</span><span class="p">,</span> <span class="n">nd</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nd</span><span class="p">)</span>
+        <span class="n">cloned_controller</span><span class="o">.</span><span class="n">alpha</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">cloned_controller</span></div>
+</div>
+
+    
+
+<div class="viewcode-block" id="BetaILSFController">
+<a class="viewcode-back" href="../../../../../../ctrlnmod.models.ssmodels.continuous.linearization.html#ctrlnmod.models.ssmodels.continuous.BetaILSFController">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">BetaILSFController</span><span class="p">(</span><span class="n">ILSFController</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Inverse of a Linearizing State Feedback (ILSF) controller with a Beta decoupling matrix function.</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        v = \beta(x)(u + alpha(x))</span>
+<span class="sd">    </span>
+<span class="sd">    with :math:`\beta` is invertible.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nu</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">nx</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">hidden_layers</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> 
+                 <span class="n">act_f</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;relu&#39;</span><span class="p">,</span> <span class="n">nd</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">lip</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">]]</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Args:</span>
+<span class="sd">            nu (int): Number of inputs.</span>
+<span class="sd">            nx (int): Number of states.</span>
+<span class="sd">            hidden_layers (List[int]): List of integers specifying the number of neurons in each hidden layer.</span>
+<span class="sd">            act_f (str, optional): Activation function to use in the hidden layers. Defaults to &#39;relu&#39;.</span>
+<span class="sd">            nd (Optional[int], optional): Number of disturbances/exogenous signals. Defaults to None.</span>
+<span class="sd">            lip (optional): Lipschitz constant upper bound for the MLP. Defaults to None.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">BetaILSFController</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">nu</span><span class="p">,</span> <span class="n">nx</span><span class="p">,</span> <span class="n">hidden_layers</span><span class="p">,</span> <span class="n">act_f</span><span class="p">,</span> <span class="n">nd</span><span class="p">,</span> <span class="n">lip</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">nd</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">n_inputs</span> <span class="o">=</span> <span class="n">nx</span> <span class="o">+</span> <span class="n">nd</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">n_inputs</span> <span class="o">=</span> <span class="n">nx</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">act_f</span> <span class="o">=</span> <span class="n">parse_act_f</span><span class="p">(</span><span class="n">act_f</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">beta</span> <span class="o">=</span> <span class="n">BetaLayer</span><span class="p">(</span><span class="n">n_in</span><span class="o">=</span><span class="n">n_inputs</span><span class="p">,</span> <span class="n">n_out</span><span class="o">=</span><span class="n">nu</span><span class="p">,</span> <span class="n">hidden_layers</span><span class="o">=</span><span class="n">hidden_layers</span><span class="p">,</span> <span class="n">act_f</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">act_f</span><span class="p">)</span>
+
+<div class="viewcode-block" id="BetaILSFController.forward">
+<a class="viewcode-back" href="../../../../../../ctrlnmod.models.ssmodels.continuous.linearization.html#ctrlnmod.models.ssmodels.continuous.BetaILSFController.forward">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">d</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Forward pass of the Beta ILSF controller.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            u (Tensor): Input tensor of shape (batch_size, nu).</span>
+<span class="sd">            x (Tensor): State tensor of shape (batch_size, nx).</span>
+<span class="sd">            d (Optional[Tensor]): Disturbance tensor of shape (batch_size, nd). Defaults to None.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Tensor: Output tensor of shape (batch_size, nu), which is the new virtual input.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">d</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">inputs</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">d</span><span class="p">),</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">inputs</span> <span class="o">=</span> <span class="n">x</span>
+        
+        <span class="n">beta_x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">beta</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+        <span class="n">alpha_x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">beta_x</span> <span class="p">,</span> <span class="p">(</span><span class="n">u</span> <span class="o">+</span> <span class="n">alpha_x</span><span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span></div>
+
+    
+<div class="viewcode-block" id="BetaILSFController.clone">
+<a class="viewcode-back" href="../../../../../../ctrlnmod.models.ssmodels.continuous.linearization.html#ctrlnmod.models.ssmodels.continuous.BetaILSFController.clone">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">clone</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;BetaILSFController&#39;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Clone the Beta ILSF controller.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            BetaILSFController: A new instance of the Beta ILSF controller with the same parameters.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cloned_controller</span> <span class="o">=</span> <span class="n">BetaILSFController</span><span class="p">(</span><span class="n">nu</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nu</span><span class="p">,</span> <span class="n">nx</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nx</span><span class="p">,</span> <span class="n">hidden_layers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">hidden_layers</span><span class="p">,</span> 
+                                               <span class="n">act_f</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">act_f_str</span><span class="p">,</span> <span class="n">nd</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nd</span><span class="p">)</span>
+        <span class="n">cloned_controller</span><span class="o">.</span><span class="n">alpha</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
+        <span class="n">cloned_controller</span><span class="o">.</span><span class="n">beta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">beta</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">cloned_controller</span></div>
+</div>
+
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    In this section, we now build the linearizable neural network architectures</span>
+<span class="sd">    which will be used to learn the linearizing controllers.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+<div class="viewcode-block" id="FLNSSM">
+<a class="viewcode-back" href="../../../../../../ctrlnmod.models.ssmodels.continuous.linearization.html#ctrlnmod.models.ssmodels.continuous.FLNSSM">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">FLNSSM</span><span class="p">(</span><span class="n">SSModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A Feedforward Linearizable Neural Network State-Space Model (FLNSSM) that learns a linearizing controller</span>
+<span class="sd">    for a given system. It can be an Output Feedback or State Feedback controller, depending on the inputs provided.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        nu (int): Number of inputs.</span>
+<span class="sd">        ny (int): Number of outputs.</span>
+<span class="sd">        nx (int): Number of states.</span>
+<span class="sd">        linear_model (Optional[SSModel], optional): Linear model type to use as a reference model for the closed-loop system. Defaults to None.</span>
+<span class="sd">        controller_type (str, optional): Type of controller to learn (&#39;output_feedback&#39; or &#39;state_feedback&#39;). Defaults to &#39;output_feedback&#39;.</span>
+<span class="sd">        nd (Optional[int]): Number of disturbances/exogenous signals. Defaults to None.</span>
+<span class="sd">        hidden_layers (List[int]): List of integers specifying the number of neurons in each hidden layer.</span>
+<span class="sd">        act_f (str, optional): Activation function to use in the hidden layers. Defaults to &#39;relu&#39;.</span>
+<span class="sd">        lip (Optional[Union[float, Tensor]], optional): Lipschitz constant upper bound for the MLPs. Defaults to None.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nu</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">ny</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">nx</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">linear_model</span><span class="p">:</span> <span class="n">SSModel</span><span class="p">,</span>
+                 <span class="n">controller_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;output_feedback&#39;</span><span class="p">,</span>
+                 <span class="n">nd</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">hidden_layers</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">64</span><span class="p">,</span> <span class="mi">64</span><span class="p">],</span> <span class="n">act_f</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;relu&#39;</span><span class="p">,</span>
+                 <span class="n">lip</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">FLNSSM</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">nu</span><span class="o">=</span><span class="n">nu</span><span class="p">,</span> <span class="n">ny</span><span class="o">=</span><span class="n">ny</span><span class="p">,</span> <span class="n">nx</span><span class="o">=</span><span class="n">nx</span><span class="p">,</span> <span class="n">nd</span><span class="o">=</span><span class="n">nd</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">hidden_layers</span> <span class="o">=</span> <span class="n">hidden_layers</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">act_f</span> <span class="o">=</span> <span class="n">parse_act_f</span><span class="p">(</span><span class="n">act_f</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">act_f_str</span> <span class="o">=</span> <span class="n">act_f</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">linear_model</span> <span class="o">=</span> <span class="n">linear_model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nd</span> <span class="o">=</span> <span class="n">nd</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">controller_type</span> <span class="o">=</span> <span class="n">controller_type</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_frame_cache</span><span class="o">.</span><span class="n">register_child</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">linear_model</span><span class="o">.</span><span class="n">_frame_cache</span><span class="p">)</span>
+
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">linear_model</span><span class="o">.</span><span class="n">nd</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">nd</span><span class="p">,</span> \
+            <span class="sa">f</span><span class="s2">&quot;Linear model&#39;s nd (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">linear_model</span><span class="o">.</span><span class="n">nd</span><span class="si">}</span><span class="s2">) must match the model&#39;s nd (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">nd</span><span class="si">}</span><span class="s2">)&quot;</span> 
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">linear_model</span><span class="o">.</span><span class="n">nu</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">nu</span><span class="p">,</span> \
+            <span class="sa">f</span><span class="s2">&quot;Linear model&#39;s nu (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">linear_model</span><span class="o">.</span><span class="n">nu</span><span class="si">}</span><span class="s2">) must match the model&#39;s nu (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">nu</span><span class="si">}</span><span class="s2">)&quot;</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">linear_model</span><span class="o">.</span><span class="n">ny</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">ny</span><span class="p">,</span> \
+            <span class="sa">f</span><span class="s2">&quot;Linear model&#39;s ny (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">linear_model</span><span class="o">.</span><span class="n">ny</span><span class="si">}</span><span class="s2">) must match the model&#39;s ny (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">ny</span><span class="si">}</span><span class="s2">)&quot;</span>
+        
+        
+        <span class="k">if</span> <span class="n">controller_type</span> <span class="o">==</span> <span class="s1">&#39;output_feedback&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">controller</span> <span class="o">=</span> <span class="n">ILOFController</span><span class="p">(</span><span class="n">nu</span><span class="o">=</span><span class="n">nu</span><span class="p">,</span> <span class="n">ny</span><span class="o">=</span><span class="n">ny</span><span class="p">,</span> <span class="n">hidden_layers</span><span class="o">=</span><span class="n">hidden_layers</span><span class="p">,</span> <span class="n">act_f</span><span class="o">=</span><span class="n">act_f</span><span class="p">,</span> <span class="n">nd</span><span class="o">=</span><span class="n">nd</span><span class="p">,</span> <span class="n">lip</span><span class="o">=</span><span class="n">lip</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">controller_type</span> <span class="o">==</span> <span class="s1">&#39;state_feedback&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">controller</span> <span class="o">=</span> <span class="n">ILSFController</span><span class="p">(</span><span class="n">nu</span><span class="o">=</span><span class="n">nu</span><span class="p">,</span> <span class="n">nx</span><span class="o">=</span><span class="n">nx</span><span class="p">,</span> <span class="n">hidden_layers</span><span class="o">=</span><span class="n">hidden_layers</span><span class="p">,</span> <span class="n">act_f</span><span class="o">=</span><span class="n">act_f</span><span class="p">,</span> <span class="n">nd</span><span class="o">=</span><span class="n">nd</span><span class="p">,</span> <span class="n">lip</span><span class="o">=</span><span class="n">lip</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">controller_type</span> <span class="o">==</span> <span class="s1">&#39;beta_output_feedback&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">controller</span> <span class="o">=</span> <span class="n">BetaILOFController</span><span class="p">(</span><span class="n">nu</span><span class="o">=</span><span class="n">nu</span><span class="p">,</span> <span class="n">ny</span><span class="o">=</span><span class="n">ny</span><span class="p">,</span> <span class="n">hidden_layers</span><span class="o">=</span><span class="n">hidden_layers</span><span class="p">,</span> <span class="n">act_f</span><span class="o">=</span><span class="n">act_f</span><span class="p">,</span> <span class="n">nd</span><span class="o">=</span><span class="n">nd</span><span class="p">,</span> <span class="n">lip</span><span class="o">=</span><span class="n">lip</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">controller_type</span> <span class="o">==</span> <span class="s1">&#39;beta_state_feedback&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">controller</span> <span class="o">=</span> <span class="n">BetaILSFController</span><span class="p">(</span><span class="n">nu</span><span class="o">=</span><span class="n">nu</span><span class="p">,</span> <span class="n">nx</span><span class="o">=</span><span class="n">nx</span><span class="p">,</span> <span class="n">hidden_layers</span><span class="o">=</span><span class="n">hidden_layers</span><span class="p">,</span> <span class="n">act_f</span><span class="o">=</span><span class="n">act_f</span><span class="p">,</span> <span class="n">nd</span><span class="o">=</span><span class="n">nd</span><span class="p">,</span> <span class="n">lip</span><span class="o">=</span><span class="n">lip</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown controller type: </span><span class="si">{</span><span class="n">controller_type</span><span class="si">}</span><span class="s2">. Supported types are &#39;output_feedback&#39;, &#39;state_feedback&#39;, &#39;beta_output_feedback&#39;, and &#39;beta_state_feedback&#39;.&quot;</span><span class="p">)</span>
+        
+    
+<div class="viewcode-block" id="FLNSSM.forward">
+<a class="viewcode-back" href="../../../../../../ctrlnmod.models.ssmodels.continuous.linearization.html#ctrlnmod.models.ssmodels.continuous.FLNSSM.forward">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">d</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Forward pass of the FLNSSM model.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            u (Tensor): Input tensor of shape (batch_size, nu).</span>
+<span class="sd">            x (Tensor): State tensor of shape (batch_size, nx).</span>
+<span class="sd">            d (Optional[Tensor]): Disturbance tensor of shape (batch_size, nd). Defaults to None.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Tensor: Output tensor of shape (batch_size, ny), which is the output of the linear model.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="k">if</span> <span class="s1">&#39;output&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">controller_type</span><span class="p">:</span>  <span class="c1"># Output feedback</span>
+            <span class="c1"># Pre computing the current y</span>
+            <span class="k">if</span> <span class="s1">&#39;Exo&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">linear_model</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">:</span>
+                <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_frame</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">C</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_frame</span><span class="p">()</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="n">x</span> <span class="o">@</span> <span class="n">C</span><span class="o">.</span><span class="n">T</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">controller</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">d</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># State feedback</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">controller</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">d</span><span class="p">)</span>
+        <span class="n">dx</span><span class="p">,</span> <span class="n">y</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">linear_model</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">d</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">dx</span><span class="p">,</span> <span class="n">y</span></div>
+
+    
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">(</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;  nu=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">nu</span><span class="si">}</span><span class="s2">, ny=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">ny</span><span class="si">}</span><span class="s2">, nx=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">nx</span><span class="si">}</span><span class="s2">, nd=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">nd</span><span class="si">}</span><span class="s2">,</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;  controller=</span><span class="si">{</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">controller</span><span class="p">)</span><span class="si">}</span><span class="s2">,</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;  linear_model=</span><span class="si">{</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">linear_model</span><span class="p">),</span><span class="w"> </span><span class="s1">&#39;    &#39;</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;)&quot;</span>
+        <span class="p">)</span>
+    
+    <span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        String representation of the FLNSSM model.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s2">&quot;FLNSSM Model:</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__repr__</span><span class="p">()</span>
+    
+    <span class="k">def</span><span class="w"> </span><span class="nf">_frame</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the weights from parameterized modules.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Tuple[Tensor, ...]: A tuple containing the frame tensors.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">linear_model</span><span class="o">.</span><span class="n">_frame</span><span class="p">()</span>
+    
+    <span class="k">def</span><span class="w"> </span><span class="nf">_right_inverse</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span>  <span class="c1"># Every initialisation must be done through the init_weights_ method of the linear model and the controller</span>
+
+<div class="viewcode-block" id="FLNSSM.init_weights_">
+<a class="viewcode-back" href="../../../../../../ctrlnmod.models.ssmodels.continuous.linearization.html#ctrlnmod.models.ssmodels.continuous.FLNSSM.init_weights_">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">init_weights_</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize the weights of the linear model and the controller.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            *args: Positional arguments for the linear model and controller.</span>
+<span class="sd">            **kwargs: Keyword arguments for the linear model and controller.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span> <span class="c1"># Every initialisation must be done through the init_weights_ method of the linear model and the controller</span></div>
+
+    
+<div class="viewcode-block" id="FLNSSM.clone">
+<a class="viewcode-back" href="../../../../../../ctrlnmod.models.ssmodels.continuous.linearization.html#ctrlnmod.models.ssmodels.continuous.FLNSSM.clone">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">clone</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;FLNSSM&#39;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Clone the FLNSSM model.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            FLNSSM: A new instance of the FLNSSM model with the same parameters.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cloned_model</span> <span class="o">=</span> <span class="n">FLNSSM</span><span class="p">(</span><span class="n">nu</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nu</span><span class="p">,</span> <span class="n">ny</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ny</span><span class="p">,</span> <span class="n">nx</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nx</span><span class="p">,</span> <span class="n">linear_model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">linear_model</span><span class="o">.</span><span class="n">clone</span><span class="p">(),</span>
+                             <span class="n">controller_type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">controller</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
+                             <span class="n">nd</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nd</span><span class="p">,</span> <span class="n">hidden_layers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">hidden_layers</span><span class="p">,</span> <span class="n">act_f</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">act_f_str</span><span class="p">)</span>
+
+        <span class="n">cloned_model</span><span class="o">.</span><span class="n">linear_model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">linear_model</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
+        <span class="n">cloned_model</span><span class="o">.</span><span class="n">controller</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">controller</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">cloned_model</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Alexandre Hache.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

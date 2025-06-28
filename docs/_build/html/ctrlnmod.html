@@ -1,0 +1,896 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ctrlnmod package &mdash; ctrlnmod 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=01f34227"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="ctrlnmod.integrators package" href="ctrlnmod.integrators.html" />
+    <link rel="prev" title="ctrlnmod" href="modules.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            ctrlnmod
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">ctrlnmod</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">ctrlnmod package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#subpackages">Subpackages</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.integrators.html">ctrlnmod.integrators package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.layers.html">ctrlnmod.layers package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.linalg.html">ctrlnmod.linalg package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.lmis.html">ctrlnmod.lmis package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.losses.html">ctrlnmod.losses package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.matlab.html">ctrlnmod.matlab package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.html">ctrlnmod.models package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.optim.html">ctrlnmod.optim package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.plot.html">ctrlnmod.plot package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.postprocessing.html">ctrlnmod.postprocessing package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.preprocessing.html">ctrlnmod.preprocessing package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.regularizations.html">ctrlnmod.regularizations package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.train.html">ctrlnmod.train package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.utils.html">ctrlnmod.utils package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-ctrlnmod.constraints">ctrlnmod.constraints module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#ctrlnmod.constraints.LMIConstraint"><code class="docutils literal notranslate"><span class="pre">LMIConstraint</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ctrlnmod.constraints.ManifoldConstraint"><code class="docutils literal notranslate"><span class="pre">ManifoldConstraint</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-ctrlnmod">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">ctrlnmod</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">ctrlnmod</a></li>
+      <li class="breadcrumb-item active">ctrlnmod package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/ctrlnmod.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="ctrlnmod-package">
+<h1>ctrlnmod package<a class="headerlink" href="#ctrlnmod-package" title="Link to this heading"></a></h1>
+<section id="subpackages">
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Link to this heading"></a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="ctrlnmod.integrators.html">ctrlnmod.integrators package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="ctrlnmod.integrators.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ctrlnmod.integrators.html#module-ctrlnmod.integrators.integrators">ctrlnmod.integrators.integrators module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.integrators.html#ctrlnmod.integrators.integrators.RK45Simulator"><code class="docutils literal notranslate"><span class="pre">RK45Simulator</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.integrators.html#ctrlnmod.integrators.integrators.RK45Simulator.clone"><code class="docutils literal notranslate"><span class="pre">RK45Simulator.clone()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.integrators.html#ctrlnmod.integrators.integrators.RK45Simulator.discretize"><code class="docutils literal notranslate"><span class="pre">RK45Simulator.discretize()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.integrators.html#ctrlnmod.integrators.integrators.RK45Simulator.forward"><code class="docutils literal notranslate"><span class="pre">RK45Simulator.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.integrators.html#ctrlnmod.integrators.integrators.RK4Simulator"><code class="docutils literal notranslate"><span class="pre">RK4Simulator</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.integrators.html#ctrlnmod.integrators.integrators.RK4Simulator.clone"><code class="docutils literal notranslate"><span class="pre">RK4Simulator.clone()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.integrators.html#ctrlnmod.integrators.integrators.RK4Simulator.discretize"><code class="docutils literal notranslate"><span class="pre">RK4Simulator.discretize()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.integrators.html#ctrlnmod.integrators.integrators.RK4Simulator.forward"><code class="docutils literal notranslate"><span class="pre">RK4Simulator.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.integrators.html#ctrlnmod.integrators.integrators.Sim_discrete"><code class="docutils literal notranslate"><span class="pre">Sim_discrete</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.integrators.html#ctrlnmod.integrators.integrators.Sim_discrete.clone"><code class="docutils literal notranslate"><span class="pre">Sim_discrete.clone()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.integrators.html#ctrlnmod.integrators.integrators.Sim_discrete.forward"><code class="docutils literal notranslate"><span class="pre">Sim_discrete.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.integrators.html#ctrlnmod.integrators.integrators.Simulator"><code class="docutils literal notranslate"><span class="pre">Simulator</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.integrators.html#ctrlnmod.integrators.integrators.Simulator.check"><code class="docutils literal notranslate"><span class="pre">Simulator.check()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.integrators.html#ctrlnmod.integrators.integrators.Simulator.extract_weights"><code class="docutils literal notranslate"><span class="pre">Simulator.extract_weights()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.integrators.html#ctrlnmod.integrators.integrators.Simulator.get_obs_size"><code class="docutils literal notranslate"><span class="pre">Simulator.get_obs_size()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.integrators.html#ctrlnmod.integrators.integrators.Simulator.load"><code class="docutils literal notranslate"><span class="pre">Simulator.load()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.integrators.html#ctrlnmod.integrators.integrators.Simulator.save"><code class="docutils literal notranslate"><span class="pre">Simulator.save()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.integrators.html#ctrlnmod.integrators.integrators.Simulator.set_save_path"><code class="docutils literal notranslate"><span class="pre">Simulator.set_save_path()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.integrators.html#ctrlnmod.integrators.integrators.Simulator.simulate"><code class="docutils literal notranslate"><span class="pre">Simulator.simulate()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ctrlnmod.integrators.html#module-ctrlnmod.integrators">Module contents</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.integrators.html#ctrlnmod.integrators.RK45Simulator"><code class="docutils literal notranslate"><span class="pre">RK45Simulator</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.integrators.html#ctrlnmod.integrators.RK45Simulator.clone"><code class="docutils literal notranslate"><span class="pre">RK45Simulator.clone()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.integrators.html#ctrlnmod.integrators.RK45Simulator.discretize"><code class="docutils literal notranslate"><span class="pre">RK45Simulator.discretize()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.integrators.html#ctrlnmod.integrators.RK45Simulator.forward"><code class="docutils literal notranslate"><span class="pre">RK45Simulator.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.integrators.html#ctrlnmod.integrators.RK4Simulator"><code class="docutils literal notranslate"><span class="pre">RK4Simulator</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.integrators.html#ctrlnmod.integrators.RK4Simulator.clone"><code class="docutils literal notranslate"><span class="pre">RK4Simulator.clone()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.integrators.html#ctrlnmod.integrators.RK4Simulator.discretize"><code class="docutils literal notranslate"><span class="pre">RK4Simulator.discretize()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.integrators.html#ctrlnmod.integrators.RK4Simulator.forward"><code class="docutils literal notranslate"><span class="pre">RK4Simulator.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.integrators.html#ctrlnmod.integrators.Sim_discrete"><code class="docutils literal notranslate"><span class="pre">Sim_discrete</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.integrators.html#ctrlnmod.integrators.Sim_discrete.clone"><code class="docutils literal notranslate"><span class="pre">Sim_discrete.clone()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.integrators.html#ctrlnmod.integrators.Sim_discrete.forward"><code class="docutils literal notranslate"><span class="pre">Sim_discrete.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.integrators.html#ctrlnmod.integrators.Simulator"><code class="docutils literal notranslate"><span class="pre">Simulator</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.integrators.html#ctrlnmod.integrators.Simulator.check"><code class="docutils literal notranslate"><span class="pre">Simulator.check()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.integrators.html#ctrlnmod.integrators.Simulator.extract_weights"><code class="docutils literal notranslate"><span class="pre">Simulator.extract_weights()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.integrators.html#ctrlnmod.integrators.Simulator.get_obs_size"><code class="docutils literal notranslate"><span class="pre">Simulator.get_obs_size()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.integrators.html#ctrlnmod.integrators.Simulator.load"><code class="docutils literal notranslate"><span class="pre">Simulator.load()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.integrators.html#ctrlnmod.integrators.Simulator.save"><code class="docutils literal notranslate"><span class="pre">Simulator.save()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.integrators.html#ctrlnmod.integrators.Simulator.set_save_path"><code class="docutils literal notranslate"><span class="pre">Simulator.set_save_path()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.integrators.html#ctrlnmod.integrators.Simulator.simulate"><code class="docutils literal notranslate"><span class="pre">Simulator.simulate()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ctrlnmod.layers.html">ctrlnmod.layers package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="ctrlnmod.layers.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ctrlnmod.layers.html#module-ctrlnmod.layers.dd">ctrlnmod.layers.dd module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.layers.html#ctrlnmod.layers.dd.DDLayer"><code class="docutils literal notranslate"><span class="pre">DDLayer</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.layers.html#ctrlnmod.layers.dd.DDLayer.forward"><code class="docutils literal notranslate"><span class="pre">DDLayer.forward()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.layers.html#ctrlnmod.layers.dd.DDLayer.updateU_"><code class="docutils literal notranslate"><span class="pre">DDLayer.updateU_()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ctrlnmod.layers.html#module-ctrlnmod.layers.layers">ctrlnmod.layers.layers module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.layers.html#ctrlnmod.layers.layers.BetaLayer"><code class="docutils literal notranslate"><span class="pre">BetaLayer</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.layers.html#ctrlnmod.layers.layers.BetaLayer.clone"><code class="docutils literal notranslate"><span class="pre">BetaLayer.clone()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.layers.html#ctrlnmod.layers.layers.BetaLayer.forward"><code class="docutils literal notranslate"><span class="pre">BetaLayer.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.layers.html#ctrlnmod.layers.layers.CustomSoftplus"><code class="docutils literal notranslate"><span class="pre">CustomSoftplus</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.layers.html#ctrlnmod.layers.layers.CustomSoftplus.forward"><code class="docutils literal notranslate"><span class="pre">CustomSoftplus.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.layers.html#ctrlnmod.layers.layers.ScaledSoftmax"><code class="docutils literal notranslate"><span class="pre">ScaledSoftmax</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.layers.html#ctrlnmod.layers.layers.ScaledSoftmax.forward"><code class="docutils literal notranslate"><span class="pre">ScaledSoftmax.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.layers.html#ctrlnmod.layers.layers.softplus_epsilon"><code class="docutils literal notranslate"><span class="pre">softplus_epsilon()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ctrlnmod.layers.html#module-ctrlnmod.layers.liplayers">ctrlnmod.layers.liplayers module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.layers.html#ctrlnmod.layers.liplayers.SandwichLayer"><code class="docutils literal notranslate"><span class="pre">SandwichLayer</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.layers.html#ctrlnmod.layers.liplayers.SandwichLayer.alpha"><code class="docutils literal notranslate"><span class="pre">SandwichLayer.alpha</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.layers.html#ctrlnmod.layers.liplayers.SandwichLayer.scale"><code class="docutils literal notranslate"><span class="pre">SandwichLayer.scale</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.layers.html#ctrlnmod.layers.liplayers.SandwichLayer.AB"><code class="docutils literal notranslate"><span class="pre">SandwichLayer.AB</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.layers.html#ctrlnmod.layers.liplayers.SandwichLayer.act_f"><code class="docutils literal notranslate"><span class="pre">SandwichLayer.act_f</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.layers.html#ctrlnmod.layers.liplayers.SandwichLayer.param"><code class="docutils literal notranslate"><span class="pre">SandwichLayer.param</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.layers.html#id0"><code class="docutils literal notranslate"><span class="pre">SandwichLayer.scale</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.layers.html#ctrlnmod.layers.liplayers.SandwichLayer.forward"><code class="docutils literal notranslate"><span class="pre">SandwichLayer.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.layers.html#ctrlnmod.layers.liplayers.SandwichLinear"><code class="docutils literal notranslate"><span class="pre">SandwichLinear</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.layers.html#ctrlnmod.layers.liplayers.SandwichLinear.alpha"><code class="docutils literal notranslate"><span class="pre">SandwichLinear.alpha</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.layers.html#ctrlnmod.layers.liplayers.SandwichLinear.scale"><code class="docutils literal notranslate"><span class="pre">SandwichLinear.scale</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.layers.html#ctrlnmod.layers.liplayers.SandwichLinear.AB"><code class="docutils literal notranslate"><span class="pre">SandwichLinear.AB</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.layers.html#ctrlnmod.layers.liplayers.SandwichLinear.param"><code class="docutils literal notranslate"><span class="pre">SandwichLinear.param</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.layers.html#id1"><code class="docutils literal notranslate"><span class="pre">SandwichLinear.scale</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.layers.html#ctrlnmod.layers.liplayers.SandwichLinear.forward"><code class="docutils literal notranslate"><span class="pre">SandwichLinear.forward()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ctrlnmod.layers.html#module-ctrlnmod.layers">Module contents</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.layers.html#ctrlnmod.layers.BetaLayer"><code class="docutils literal notranslate"><span class="pre">BetaLayer</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.layers.html#ctrlnmod.layers.BetaLayer.clone"><code class="docutils literal notranslate"><span class="pre">BetaLayer.clone()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.layers.html#ctrlnmod.layers.BetaLayer.forward"><code class="docutils literal notranslate"><span class="pre">BetaLayer.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.layers.html#ctrlnmod.layers.CustomSoftplus"><code class="docutils literal notranslate"><span class="pre">CustomSoftplus</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.layers.html#ctrlnmod.layers.CustomSoftplus.forward"><code class="docutils literal notranslate"><span class="pre">CustomSoftplus.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.layers.html#ctrlnmod.layers.SandwichLayer"><code class="docutils literal notranslate"><span class="pre">SandwichLayer</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.layers.html#ctrlnmod.layers.SandwichLayer.alpha"><code class="docutils literal notranslate"><span class="pre">SandwichLayer.alpha</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.layers.html#ctrlnmod.layers.SandwichLayer.scale"><code class="docutils literal notranslate"><span class="pre">SandwichLayer.scale</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.layers.html#ctrlnmod.layers.SandwichLayer.AB"><code class="docutils literal notranslate"><span class="pre">SandwichLayer.AB</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.layers.html#ctrlnmod.layers.SandwichLayer.act_f"><code class="docutils literal notranslate"><span class="pre">SandwichLayer.act_f</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.layers.html#ctrlnmod.layers.SandwichLayer.param"><code class="docutils literal notranslate"><span class="pre">SandwichLayer.param</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.layers.html#id2"><code class="docutils literal notranslate"><span class="pre">SandwichLayer.scale</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.layers.html#ctrlnmod.layers.SandwichLayer.forward"><code class="docutils literal notranslate"><span class="pre">SandwichLayer.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.layers.html#ctrlnmod.layers.SandwichLinear"><code class="docutils literal notranslate"><span class="pre">SandwichLinear</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.layers.html#ctrlnmod.layers.SandwichLinear.alpha"><code class="docutils literal notranslate"><span class="pre">SandwichLinear.alpha</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.layers.html#ctrlnmod.layers.SandwichLinear.scale"><code class="docutils literal notranslate"><span class="pre">SandwichLinear.scale</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.layers.html#ctrlnmod.layers.SandwichLinear.AB"><code class="docutils literal notranslate"><span class="pre">SandwichLinear.AB</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.layers.html#ctrlnmod.layers.SandwichLinear.param"><code class="docutils literal notranslate"><span class="pre">SandwichLinear.param</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.layers.html#id3"><code class="docutils literal notranslate"><span class="pre">SandwichLinear.scale</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.layers.html#ctrlnmod.layers.SandwichLinear.forward"><code class="docutils literal notranslate"><span class="pre">SandwichLinear.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.layers.html#ctrlnmod.layers.ScaledSoftmax"><code class="docutils literal notranslate"><span class="pre">ScaledSoftmax</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.layers.html#ctrlnmod.layers.ScaledSoftmax.forward"><code class="docutils literal notranslate"><span class="pre">ScaledSoftmax.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.layers.html#ctrlnmod.layers.softplus_epsilon"><code class="docutils literal notranslate"><span class="pre">softplus_epsilon()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ctrlnmod.linalg.html">ctrlnmod.linalg package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="ctrlnmod.linalg.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ctrlnmod.linalg.html#module-ctrlnmod.linalg.utils">ctrlnmod.linalg.utils module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.linalg.html#ctrlnmod.linalg.utils.InvSoftmaxEta"><code class="docutils literal notranslate"><span class="pre">InvSoftmaxEta</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.linalg.html#ctrlnmod.linalg.utils.InvSoftmaxEta.forward"><code class="docutils literal notranslate"><span class="pre">InvSoftmaxEta.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.linalg.html#ctrlnmod.linalg.utils.Logm"><code class="docutils literal notranslate"><span class="pre">Logm</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.linalg.html#ctrlnmod.linalg.utils.Logm.backward"><code class="docutils literal notranslate"><span class="pre">Logm.backward()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.linalg.html#ctrlnmod.linalg.utils.Logm.forward"><code class="docutils literal notranslate"><span class="pre">Logm.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.linalg.html#ctrlnmod.linalg.utils.MatrixSquareRoot"><code class="docutils literal notranslate"><span class="pre">MatrixSquareRoot</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.linalg.html#ctrlnmod.linalg.utils.MatrixSquareRoot.backward"><code class="docutils literal notranslate"><span class="pre">MatrixSquareRoot.backward()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.linalg.html#ctrlnmod.linalg.utils.MatrixSquareRoot.forward"><code class="docutils literal notranslate"><span class="pre">MatrixSquareRoot.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.linalg.html#ctrlnmod.linalg.utils.SoftmaxEta"><code class="docutils literal notranslate"><span class="pre">SoftmaxEta</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.linalg.html#ctrlnmod.linalg.utils.SoftmaxEta.forward"><code class="docutils literal notranslate"><span class="pre">SoftmaxEta.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.linalg.html#ctrlnmod.linalg.utils.adjoint"><code class="docutils literal notranslate"><span class="pre">adjoint()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.linalg.html#ctrlnmod.linalg.utils.block_diag"><code class="docutils literal notranslate"><span class="pre">block_diag()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.linalg.html#ctrlnmod.linalg.utils.cayley"><code class="docutils literal notranslate"><span class="pre">cayley()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.linalg.html#ctrlnmod.linalg.utils.check_controllability"><code class="docutils literal notranslate"><span class="pre">check_controllability()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.linalg.html#ctrlnmod.linalg.utils.check_observability"><code class="docutils literal notranslate"><span class="pre">check_observability()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.linalg.html#ctrlnmod.linalg.utils.create_block_lower_triangular"><code class="docutils literal notranslate"><span class="pre">create_block_lower_triangular()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.linalg.html#ctrlnmod.linalg.utils.fill_strictly_block_triangular"><code class="docutils literal notranslate"><span class="pre">fill_strictly_block_triangular()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.linalg.html#ctrlnmod.linalg.utils.getEigenvalues"><code class="docutils literal notranslate"><span class="pre">getEigenvalues()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.linalg.html#ctrlnmod.linalg.utils.get_lyap_exp"><code class="docutils literal notranslate"><span class="pre">get_lyap_exp()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.linalg.html#ctrlnmod.linalg.utils.is_alpha_stable"><code class="docutils literal notranslate"><span class="pre">is_alpha_stable()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.linalg.html#ctrlnmod.linalg.utils.is_positive_definite"><code class="docutils literal notranslate"><span class="pre">is_positive_definite()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.linalg.html#ctrlnmod.linalg.utils.logm_scipy"><code class="docutils literal notranslate"><span class="pre">logm_scipy()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.linalg.html#ctrlnmod.linalg.utils.project_onto_stiefel"><code class="docutils literal notranslate"><span class="pre">project_onto_stiefel()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.linalg.html#ctrlnmod.linalg.utils.schur"><code class="docutils literal notranslate"><span class="pre">schur()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.linalg.html#ctrlnmod.linalg.utils.solve_riccati_torch"><code class="docutils literal notranslate"><span class="pre">solve_riccati_torch()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ctrlnmod.linalg.html#module-ctrlnmod.linalg">Module contents</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.linalg.html#ctrlnmod.linalg.InvSoftmaxEta"><code class="docutils literal notranslate"><span class="pre">InvSoftmaxEta</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.linalg.html#ctrlnmod.linalg.InvSoftmaxEta.forward"><code class="docutils literal notranslate"><span class="pre">InvSoftmaxEta.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.linalg.html#ctrlnmod.linalg.Logm"><code class="docutils literal notranslate"><span class="pre">Logm</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.linalg.html#ctrlnmod.linalg.Logm.backward"><code class="docutils literal notranslate"><span class="pre">Logm.backward()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.linalg.html#ctrlnmod.linalg.Logm.forward"><code class="docutils literal notranslate"><span class="pre">Logm.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.linalg.html#ctrlnmod.linalg.MatrixSquareRoot"><code class="docutils literal notranslate"><span class="pre">MatrixSquareRoot</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.linalg.html#ctrlnmod.linalg.MatrixSquareRoot.backward"><code class="docutils literal notranslate"><span class="pre">MatrixSquareRoot.backward()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.linalg.html#ctrlnmod.linalg.MatrixSquareRoot.forward"><code class="docutils literal notranslate"><span class="pre">MatrixSquareRoot.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.linalg.html#ctrlnmod.linalg.SoftmaxEta"><code class="docutils literal notranslate"><span class="pre">SoftmaxEta</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.linalg.html#ctrlnmod.linalg.SoftmaxEta.forward"><code class="docutils literal notranslate"><span class="pre">SoftmaxEta.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.linalg.html#ctrlnmod.linalg.adjoint"><code class="docutils literal notranslate"><span class="pre">adjoint()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.linalg.html#ctrlnmod.linalg.block_diag"><code class="docutils literal notranslate"><span class="pre">block_diag()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.linalg.html#ctrlnmod.linalg.cayley"><code class="docutils literal notranslate"><span class="pre">cayley()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.linalg.html#ctrlnmod.linalg.check_controllability"><code class="docutils literal notranslate"><span class="pre">check_controllability()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.linalg.html#ctrlnmod.linalg.check_observability"><code class="docutils literal notranslate"><span class="pre">check_observability()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.linalg.html#ctrlnmod.linalg.getEigenvalues"><code class="docutils literal notranslate"><span class="pre">getEigenvalues()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.linalg.html#ctrlnmod.linalg.is_alpha_stable"><code class="docutils literal notranslate"><span class="pre">is_alpha_stable()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.linalg.html#ctrlnmod.linalg.is_positive_definite"><code class="docutils literal notranslate"><span class="pre">is_positive_definite()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.linalg.html#ctrlnmod.linalg.project_onto_stiefel"><code class="docutils literal notranslate"><span class="pre">project_onto_stiefel()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ctrlnmod.lmis.html">ctrlnmod.lmis package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="ctrlnmod.lmis.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ctrlnmod.lmis.html#module-ctrlnmod.lmis.base">ctrlnmod.lmis.base module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.lmis.html#ctrlnmod.lmis.base.LMI"><code class="docutils literal notranslate"><span class="pre">LMI</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.lmis.html#ctrlnmod.lmis.base.LMI.check_"><code class="docutils literal notranslate"><span class="pre">LMI.check_()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.lmis.html#ctrlnmod.lmis.base.LMI.forward"><code class="docutils literal notranslate"><span class="pre">LMI.forward()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.lmis.html#ctrlnmod.lmis.base.LMI.solve"><code class="docutils literal notranslate"><span class="pre">LMI.solve()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ctrlnmod.lmis.html#module-ctrlnmod.lmis.h2">ctrlnmod.lmis.h2 module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.lmis.html#ctrlnmod.lmis.h2.H2Cont"><code class="docutils literal notranslate"><span class="pre">H2Cont</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.lmis.html#ctrlnmod.lmis.h2.H2Cont.forward"><code class="docutils literal notranslate"><span class="pre">H2Cont.forward()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.lmis.html#ctrlnmod.lmis.h2.H2Cont.solve"><code class="docutils literal notranslate"><span class="pre">H2Cont.solve()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.lmis.html#ctrlnmod.lmis.h2.H2Disc"><code class="docutils literal notranslate"><span class="pre">H2Disc</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.lmis.html#ctrlnmod.lmis.h2.H2Disc.forward"><code class="docutils literal notranslate"><span class="pre">H2Disc.forward()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.lmis.html#ctrlnmod.lmis.h2.H2Disc.solve"><code class="docutils literal notranslate"><span class="pre">H2Disc.solve()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ctrlnmod.lmis.html#module-ctrlnmod.lmis.hinf">ctrlnmod.lmis.hinf module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.lmis.html#ctrlnmod.lmis.hinf.HInfBase"><code class="docutils literal notranslate"><span class="pre">HInfBase</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.lmis.html#ctrlnmod.lmis.hinf.HInfBase.ExtractMatricesFn"><code class="docutils literal notranslate"><span class="pre">HInfBase.ExtractMatricesFn</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.lmis.html#ctrlnmod.lmis.hinf.HInfCont"><code class="docutils literal notranslate"><span class="pre">HInfCont</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.lmis.html#ctrlnmod.lmis.hinf.HInfCont.forward"><code class="docutils literal notranslate"><span class="pre">HInfCont.forward()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.lmis.html#ctrlnmod.lmis.hinf.HInfCont.init_"><code class="docutils literal notranslate"><span class="pre">HInfCont.init_()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.lmis.html#ctrlnmod.lmis.hinf.HInfCont.solve"><code class="docutils literal notranslate"><span class="pre">HInfCont.solve()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.lmis.html#ctrlnmod.lmis.hinf.HInfDisc"><code class="docutils literal notranslate"><span class="pre">HInfDisc</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.lmis.html#ctrlnmod.lmis.hinf.HInfDisc.forward"><code class="docutils literal notranslate"><span class="pre">HInfDisc.forward()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.lmis.html#ctrlnmod.lmis.hinf.HInfDisc.solve"><code class="docutils literal notranslate"><span class="pre">HInfDisc.solve()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ctrlnmod.lmis.html#module-ctrlnmod.lmis.lfr">ctrlnmod.lmis.lfr module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.lmis.html#ctrlnmod.lmis.lfr.AbsoluteStableLFT"><code class="docutils literal notranslate"><span class="pre">AbsoluteStableLFT</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.lmis.html#ctrlnmod.lmis.lfr.AbsoluteStableLFT.forward"><code class="docutils literal notranslate"><span class="pre">AbsoluteStableLFT.forward()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.lmis.html#ctrlnmod.lmis.lfr.AbsoluteStableLFT.solve"><code class="docutils literal notranslate"><span class="pre">AbsoluteStableLFT.solve()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.lmis.html#ctrlnmod.lmis.lfr.AbsoluteStableLFT.update_matrices"><code class="docutils literal notranslate"><span class="pre">AbsoluteStableLFT.update_matrices()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ctrlnmod.lmis.html#module-ctrlnmod.lmis.lipschitz">ctrlnmod.lmis.lipschitz module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.lmis.html#ctrlnmod.lmis.lipschitz.Lipschitz"><code class="docutils literal notranslate"><span class="pre">Lipschitz</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.lmis.html#ctrlnmod.lmis.lipschitz.Lipschitz.A"><code class="docutils literal notranslate"><span class="pre">Lipschitz.A</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.lmis.html#ctrlnmod.lmis.lipschitz.Lipschitz.B"><code class="docutils literal notranslate"><span class="pre">Lipschitz.B</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.lmis.html#ctrlnmod.lmis.lipschitz.Lipschitz.C"><code class="docutils literal notranslate"><span class="pre">Lipschitz.C</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.lmis.html#ctrlnmod.lmis.lipschitz.Lipschitz.extract_matrices"><code class="docutils literal notranslate"><span class="pre">Lipschitz.extract_matrices</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.lmis.html#ctrlnmod.lmis.lipschitz.Lipschitz.beta"><code class="docutils literal notranslate"><span class="pre">Lipschitz.beta</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.lmis.html#ctrlnmod.lmis.lipschitz.Lipschitz.lip"><code class="docutils literal notranslate"><span class="pre">Lipschitz.lip</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.lmis.html#ctrlnmod.lmis.lipschitz.Lipschitz.Lambda_vec"><code class="docutils literal notranslate"><span class="pre">Lipschitz.Lambda_vec</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.lmis.html#ctrlnmod.lmis.lipschitz.Lipschitz.ExtractMatricesFn"><code class="docutils literal notranslate"><span class="pre">Lipschitz.ExtractMatricesFn</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.lmis.html#ctrlnmod.lmis.lipschitz.Lipschitz.forward"><code class="docutils literal notranslate"><span class="pre">Lipschitz.forward()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.lmis.html#ctrlnmod.lmis.lipschitz.Lipschitz.init_"><code class="docutils literal notranslate"><span class="pre">Lipschitz.init_()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.lmis.html#ctrlnmod.lmis.lipschitz.Lipschitz.solve"><code class="docutils literal notranslate"><span class="pre">Lipschitz.solve()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ctrlnmod.lmis.html#module-ctrlnmod.lmis.lyap">ctrlnmod.lmis.lyap module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.lmis.html#ctrlnmod.lmis.lyap.LyapunovContinuous"><code class="docutils literal notranslate"><span class="pre">LyapunovContinuous</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.lmis.html#ctrlnmod.lmis.lyap.LyapunovContinuous.forward"><code class="docutils literal notranslate"><span class="pre">LyapunovContinuous.forward()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.lmis.html#ctrlnmod.lmis.lyap.LyapunovContinuous.solve"><code class="docutils literal notranslate"><span class="pre">LyapunovContinuous.solve()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.lmis.html#ctrlnmod.lmis.lyap.LyapunovDiscrete"><code class="docutils literal notranslate"><span class="pre">LyapunovDiscrete</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.lmis.html#ctrlnmod.lmis.lyap.LyapunovDiscrete.forward"><code class="docutils literal notranslate"><span class="pre">LyapunovDiscrete.forward()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.lmis.html#ctrlnmod.lmis.lyap.LyapunovDiscrete.solve"><code class="docutils literal notranslate"><span class="pre">LyapunovDiscrete.solve()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ctrlnmod.lmis.html#module-ctrlnmod.lmis">Module contents</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.lmis.html#ctrlnmod.lmis.AbsoluteStableLFT"><code class="docutils literal notranslate"><span class="pre">AbsoluteStableLFT</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.lmis.html#ctrlnmod.lmis.AbsoluteStableLFT.forward"><code class="docutils literal notranslate"><span class="pre">AbsoluteStableLFT.forward()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.lmis.html#ctrlnmod.lmis.AbsoluteStableLFT.solve"><code class="docutils literal notranslate"><span class="pre">AbsoluteStableLFT.solve()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.lmis.html#ctrlnmod.lmis.AbsoluteStableLFT.update_matrices"><code class="docutils literal notranslate"><span class="pre">AbsoluteStableLFT.update_matrices()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.lmis.html#ctrlnmod.lmis.HInfCont"><code class="docutils literal notranslate"><span class="pre">HInfCont</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.lmis.html#ctrlnmod.lmis.HInfCont.forward"><code class="docutils literal notranslate"><span class="pre">HInfCont.forward()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.lmis.html#ctrlnmod.lmis.HInfCont.init_"><code class="docutils literal notranslate"><span class="pre">HInfCont.init_()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.lmis.html#ctrlnmod.lmis.HInfCont.solve"><code class="docutils literal notranslate"><span class="pre">HInfCont.solve()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.lmis.html#ctrlnmod.lmis.HInfDisc"><code class="docutils literal notranslate"><span class="pre">HInfDisc</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.lmis.html#ctrlnmod.lmis.HInfDisc.forward"><code class="docutils literal notranslate"><span class="pre">HInfDisc.forward()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.lmis.html#ctrlnmod.lmis.HInfDisc.solve"><code class="docutils literal notranslate"><span class="pre">HInfDisc.solve()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.lmis.html#ctrlnmod.lmis.LMI"><code class="docutils literal notranslate"><span class="pre">LMI</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.lmis.html#ctrlnmod.lmis.LMI.check_"><code class="docutils literal notranslate"><span class="pre">LMI.check_()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.lmis.html#ctrlnmod.lmis.LMI.forward"><code class="docutils literal notranslate"><span class="pre">LMI.forward()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.lmis.html#ctrlnmod.lmis.LMI.solve"><code class="docutils literal notranslate"><span class="pre">LMI.solve()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.lmis.html#ctrlnmod.lmis.Lipschitz"><code class="docutils literal notranslate"><span class="pre">Lipschitz</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.lmis.html#ctrlnmod.lmis.Lipschitz.A"><code class="docutils literal notranslate"><span class="pre">Lipschitz.A</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.lmis.html#ctrlnmod.lmis.Lipschitz.B"><code class="docutils literal notranslate"><span class="pre">Lipschitz.B</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.lmis.html#ctrlnmod.lmis.Lipschitz.C"><code class="docutils literal notranslate"><span class="pre">Lipschitz.C</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.lmis.html#ctrlnmod.lmis.Lipschitz.extract_matrices"><code class="docutils literal notranslate"><span class="pre">Lipschitz.extract_matrices</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.lmis.html#ctrlnmod.lmis.Lipschitz.beta"><code class="docutils literal notranslate"><span class="pre">Lipschitz.beta</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.lmis.html#ctrlnmod.lmis.Lipschitz.lip"><code class="docutils literal notranslate"><span class="pre">Lipschitz.lip</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.lmis.html#ctrlnmod.lmis.Lipschitz.Lambda_vec"><code class="docutils literal notranslate"><span class="pre">Lipschitz.Lambda_vec</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.lmis.html#ctrlnmod.lmis.Lipschitz.ExtractMatricesFn"><code class="docutils literal notranslate"><span class="pre">Lipschitz.ExtractMatricesFn</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.lmis.html#ctrlnmod.lmis.Lipschitz.forward"><code class="docutils literal notranslate"><span class="pre">Lipschitz.forward()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.lmis.html#ctrlnmod.lmis.Lipschitz.init_"><code class="docutils literal notranslate"><span class="pre">Lipschitz.init_()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.lmis.html#ctrlnmod.lmis.Lipschitz.solve"><code class="docutils literal notranslate"><span class="pre">Lipschitz.solve()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.lmis.html#ctrlnmod.lmis.Lipschitz.training"><code class="docutils literal notranslate"><span class="pre">Lipschitz.training</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.lmis.html#ctrlnmod.lmis.LyapunovContinuous"><code class="docutils literal notranslate"><span class="pre">LyapunovContinuous</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.lmis.html#ctrlnmod.lmis.LyapunovContinuous.forward"><code class="docutils literal notranslate"><span class="pre">LyapunovContinuous.forward()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.lmis.html#ctrlnmod.lmis.LyapunovContinuous.solve"><code class="docutils literal notranslate"><span class="pre">LyapunovContinuous.solve()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.lmis.html#ctrlnmod.lmis.LyapunovDiscrete"><code class="docutils literal notranslate"><span class="pre">LyapunovDiscrete</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.lmis.html#ctrlnmod.lmis.LyapunovDiscrete.forward"><code class="docutils literal notranslate"><span class="pre">LyapunovDiscrete.forward()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.lmis.html#ctrlnmod.lmis.LyapunovDiscrete.solve"><code class="docutils literal notranslate"><span class="pre">LyapunovDiscrete.solve()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ctrlnmod.losses.html">ctrlnmod.losses package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="ctrlnmod.losses.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ctrlnmod.losses.html#module-ctrlnmod.losses.losses">ctrlnmod.losses.losses module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.losses.html#ctrlnmod.losses.losses.BaseLoss"><code class="docutils literal notranslate"><span class="pre">BaseLoss</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.losses.html#ctrlnmod.losses.losses.BaseLoss.add_regularization"><code class="docutils literal notranslate"><span class="pre">BaseLoss.add_regularization()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.losses.html#ctrlnmod.losses.losses.BaseLoss.update"><code class="docutils literal notranslate"><span class="pre">BaseLoss.update()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.losses.html#ctrlnmod.losses.losses.FitPercentLoss"><code class="docutils literal notranslate"><span class="pre">FitPercentLoss</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.losses.html#ctrlnmod.losses.losses.MSELoss"><code class="docutils literal notranslate"><span class="pre">MSELoss</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.losses.html#ctrlnmod.losses.losses.NMSELoss"><code class="docutils literal notranslate"><span class="pre">NMSELoss</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.losses.html#ctrlnmod.losses.losses.NRMSELoss"><code class="docutils literal notranslate"><span class="pre">NRMSELoss</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.losses.html#ctrlnmod.losses.losses.RMSELoss"><code class="docutils literal notranslate"><span class="pre">RMSELoss</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ctrlnmod.losses.html#module-ctrlnmod.losses">Module contents</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.losses.html#ctrlnmod.losses.BaseLoss"><code class="docutils literal notranslate"><span class="pre">BaseLoss</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.losses.html#ctrlnmod.losses.BaseLoss.add_regularization"><code class="docutils literal notranslate"><span class="pre">BaseLoss.add_regularization()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.losses.html#ctrlnmod.losses.BaseLoss.update"><code class="docutils literal notranslate"><span class="pre">BaseLoss.update()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.losses.html#ctrlnmod.losses.FitPercentLoss"><code class="docutils literal notranslate"><span class="pre">FitPercentLoss</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.losses.html#ctrlnmod.losses.MSELoss"><code class="docutils literal notranslate"><span class="pre">MSELoss</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.losses.html#ctrlnmod.losses.NMSELoss"><code class="docutils literal notranslate"><span class="pre">NMSELoss</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.losses.html#ctrlnmod.losses.NRMSELoss"><code class="docutils literal notranslate"><span class="pre">NRMSELoss</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.losses.html#ctrlnmod.losses.RMSELoss"><code class="docutils literal notranslate"><span class="pre">RMSELoss</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ctrlnmod.matlab.html">ctrlnmod.matlab package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="ctrlnmod.matlab.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ctrlnmod.matlab.html#ctrlnmod-matlab-matlabfcn-module">ctrlnmod.matlab.matlabfcn module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ctrlnmod.matlab.html#module-contents">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ctrlnmod.models.html">ctrlnmod.models package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="ctrlnmod.models.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.models.feedforward.html">ctrlnmod.models.feedforward package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.feedforward.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.feedforward.html#module-ctrlnmod.models.feedforward.lbdn">ctrlnmod.models.feedforward.lbdn module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.feedforward.html#module-ctrlnmod.models.feedforward">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.models.ssmodels.html">ctrlnmod.models.ssmodels package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.html#subpackages">Subpackages</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.html#module-ctrlnmod.models.ssmodels.base">ctrlnmod.models.ssmodels.base module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.ssmodels.html#module-ctrlnmod.models.ssmodels">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ctrlnmod.models.html#module-ctrlnmod.models">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ctrlnmod.optim.html">ctrlnmod.optim package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="ctrlnmod.optim.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ctrlnmod.optim.html#module-ctrlnmod.optim.backtracking">ctrlnmod.optim.backtracking module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.optim.html#ctrlnmod.optim.backtracking.BackTrackOptimizer"><code class="docutils literal notranslate"><span class="pre">BackTrackOptimizer</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.optim.html#ctrlnmod.optim.backtracking.BackTrackOptimizer.n_backtrack_iter"><code class="docutils literal notranslate"><span class="pre">BackTrackOptimizer.n_backtrack_iter</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.optim.html#ctrlnmod.optim.backtracking.BackTrackOptimizer.step"><code class="docutils literal notranslate"><span class="pre">BackTrackOptimizer.step()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.optim.html#ctrlnmod.optim.backtracking.BackTrackOptimizer.zero_grad"><code class="docutils literal notranslate"><span class="pre">BackTrackOptimizer.zero_grad()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ctrlnmod.optim.html#module-ctrlnmod.optim.pgd">ctrlnmod.optim.pgd module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.optim.html#ctrlnmod.optim.pgd.ProjectedOptimizer"><code class="docutils literal notranslate"><span class="pre">ProjectedOptimizer</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.optim.html#ctrlnmod.optim.pgd.ProjectedOptimizer.add_param_group"><code class="docutils literal notranslate"><span class="pre">ProjectedOptimizer.add_param_group()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.optim.html#ctrlnmod.optim.pgd.ProjectedOptimizer.param_groups"><code class="docutils literal notranslate"><span class="pre">ProjectedOptimizer.param_groups</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.optim.html#ctrlnmod.optim.pgd.ProjectedOptimizer.state"><code class="docutils literal notranslate"><span class="pre">ProjectedOptimizer.state</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.optim.html#ctrlnmod.optim.pgd.ProjectedOptimizer.step"><code class="docutils literal notranslate"><span class="pre">ProjectedOptimizer.step()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.optim.html#ctrlnmod.optim.pgd.ProjectedOptimizer.zero_grad"><code class="docutils literal notranslate"><span class="pre">ProjectedOptimizer.zero_grad()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.optim.html#ctrlnmod.optim.pgd.project_to_pos_def"><code class="docutils literal notranslate"><span class="pre">project_to_pos_def()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ctrlnmod.optim.html#module-ctrlnmod.optim">Module contents</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.optim.html#ctrlnmod.optim.BackTrackOptimizer"><code class="docutils literal notranslate"><span class="pre">BackTrackOptimizer</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.optim.html#ctrlnmod.optim.BackTrackOptimizer.n_backtrack_iter"><code class="docutils literal notranslate"><span class="pre">BackTrackOptimizer.n_backtrack_iter</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.optim.html#ctrlnmod.optim.BackTrackOptimizer.step"><code class="docutils literal notranslate"><span class="pre">BackTrackOptimizer.step()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.optim.html#ctrlnmod.optim.BackTrackOptimizer.zero_grad"><code class="docutils literal notranslate"><span class="pre">BackTrackOptimizer.zero_grad()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.optim.html#ctrlnmod.optim.ProjectedOptimizer"><code class="docutils literal notranslate"><span class="pre">ProjectedOptimizer</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.optim.html#ctrlnmod.optim.ProjectedOptimizer.add_param_group"><code class="docutils literal notranslate"><span class="pre">ProjectedOptimizer.add_param_group()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.optim.html#ctrlnmod.optim.ProjectedOptimizer.param_groups"><code class="docutils literal notranslate"><span class="pre">ProjectedOptimizer.param_groups</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.optim.html#ctrlnmod.optim.ProjectedOptimizer.state"><code class="docutils literal notranslate"><span class="pre">ProjectedOptimizer.state</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.optim.html#ctrlnmod.optim.ProjectedOptimizer.step"><code class="docutils literal notranslate"><span class="pre">ProjectedOptimizer.step()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.optim.html#ctrlnmod.optim.ProjectedOptimizer.zero_grad"><code class="docutils literal notranslate"><span class="pre">ProjectedOptimizer.zero_grad()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.optim.html#ctrlnmod.optim.project_to_pos_def"><code class="docutils literal notranslate"><span class="pre">project_to_pos_def()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ctrlnmod.plot.html">ctrlnmod.plot package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="ctrlnmod.plot.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ctrlnmod.plot.html#module-ctrlnmod.plot.plots">ctrlnmod.plot.plots module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.plot.html#ctrlnmod.plot.plots.plot_losses"><code class="docutils literal notranslate"><span class="pre">plot_losses()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.plot.html#ctrlnmod.plot.plots.plot_y_true_vs_error"><code class="docutils literal notranslate"><span class="pre">plot_y_true_vs_error()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.plot.html#ctrlnmod.plot.plots.plot_y_true_vs_y_sim"><code class="docutils literal notranslate"><span class="pre">plot_y_true_vs_y_sim()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.plot.html#ctrlnmod.plot.plots.to_numpy"><code class="docutils literal notranslate"><span class="pre">to_numpy()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ctrlnmod.plot.html#module-ctrlnmod.plot">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ctrlnmod.postprocessing.html">ctrlnmod.postprocessing package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="ctrlnmod.postprocessing.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ctrlnmod.postprocessing.html#ctrlnmod-postprocessing-postprocessing-module">ctrlnmod.postprocessing.postprocessing module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ctrlnmod.postprocessing.html#module-contents">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ctrlnmod.preprocessing.html">ctrlnmod.preprocessing package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="ctrlnmod.preprocessing.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ctrlnmod.preprocessing.html#module-ctrlnmod.preprocessing.preprocessing">ctrlnmod.preprocessing.preprocessing module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.preprocessing.html#ctrlnmod.preprocessing.preprocessing.preprocess_mat_file"><code class="docutils literal notranslate"><span class="pre">preprocess_mat_file()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.preprocessing.html#ctrlnmod.preprocessing.preprocessing.preprocess_mat_file_dist"><code class="docutils literal notranslate"><span class="pre">preprocess_mat_file_dist()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ctrlnmod.preprocessing.html#module-ctrlnmod.preprocessing.scalers">ctrlnmod.preprocessing.scalers module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.preprocessing.html#ctrlnmod.preprocessing.scalers.BaseScaler"><code class="docutils literal notranslate"><span class="pre">BaseScaler</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.preprocessing.html#ctrlnmod.preprocessing.scalers.BaseScaler.clone"><code class="docutils literal notranslate"><span class="pre">BaseScaler.clone()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.preprocessing.html#ctrlnmod.preprocessing.scalers.BaseScaler.fit"><code class="docutils literal notranslate"><span class="pre">BaseScaler.fit()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.preprocessing.html#ctrlnmod.preprocessing.scalers.BaseScaler.inverse_transform"><code class="docutils literal notranslate"><span class="pre">BaseScaler.inverse_transform()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.preprocessing.html#ctrlnmod.preprocessing.scalers.BaseScaler.load_parameters"><code class="docutils literal notranslate"><span class="pre">BaseScaler.load_parameters()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.preprocessing.html#ctrlnmod.preprocessing.scalers.BaseScaler.save_parameters"><code class="docutils literal notranslate"><span class="pre">BaseScaler.save_parameters()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.preprocessing.html#ctrlnmod.preprocessing.scalers.BaseScaler.transform"><code class="docutils literal notranslate"><span class="pre">BaseScaler.transform()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.preprocessing.html#ctrlnmod.preprocessing.scalers.CustomTScaler"><code class="docutils literal notranslate"><span class="pre">CustomTScaler</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.preprocessing.html#ctrlnmod.preprocessing.scalers.CustomTScaler.fit"><code class="docutils literal notranslate"><span class="pre">CustomTScaler.fit()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.preprocessing.html#ctrlnmod.preprocessing.scalers.CustomTScaler.from_diagonal"><code class="docutils literal notranslate"><span class="pre">CustomTScaler.from_diagonal()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.preprocessing.html#ctrlnmod.preprocessing.scalers.MinMaxScaler"><code class="docutils literal notranslate"><span class="pre">MinMaxScaler</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.preprocessing.html#ctrlnmod.preprocessing.scalers.MinMaxScaler.fit"><code class="docutils literal notranslate"><span class="pre">MinMaxScaler.fit()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.preprocessing.html#ctrlnmod.preprocessing.scalers.StandardScaler"><code class="docutils literal notranslate"><span class="pre">StandardScaler</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.preprocessing.html#ctrlnmod.preprocessing.scalers.StandardScaler.fit"><code class="docutils literal notranslate"><span class="pre">StandardScaler.fit()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ctrlnmod.preprocessing.html#module-ctrlnmod.preprocessing">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ctrlnmod.regularizations.html">ctrlnmod.regularizations package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="ctrlnmod.regularizations.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ctrlnmod.regularizations.html#module-ctrlnmod.regularizations.regularizations">ctrlnmod.regularizations.regularizations module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.regularizations.html#ctrlnmod.regularizations.regularizations.DDRegularization"><code class="docutils literal notranslate"><span class="pre">DDRegularization</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.regularizations.html#ctrlnmod.regularizations.regularizations.DDRegularization.update"><code class="docutils literal notranslate"><span class="pre">DDRegularization.update()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.regularizations.html#ctrlnmod.regularizations.regularizations.L1Regularization"><code class="docutils literal notranslate"><span class="pre">L1Regularization</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.regularizations.html#ctrlnmod.regularizations.regularizations.L1Regularization.update"><code class="docutils literal notranslate"><span class="pre">L1Regularization.update()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.regularizations.html#ctrlnmod.regularizations.regularizations.L2Regularization"><code class="docutils literal notranslate"><span class="pre">L2Regularization</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.regularizations.html#ctrlnmod.regularizations.regularizations.L2Regularization.update"><code class="docutils literal notranslate"><span class="pre">L2Regularization.update()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.regularizations.html#ctrlnmod.regularizations.regularizations.LogdetRegularization"><code class="docutils literal notranslate"><span class="pre">LogdetRegularization</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.regularizations.html#ctrlnmod.regularizations.regularizations.LogdetRegularization.update"><code class="docutils literal notranslate"><span class="pre">LogdetRegularization.update()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.regularizations.html#ctrlnmod.regularizations.regularizations.Regularization"><code class="docutils literal notranslate"><span class="pre">Regularization</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.regularizations.html#ctrlnmod.regularizations.regularizations.Regularization.update"><code class="docutils literal notranslate"><span class="pre">Regularization.update()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.regularizations.html#ctrlnmod.regularizations.regularizations.StateRegularization"><code class="docutils literal notranslate"><span class="pre">StateRegularization</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.regularizations.html#ctrlnmod.regularizations.regularizations.StateRegularization.update"><code class="docutils literal notranslate"><span class="pre">StateRegularization.update()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.regularizations.html#ctrlnmod.regularizations.regularizations.add_regularization"><code class="docutils literal notranslate"><span class="pre">add_regularization()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ctrlnmod.regularizations.html#module-ctrlnmod.regularizations">Module contents</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.regularizations.html#ctrlnmod.regularizations.DDRegularization"><code class="docutils literal notranslate"><span class="pre">DDRegularization</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.regularizations.html#ctrlnmod.regularizations.DDRegularization.update"><code class="docutils literal notranslate"><span class="pre">DDRegularization.update()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.regularizations.html#ctrlnmod.regularizations.L1Regularization"><code class="docutils literal notranslate"><span class="pre">L1Regularization</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.regularizations.html#ctrlnmod.regularizations.L1Regularization.update"><code class="docutils literal notranslate"><span class="pre">L1Regularization.update()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.regularizations.html#ctrlnmod.regularizations.L2Regularization"><code class="docutils literal notranslate"><span class="pre">L2Regularization</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.regularizations.html#ctrlnmod.regularizations.L2Regularization.update"><code class="docutils literal notranslate"><span class="pre">L2Regularization.update()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.regularizations.html#ctrlnmod.regularizations.LogdetRegularization"><code class="docutils literal notranslate"><span class="pre">LogdetRegularization</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.regularizations.html#ctrlnmod.regularizations.LogdetRegularization.update"><code class="docutils literal notranslate"><span class="pre">LogdetRegularization.update()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.regularizations.html#ctrlnmod.regularizations.Regularization"><code class="docutils literal notranslate"><span class="pre">Regularization</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.regularizations.html#ctrlnmod.regularizations.Regularization.update"><code class="docutils literal notranslate"><span class="pre">Regularization.update()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.regularizations.html#ctrlnmod.regularizations.StateRegularization"><code class="docutils literal notranslate"><span class="pre">StateRegularization</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.regularizations.html#ctrlnmod.regularizations.StateRegularization.update"><code class="docutils literal notranslate"><span class="pre">StateRegularization.update()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ctrlnmod.train.html">ctrlnmod.train package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="ctrlnmod.train.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ctrlnmod.train.html#module-ctrlnmod.train.train">ctrlnmod.train.train module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.train.html#ctrlnmod.train.train.LitNode"><code class="docutils literal notranslate"><span class="pre">LitNode</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.train.html#ctrlnmod.train.train.LitNode.configure_optimizers"><code class="docutils literal notranslate"><span class="pre">LitNode.configure_optimizers()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.train.html#ctrlnmod.train.train.LitNode.forward"><code class="docutils literal notranslate"><span class="pre">LitNode.forward()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.train.html#ctrlnmod.train.train.LitNode.get_res_dir"><code class="docutils literal notranslate"><span class="pre">LitNode.get_res_dir()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.train.html#ctrlnmod.train.train.LitNode.load_model"><code class="docutils literal notranslate"><span class="pre">LitNode.load_model()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.train.html#ctrlnmod.train.train.LitNode.on_after_backward"><code class="docutils literal notranslate"><span class="pre">LitNode.on_after_backward()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.train.html#ctrlnmod.train.train.LitNode.on_train_epoch_end"><code class="docutils literal notranslate"><span class="pre">LitNode.on_train_epoch_end()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.train.html#ctrlnmod.train.train.LitNode.on_train_start"><code class="docutils literal notranslate"><span class="pre">LitNode.on_train_start()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.train.html#ctrlnmod.train.train.LitNode.on_validation_epoch_end"><code class="docutils literal notranslate"><span class="pre">LitNode.on_validation_epoch_end()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.train.html#ctrlnmod.train.train.LitNode.training_step"><code class="docutils literal notranslate"><span class="pre">LitNode.training_step()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.train.html#ctrlnmod.train.train.LitNode.validation_step"><code class="docutils literal notranslate"><span class="pre">LitNode.validation_step()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.train.html#ctrlnmod.train.train.StopTrainingCallback"><code class="docutils literal notranslate"><span class="pre">StopTrainingCallback</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.train.html#ctrlnmod.train.train.StopTrainingCallback.on_validation_epoch_end"><code class="docutils literal notranslate"><span class="pre">StopTrainingCallback.on_validation_epoch_end()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.train.html#ctrlnmod.train.train.train_model"><code class="docutils literal notranslate"><span class="pre">train_model()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ctrlnmod.train.html#module-ctrlnmod.train">Module contents</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.train.html#ctrlnmod.train.LitNode"><code class="docutils literal notranslate"><span class="pre">LitNode</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.train.html#ctrlnmod.train.LitNode.configure_optimizers"><code class="docutils literal notranslate"><span class="pre">LitNode.configure_optimizers()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.train.html#ctrlnmod.train.LitNode.forward"><code class="docutils literal notranslate"><span class="pre">LitNode.forward()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.train.html#ctrlnmod.train.LitNode.get_res_dir"><code class="docutils literal notranslate"><span class="pre">LitNode.get_res_dir()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.train.html#ctrlnmod.train.LitNode.load_model"><code class="docutils literal notranslate"><span class="pre">LitNode.load_model()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.train.html#ctrlnmod.train.LitNode.on_after_backward"><code class="docutils literal notranslate"><span class="pre">LitNode.on_after_backward()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.train.html#ctrlnmod.train.LitNode.on_train_epoch_end"><code class="docutils literal notranslate"><span class="pre">LitNode.on_train_epoch_end()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.train.html#ctrlnmod.train.LitNode.on_train_start"><code class="docutils literal notranslate"><span class="pre">LitNode.on_train_start()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.train.html#ctrlnmod.train.LitNode.on_validation_epoch_end"><code class="docutils literal notranslate"><span class="pre">LitNode.on_validation_epoch_end()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.train.html#ctrlnmod.train.LitNode.training_step"><code class="docutils literal notranslate"><span class="pre">LitNode.training_step()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.train.html#ctrlnmod.train.LitNode.validation_step"><code class="docutils literal notranslate"><span class="pre">LitNode.validation_step()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.train.html#ctrlnmod.train.train_model"><code class="docutils literal notranslate"><span class="pre">train_model()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ctrlnmod.utils.html">ctrlnmod.utils package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="ctrlnmod.utils.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ctrlnmod.utils.html#module-ctrlnmod.utils.data">ctrlnmod.utils.data module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.utils.html#ctrlnmod.utils.data.Experiment"><code class="docutils literal notranslate"><span class="pre">Experiment</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.utils.html#ctrlnmod.utils.data.Experiment.y"><code class="docutils literal notranslate"><span class="pre">Experiment.y</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.utils.html#ctrlnmod.utils.data.Experiment.ts"><code class="docutils literal notranslate"><span class="pre">Experiment.ts</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.utils.html#ctrlnmod.utils.data.Experiment.x"><code class="docutils literal notranslate"><span class="pre">Experiment.x</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.utils.html#ctrlnmod.utils.data.Experiment.nu"><code class="docutils literal notranslate"><span class="pre">Experiment.nu</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.utils.html#ctrlnmod.utils.data.Experiment.ny"><code class="docutils literal notranslate"><span class="pre">Experiment.ny</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.utils.html#ctrlnmod.utils.data.Experiment.nx"><code class="docutils literal notranslate"><span class="pre">Experiment.nx</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.utils.html#ctrlnmod.utils.data.Experiment.n_samples"><code class="docutils literal notranslate"><span class="pre">Experiment.n_samples</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.utils.html#ctrlnmod.utils.data.Experiment.x_trainable"><code class="docutils literal notranslate"><span class="pre">Experiment.x_trainable</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.utils.html#ctrlnmod.utils.data.Experiment.d"><code class="docutils literal notranslate"><span class="pre">Experiment.d</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.utils.html#ctrlnmod.utils.data.Experiment.__getitem__"><code class="docutils literal notranslate"><span class="pre">Experiment.__getitem__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.utils.html#ctrlnmod.utils.data.Experiment.__len__"><code class="docutils literal notranslate"><span class="pre">Experiment.__len__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.utils.html#ctrlnmod.utils.data.Experiment.denormalize"><code class="docutils literal notranslate"><span class="pre">Experiment.denormalize()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.utils.html#ctrlnmod.utils.data.Experiment.get_data"><code class="docutils literal notranslate"><span class="pre">Experiment.get_data()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.utils.html#ctrlnmod.utils.data.Experiment.plot"><code class="docutils literal notranslate"><span class="pre">Experiment.plot()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.utils.html#id0"><code class="docutils literal notranslate"><span class="pre">Experiment.denormalize()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.utils.html#id1"><code class="docutils literal notranslate"><span class="pre">Experiment.get_data()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.utils.html#id2"><code class="docutils literal notranslate"><span class="pre">Experiment.plot()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.utils.html#ctrlnmod.utils.data.ExperimentsDataModule"><code class="docutils literal notranslate"><span class="pre">ExperimentsDataModule</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.utils.html#ctrlnmod.utils.data.ExperimentsDataModule.setup"><code class="docutils literal notranslate"><span class="pre">ExperimentsDataModule.setup()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.utils.html#ctrlnmod.utils.data.ExperimentsDataModule.train_dataloader"><code class="docutils literal notranslate"><span class="pre">ExperimentsDataModule.train_dataloader()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.utils.html#ctrlnmod.utils.data.ExperimentsDataModule.val_dataloader"><code class="docutils literal notranslate"><span class="pre">ExperimentsDataModule.val_dataloader()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.utils.html#ctrlnmod.utils.data.ExperimentsDataset"><code class="docutils literal notranslate"><span class="pre">ExperimentsDataset</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.utils.html#ctrlnmod.utils.data.ExperimentsDataset.append"><code class="docutils literal notranslate"><span class="pre">ExperimentsDataset.append()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.utils.html#ctrlnmod.utils.data.ExperimentsDataset.plot"><code class="docutils literal notranslate"><span class="pre">ExperimentsDataset.plot()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.utils.html#ctrlnmod.utils.data.ExperimentsDataset.set_seq_len"><code class="docutils literal notranslate"><span class="pre">ExperimentsDataset.set_seq_len()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ctrlnmod.utils.html#module-ctrlnmod.utils.misc">ctrlnmod.utils.misc module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.utils.html#ctrlnmod.utils.misc.FrameCacheManager"><code class="docutils literal notranslate"><span class="pre">FrameCacheManager</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.utils.html#ctrlnmod.utils.misc.FrameCacheManager.cache_frame"><code class="docutils literal notranslate"><span class="pre">FrameCacheManager.cache_frame()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.utils.html#ctrlnmod.utils.misc.FrameCacheManager.register_child"><code class="docutils literal notranslate"><span class="pre">FrameCacheManager.register_child()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.utils.html#ctrlnmod.utils.misc.add_info_decorator"><code class="docutils literal notranslate"><span class="pre">add_info_decorator()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.utils.html#ctrlnmod.utils.misc.backtrack"><code class="docutils literal notranslate"><span class="pre">backtrack()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.utils.html#ctrlnmod.utils.misc.find_module"><code class="docutils literal notranslate"><span class="pre">find_module()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.utils.html#ctrlnmod.utils.misc.flatten_params"><code class="docutils literal notranslate"><span class="pre">flatten_params()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.utils.html#ctrlnmod.utils.misc.is_legal"><code class="docutils literal notranslate"><span class="pre">is_legal()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.utils.html#ctrlnmod.utils.misc.monitor_training"><code class="docutils literal notranslate"><span class="pre">monitor_training()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.utils.html#ctrlnmod.utils.misc.parse_act_f"><code class="docutils literal notranslate"><span class="pre">parse_act_f()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.utils.html#ctrlnmod.utils.misc.rk4_discretize"><code class="docutils literal notranslate"><span class="pre">rk4_discretize()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.utils.html#ctrlnmod.utils.misc.write_flat_params"><code class="docutils literal notranslate"><span class="pre">write_flat_params()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ctrlnmod.utils.html#module-ctrlnmod.utils">Module contents</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.utils.html#ctrlnmod.utils.Experiment"><code class="docutils literal notranslate"><span class="pre">Experiment</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.utils.html#ctrlnmod.utils.Experiment.y"><code class="docutils literal notranslate"><span class="pre">Experiment.y</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.utils.html#ctrlnmod.utils.Experiment.ts"><code class="docutils literal notranslate"><span class="pre">Experiment.ts</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.utils.html#ctrlnmod.utils.Experiment.x"><code class="docutils literal notranslate"><span class="pre">Experiment.x</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.utils.html#ctrlnmod.utils.Experiment.nu"><code class="docutils literal notranslate"><span class="pre">Experiment.nu</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.utils.html#ctrlnmod.utils.Experiment.ny"><code class="docutils literal notranslate"><span class="pre">Experiment.ny</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.utils.html#ctrlnmod.utils.Experiment.nx"><code class="docutils literal notranslate"><span class="pre">Experiment.nx</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.utils.html#ctrlnmod.utils.Experiment.n_samples"><code class="docutils literal notranslate"><span class="pre">Experiment.n_samples</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.utils.html#ctrlnmod.utils.Experiment.x_trainable"><code class="docutils literal notranslate"><span class="pre">Experiment.x_trainable</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.utils.html#ctrlnmod.utils.Experiment.d"><code class="docutils literal notranslate"><span class="pre">Experiment.d</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.utils.html#ctrlnmod.utils.Experiment.__getitem__"><code class="docutils literal notranslate"><span class="pre">Experiment.__getitem__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.utils.html#ctrlnmod.utils.Experiment.__len__"><code class="docutils literal notranslate"><span class="pre">Experiment.__len__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.utils.html#ctrlnmod.utils.Experiment.denormalize"><code class="docutils literal notranslate"><span class="pre">Experiment.denormalize()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.utils.html#ctrlnmod.utils.Experiment.get_data"><code class="docutils literal notranslate"><span class="pre">Experiment.get_data()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.utils.html#ctrlnmod.utils.Experiment.plot"><code class="docutils literal notranslate"><span class="pre">Experiment.plot()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.utils.html#id7"><code class="docutils literal notranslate"><span class="pre">Experiment.denormalize()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.utils.html#id8"><code class="docutils literal notranslate"><span class="pre">Experiment.get_data()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.utils.html#id9"><code class="docutils literal notranslate"><span class="pre">Experiment.plot()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.utils.html#ctrlnmod.utils.ExperimentsDataset"><code class="docutils literal notranslate"><span class="pre">ExperimentsDataset</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.utils.html#ctrlnmod.utils.ExperimentsDataset.append"><code class="docutils literal notranslate"><span class="pre">ExperimentsDataset.append()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.utils.html#ctrlnmod.utils.ExperimentsDataset.plot"><code class="docutils literal notranslate"><span class="pre">ExperimentsDataset.plot()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.utils.html#ctrlnmod.utils.ExperimentsDataset.set_seq_len"><code class="docutils literal notranslate"><span class="pre">ExperimentsDataset.set_seq_len()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.utils.html#ctrlnmod.utils.FrameCacheManager"><code class="docutils literal notranslate"><span class="pre">FrameCacheManager</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.utils.html#ctrlnmod.utils.FrameCacheManager.cache_frame"><code class="docutils literal notranslate"><span class="pre">FrameCacheManager.cache_frame()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.utils.html#ctrlnmod.utils.FrameCacheManager.register_child"><code class="docutils literal notranslate"><span class="pre">FrameCacheManager.register_child()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.utils.html#ctrlnmod.utils.find_module"><code class="docutils literal notranslate"><span class="pre">find_module()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.utils.html#ctrlnmod.utils.is_legal"><code class="docutils literal notranslate"><span class="pre">is_legal()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.utils.html#ctrlnmod.utils.parse_act_f"><code class="docutils literal notranslate"><span class="pre">parse_act_f()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
+</section>
+<section id="module-ctrlnmod.constraints">
+<span id="ctrlnmod-constraints-module"></span><h2>ctrlnmod.constraints module<a class="headerlink" href="#module-ctrlnmod.constraints" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="ctrlnmod.constraints.LMIConstraint">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ctrlnmod.constraints.</span></span><span class="sig-name descname"><span class="pre">LMIConstraint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">updatable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ctrlnmod/constraints.html#LMIConstraint"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ctrlnmod.constraints.LMIConstraint" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">_Constraint</span></code></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>module</strong> (<a class="reference internal" href="ctrlnmod.lmis.html#ctrlnmod.lmis.base.LMI" title="ctrlnmod.lmis.base.LMI"><em>LMI</em></a>)</p></li>
+<li><p><strong>updatable</strong> (<em>bool</em>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="ctrlnmod.constraints.LMIConstraint.check">
+<span class="sig-name descname"><span class="pre">check</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/ctrlnmod/constraints.html#LMIConstraint.check"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ctrlnmod.constraints.LMIConstraint.check" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ctrlnmod.constraints.ManifoldConstraint">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ctrlnmod.constraints.</span></span><span class="sig-name descname"><span class="pre">ManifoldConstraint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ctrlnmod/constraints.html#ManifoldConstraint"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ctrlnmod.constraints.ManifoldConstraint" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">_Constraint</span></code></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>module</strong> (<em>Module</em>)</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="ctrlnmod.constraints.ManifoldConstraint.check">
+<span class="sig-name descname"><span class="pre">check</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/ctrlnmod/constraints.html#ManifoldConstraint.check"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ctrlnmod.constraints.ManifoldConstraint.check" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-ctrlnmod">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-ctrlnmod" title="Link to this heading"></a></h2>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="modules.html" class="btn btn-neutral float-left" title="ctrlnmod" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="ctrlnmod.integrators.html" class="btn btn-neutral float-right" title="ctrlnmod.integrators package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Alexandre Hache.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

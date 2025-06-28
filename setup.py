@@ -31,7 +31,7 @@ VERSION = "0.2.6"
 setup(
     name="ctrlnmod",
     version=VERSION,
-    description="Control oriented neural networks structure and tools for training.",
+    description="Control oriented neural state space models and tools for sdp constrained learning algorithms.",
     author="Alexandre Hache",
     author_email="alexandre.hache@outlook.fr",
     license="MIT",

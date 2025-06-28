@@ -1,0 +1,939 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ctrlnmod.utils package &mdash; ctrlnmod 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=01f34227"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="ctrlnmod.train package" href="ctrlnmod.train.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            ctrlnmod
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">ctrlnmod</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="ctrlnmod.html">ctrlnmod package</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="ctrlnmod.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.integrators.html">ctrlnmod.integrators package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.layers.html">ctrlnmod.layers package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.linalg.html">ctrlnmod.linalg package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.lmis.html">ctrlnmod.lmis package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.losses.html">ctrlnmod.losses package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.matlab.html">ctrlnmod.matlab package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.models.html">ctrlnmod.models package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.optim.html">ctrlnmod.optim package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.plot.html">ctrlnmod.plot package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.postprocessing.html">ctrlnmod.postprocessing package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.preprocessing.html">ctrlnmod.preprocessing package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.regularizations.html">ctrlnmod.regularizations package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ctrlnmod.train.html">ctrlnmod.train package</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">ctrlnmod.utils package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.html#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.html#module-ctrlnmod.constraints">ctrlnmod.constraints module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ctrlnmod.html#module-ctrlnmod">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">ctrlnmod</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">ctrlnmod</a></li>
+          <li class="breadcrumb-item"><a href="ctrlnmod.html">ctrlnmod package</a></li>
+      <li class="breadcrumb-item active">ctrlnmod.utils package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/ctrlnmod.utils.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="ctrlnmod-utils-package">
+<h1>ctrlnmod.utils package<a class="headerlink" href="#ctrlnmod-utils-package" title="Link to this heading"></a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
+</section>
+<section id="module-ctrlnmod.utils.data">
+<span id="ctrlnmod-utils-data-module"></span><h2>ctrlnmod.utils.data module<a class="headerlink" href="#module-ctrlnmod.utils.data" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="ctrlnmod.utils.data.Experiment">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ctrlnmod.utils.data.</span></span><span class="sig-name descname"><span class="pre">Experiment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_trainable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">d</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ctrlnmod/utils/data.html#Experiment"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ctrlnmod.utils.data.Experiment" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Dataset</span></code></p>
+<p>This class represents a single experiment with inputs (u), outputs (y),
+and optionally states (x) and disturbances (d). It is designed to handle
+time-series data, where each experiment can have a different number of samples.
+.. attribute:: u</p>
+<blockquote>
+<div><p>Input data of shape (n_samples, nu).</p>
+<dl class="field-list simple">
+<dt class="field-odd">type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tensor</p>
+</dd>
+</dl>
+</div></blockquote>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ctrlnmod.utils.data.Experiment.y">
+<span class="sig-name descname"><span class="pre">y</span></span><a class="headerlink" href="#ctrlnmod.utils.data.Experiment.y" title="Link to this definition"></a></dt>
+<dd><p>Output data of shape (n_samples, ny).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ctrlnmod.utils.data.Experiment.ts">
+<span class="sig-name descname"><span class="pre">ts</span></span><a class="headerlink" href="#ctrlnmod.utils.data.Experiment.ts" title="Link to this definition"></a></dt>
+<dd><p>Sampling time.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ctrlnmod.utils.data.Experiment.x">
+<span class="sig-name descname"><span class="pre">x</span></span><a class="headerlink" href="#ctrlnmod.utils.data.Experiment.x" title="Link to this definition"></a></dt>
+<dd><p>State data of shape (n_samples, nx).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tensor, optional</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ctrlnmod.utils.data.Experiment.nu">
+<span class="sig-name descname"><span class="pre">nu</span></span><a class="headerlink" href="#ctrlnmod.utils.data.Experiment.nu" title="Link to this definition"></a></dt>
+<dd><p>Number of inputs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ctrlnmod.utils.data.Experiment.ny">
+<span class="sig-name descname"><span class="pre">ny</span></span><a class="headerlink" href="#ctrlnmod.utils.data.Experiment.ny" title="Link to this definition"></a></dt>
+<dd><p>Number of outputs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ctrlnmod.utils.data.Experiment.nx">
+<span class="sig-name descname"><span class="pre">nx</span></span><a class="headerlink" href="#ctrlnmod.utils.data.Experiment.nx" title="Link to this definition"></a></dt>
+<dd><p>Number of states.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int, optional</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ctrlnmod.utils.data.Experiment.n_samples">
+<span class="sig-name descname"><span class="pre">n_samples</span></span><a class="headerlink" href="#ctrlnmod.utils.data.Experiment.n_samples" title="Link to this definition"></a></dt>
+<dd><p>Number of samples in the experiment.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ctrlnmod.utils.data.Experiment.x_trainable">
+<span class="sig-name descname"><span class="pre">x_trainable</span></span><a class="headerlink" href="#ctrlnmod.utils.data.Experiment.x_trainable" title="Link to this definition"></a></dt>
+<dd><p>Whether the state vector is trainable.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ctrlnmod.utils.data.Experiment.d">
+<span class="sig-name descname"><span class="pre">d</span></span><a class="headerlink" href="#ctrlnmod.utils.data.Experiment.d" title="Link to this definition"></a></dt>
+<dd><p>Disturbance data of shape (n_samples, nd).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tensor, optional</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ctrlnmod.utils.data.Experiment.__getitem__">
+<span class="sig-name descname"><span class="pre">__getitem__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seq_len</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ctrlnmod/utils/data.html#Experiment.__getitem__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ctrlnmod.utils.data.Experiment.__getitem__" title="Link to this definition"></a></dt>
+<dd><p>Returns a tuple of (u, y, x, x0) for the given index and sequence length.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ctrlnmod.utils.data.Experiment.__len__">
+<span class="sig-name descname"><span class="pre">__len__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/ctrlnmod/utils/data.html#Experiment.__len__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ctrlnmod.utils.data.Experiment.__len__" title="Link to this definition"></a></dt>
+<dd><p>Returns the number of samples in the experiment.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ctrlnmod.utils.data.Experiment.denormalize">
+<span class="sig-name descname"><span class="pre">denormalize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scaler</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ctrlnmod/utils/data.html#Experiment.denormalize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ctrlnmod.utils.data.Experiment.denormalize" title="Link to this definition"></a></dt>
+<dd><p>Denormalizes the data if a scaler is provided.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>u</strong> (<em>Tensor</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>y</strong> (<em>Tensor</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>x</strong> (<em>Tensor</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>d</strong> (<em>Tensor</em><em> | </em><em>None</em>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ctrlnmod.utils.data.Experiment.get_data">
+<span class="sig-name descname"><span class="pre">get_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">idx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unscaled</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scaler</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ctrlnmod/utils/data.html#Experiment.get_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ctrlnmod.utils.data.Experiment.get_data" title="Link to this definition"></a></dt>
+<dd><p>Returns the experiment data up to the specified index.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ctrlnmod.utils.data.Experiment.plot">
+<span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">idx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unscaled</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scaler</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ctrlnmod/utils/data.html#Experiment.plot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ctrlnmod.utils.data.Experiment.plot" title="Link to this definition"></a></dt>
+<dd><p>Plots the experiment data.</p>
+</dd></dl>
+
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>u</strong> (<em>np.ndarray</em>) – Input data of shape (n_samples, nu).</p></li>
+<li><p><strong>y</strong> (<em>np.ndarray</em>) – Output data of shape (n_samples, ny).</p></li>
+<li><p><strong>ts</strong> (<em>float</em>) – Sampling time.</p></li>
+<li><p><strong>x</strong> (<em>np.ndarray</em><em>, </em><em>optional</em>) – State data of shape (n_samples, nx). Defaults to None.</p></li>
+<li><p><strong>nx</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of states. If x is provided, this must match x.shape[1]. Defaults to None.</p></li>
+<li><p><strong>x_trainable</strong> (<em>bool</em>) – Whether the state vector is trainable. Defaults to False.</p></li>
+<li><p><strong>d</strong> (<em>np.ndarray</em><em>, </em><em>optional</em>) – Disturbance data of shape (n_samples, nd). Defaults to None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>ValueError</strong> – If u and y do not have the same number of samples, or if x is provided but x_trainable is True.</p></li>
+<li><p><strong>ValueError</strong> – If x is None and nx is not provided.</p></li>
+<li><p><strong>ValueError</strong> – If seq_len is invalid.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="id0">
+<span class="sig-name descname"><span class="pre">denormalize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">d</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scaler</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ctrlnmod/utils/data.html#Experiment.denormalize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id0" title="Link to this definition"></a></dt>
+<dd><p>Dénormalise les données si un scaler est fourni</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>u</strong> (<em>Tensor</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>y</strong> (<em>Tensor</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>x</strong> (<em>Tensor</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>d</strong> (<em>Tensor</em><em> | </em><em>None</em>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="id1">
+<span class="sig-name descname"><span class="pre">get_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">idx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unscaled</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scaler</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ctrlnmod/utils/data.html#Experiment.get_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id1" title="Link to this definition"></a></dt>
+<dd><p>Return the experiment values up to the idx index if idx is not None
+:type idx: 
+:param idx: Optional[int] - Index jusqu’auquel récupérer les données
+:type unscaled: 
+:param unscaled: bool - Si True et si un scaler est fourni, retourne les données dénormalisées
+:type scaler: 
+:param scaler: Optional[BaseScaler] - Scaler pour la dénormalisation</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tuple[Tensor, Tensor, Tensor] - (u, y, x) normalisés ou non</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="id2">
+<span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">idx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unscaled</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scaler</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ctrlnmod/utils/data.html#Experiment.plot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id2" title="Link to this definition"></a></dt>
+<dd><p>Affiche les données de l’expérience jusqu’à l’index idx</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ctrlnmod.utils.data.ExperimentsDataModule">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ctrlnmod.utils.data.</span></span><span class="sig-name descname"><span class="pre">ExperimentsDataModule</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">val_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_workers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_idx_val</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ctrlnmod/utils/data.html#ExperimentsDataModule"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ctrlnmod.utils.data.ExperimentsDataModule" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">LightningDataModule</span></code></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>train_set</strong> (<a class="reference internal" href="#ctrlnmod.utils.data.ExperimentsDataset" title="ctrlnmod.utils.data.ExperimentsDataset"><em>ExperimentsDataset</em></a>)</p></li>
+<li><p><strong>val_set</strong> (<a class="reference internal" href="#ctrlnmod.utils.data.ExperimentsDataset" title="ctrlnmod.utils.data.ExperimentsDataset"><em>ExperimentsDataset</em></a>)</p></li>
+<li><p><strong>batch_size</strong> (<em>int</em>)</p></li>
+<li><p><strong>num_workers</strong> (<em>int</em>)</p></li>
+<li><p><strong>max_idx_val</strong> (<em>int</em><em> | </em><em>None</em>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="ctrlnmod.utils.data.ExperimentsDataModule.setup">
+<span class="sig-name descname"><span class="pre">setup</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stage</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ctrlnmod/utils/data.html#ExperimentsDataModule.setup"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ctrlnmod.utils.data.ExperimentsDataModule.setup" title="Link to this definition"></a></dt>
+<dd><p>Called at the beginning of fit (train + validate), validate, test, or predict. This is a good hook when you
+need to build models dynamically or adjust something about them. This hook is called on every process when
+using DDP.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>stage</strong> – either <code class="docutils literal notranslate"><span class="pre">'fit'</span></code>, <code class="docutils literal notranslate"><span class="pre">'validate'</span></code>, <code class="docutils literal notranslate"><span class="pre">'test'</span></code>, or <code class="docutils literal notranslate"><span class="pre">'predict'</span></code></p>
+</dd>
+</dl>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">LitModel</span><span class="p">(</span><span class="o">...</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">l1</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">prepare_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">download_data</span><span class="p">()</span>
+        <span class="n">tokenize</span><span class="p">()</span>
+
+        <span class="c1"># don&#39;t do this</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">something</span> <span class="o">=</span> <span class="k">else</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stage</span><span class="p">):</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">load_data</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">l1</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">28</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">num_classes</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ctrlnmod.utils.data.ExperimentsDataModule.train_dataloader">
+<span class="sig-name descname"><span class="pre">train_dataloader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">unscaled</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ctrlnmod/utils/data.html#ExperimentsDataModule.train_dataloader"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ctrlnmod.utils.data.ExperimentsDataModule.train_dataloader" title="Link to this definition"></a></dt>
+<dd><p>An iterable or collection of iterables specifying training samples.</p>
+<p>For more information about multiple dataloaders, see this <span class="xref std std-ref">section</span>.</p>
+<p>The dataloader you return will not be reloaded unless you set
+<a href="#id3"><span class="problematic" id="id4">:paramref:`~lightning.pytorch.trainer.trainer.Trainer.reload_dataloaders_every_n_epochs`</span></a> to
+a positive integer.</p>
+<p>For data processing use the following pattern:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>download in <code class="xref py py-meth docutils literal notranslate"><span class="pre">prepare_data()</span></code></p></li>
+<li><p>process and split in <a class="reference internal" href="#ctrlnmod.utils.data.ExperimentsDataModule.setup" title="ctrlnmod.utils.data.ExperimentsDataModule.setup"><code class="xref py py-meth docutils literal notranslate"><span class="pre">setup()</span></code></a></p></li>
+</ul>
+</div></blockquote>
+<p>However, the above are only necessary for distributed processing.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>do not assign state in prepare_data</p>
+</div>
+<ul class="simple">
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">fit()</span></code></p></li>
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">prepare_data()</span></code></p></li>
+<li><p><a class="reference internal" href="#ctrlnmod.utils.data.ExperimentsDataModule.setup" title="ctrlnmod.utils.data.ExperimentsDataModule.setup"><code class="xref py py-meth docutils literal notranslate"><span class="pre">setup()</span></code></a></p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Lightning tries to add the correct sampler for distributed and arbitrary hardware.
+There is no need to set it yourself.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ctrlnmod.utils.data.ExperimentsDataModule.val_dataloader">
+<span class="sig-name descname"><span class="pre">val_dataloader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">unscaled</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ctrlnmod/utils/data.html#ExperimentsDataModule.val_dataloader"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ctrlnmod.utils.data.ExperimentsDataModule.val_dataloader" title="Link to this definition"></a></dt>
+<dd><p>An iterable or collection of iterables specifying validation samples.</p>
+<p>For more information about multiple dataloaders, see this <span class="xref std std-ref">section</span>.</p>
+<p>The dataloader you return will not be reloaded unless you set
+<a href="#id5"><span class="problematic" id="id6">:paramref:`~lightning.pytorch.trainer.trainer.Trainer.reload_dataloaders_every_n_epochs`</span></a> to
+a positive integer.</p>
+<p>It’s recommended that all data downloads and preparation happen in <code class="xref py py-meth docutils literal notranslate"><span class="pre">prepare_data()</span></code>.</p>
+<ul class="simple">
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">fit()</span></code></p></li>
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">validate()</span></code></p></li>
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">prepare_data()</span></code></p></li>
+<li><p><a class="reference internal" href="#ctrlnmod.utils.data.ExperimentsDataModule.setup" title="ctrlnmod.utils.data.ExperimentsDataModule.setup"><code class="xref py py-meth docutils literal notranslate"><span class="pre">setup()</span></code></a></p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Lightning tries to add the correct sampler for distributed and arbitrary hardware
+There is no need to set it yourself.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If you don’t need a validation dataset and a <code class="xref py py-meth docutils literal notranslate"><span class="pre">validation_step()</span></code>, you don’t need to
+implement this method.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ctrlnmod.utils.data.ExperimentsDataset">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ctrlnmod.utils.data.</span></span><span class="sig-name descname"><span class="pre">ExperimentsDataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">exps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seq_len</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scaler</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ctrlnmod/utils/data.html#ExperimentsDataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ctrlnmod.utils.data.ExperimentsDataset" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Dataset</span></code></p>
+<p>This class implements methods to deal with sequences potentially
+coming from several experiments and from different length.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>exps</strong> (<em>List</em><em>[</em><a class="reference internal" href="#ctrlnmod.utils.data.Experiment" title="ctrlnmod.utils.data.Experiment"><em>Experiment</em></a><em>]</em>)</p></li>
+<li><p><strong>seq_len</strong> (<em>int</em>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="ctrlnmod.utils.data.ExperimentsDataset.append">
+<span class="sig-name descname"><span class="pre">append</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">exp</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ctrlnmod/utils/data.html#ExperimentsDataset.append"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ctrlnmod.utils.data.ExperimentsDataset.append" title="Link to this definition"></a></dt>
+<dd><p>Ajoute une nouvelle expérience au dataset</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>exp</strong> (<a class="reference internal" href="#ctrlnmod.utils.data.Experiment" title="ctrlnmod.utils.data.Experiment"><em>Experiment</em></a>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ctrlnmod.utils.data.ExperimentsDataset.plot">
+<span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">figsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(15,</span> <span class="pre">10)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_exp_to_plot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unscaled</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ctrlnmod/utils/data.html#ExperimentsDataset.plot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ctrlnmod.utils.data.ExperimentsDataset.plot" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ctrlnmod.utils.data.ExperimentsDataset.set_seq_len">
+<span class="sig-name descname"><span class="pre">set_seq_len</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seq_len</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ctrlnmod/utils/data.html#ExperimentsDataset.set_seq_len"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ctrlnmod.utils.data.ExperimentsDataset.set_seq_len" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>seq_len</strong> (<em>int</em>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-ctrlnmod.utils.misc">
+<span id="ctrlnmod-utils-misc-module"></span><h2>ctrlnmod.utils.misc module<a class="headerlink" href="#module-ctrlnmod.utils.misc" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="ctrlnmod.utils.misc.FrameCacheManager">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ctrlnmod.utils.misc.</span></span><span class="sig-name descname"><span class="pre">FrameCacheManager</span></span><a class="reference internal" href="_modules/ctrlnmod/utils/misc.html#FrameCacheManager"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ctrlnmod.utils.misc.FrameCacheManager" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="ctrlnmod.utils.misc.FrameCacheManager.cache_frame">
+<span class="sig-name descname"><span class="pre">cache_frame</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/ctrlnmod/utils/misc.html#FrameCacheManager.cache_frame"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ctrlnmod.utils.misc.FrameCacheManager.cache_frame" title="Link to this definition"></a></dt>
+<dd><p>Context manager to store parameterization results</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ctrlnmod.utils.misc.FrameCacheManager.register_child">
+<span class="sig-name descname"><span class="pre">register_child</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">child_cache</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ctrlnmod/utils/misc.html#FrameCacheManager.register_child"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ctrlnmod.utils.misc.FrameCacheManager.register_child" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>child_cache</strong> (<a class="reference internal" href="#ctrlnmod.utils.misc.FrameCacheManager" title="ctrlnmod.utils.misc.FrameCacheManager"><em>FrameCacheManager</em></a>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ctrlnmod.utils.misc.add_info_decorator">
+<span class="sig-prename descclassname"><span class="pre">ctrlnmod.utils.misc.</span></span><span class="sig-name descname"><span class="pre">add_info_decorator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">info_key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">info_value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ctrlnmod/utils/misc.html#add_info_decorator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ctrlnmod.utils.misc.add_info_decorator" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ctrlnmod.utils.misc.backtrack">
+<span class="sig-prename descclassname"><span class="pre">ctrlnmod.utils.misc.</span></span><span class="sig-name descname"><span class="pre">backtrack</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">criterion</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step_ratio</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ctrlnmod/utils/misc.html#backtrack"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ctrlnmod.utils.misc.backtrack" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ctrlnmod.utils.misc.find_module">
+<span class="sig-prename descclassname"><span class="pre">ctrlnmod.utils.misc.</span></span><span class="sig-name descname"><span class="pre">find_module</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_class</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ctrlnmod/utils/misc.html#find_module"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ctrlnmod.utils.misc.find_module" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>model</strong> (<em>Module</em>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ctrlnmod.utils.misc.flatten_params">
+<span class="sig-prename descclassname"><span class="pre">ctrlnmod.utils.misc.</span></span><span class="sig-name descname"><span class="pre">flatten_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ctrlnmod/utils/misc.html#flatten_params"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ctrlnmod.utils.misc.flatten_params" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></span></p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>module</strong> (<em>Module</em>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ctrlnmod.utils.misc.is_legal">
+<span class="sig-prename descclassname"><span class="pre">ctrlnmod.utils.misc.</span></span><span class="sig-name descname"><span class="pre">is_legal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ctrlnmod/utils/misc.html#is_legal"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ctrlnmod.utils.misc.is_legal" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ctrlnmod.utils.misc.monitor_training">
+<span class="sig-prename descclassname"><span class="pre">ctrlnmod.utils.misc.</span></span><span class="sig-name descname"><span class="pre">monitor_training</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ctrlnmod/utils/misc.html#monitor_training"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ctrlnmod.utils.misc.monitor_training" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ctrlnmod.utils.misc.parse_act_f">
+<span class="sig-prename descclassname"><span class="pre">ctrlnmod.utils.misc.</span></span><span class="sig-name descname"><span class="pre">parse_act_f</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">act_f</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ctrlnmod/utils/misc.html#parse_act_f"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ctrlnmod.utils.misc.parse_act_f" title="Link to this definition"></a></dt>
+<dd><p>Parse the activation function from a string or a torch module.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>act_f</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>torch.nn.Module</em><em>]</em>) – The activation function as a string or a torch module.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The corresponding activation function module.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>torch.nn.Module</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ctrlnmod.utils.misc.rk4_discretize">
+<span class="sig-prename descclassname"><span class="pre">ctrlnmod.utils.misc.</span></span><span class="sig-name descname"><span class="pre">rk4_discretize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">A</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ctrlnmod/utils/misc.html#rk4_discretize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ctrlnmod.utils.misc.rk4_discretize" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ctrlnmod.utils.misc.write_flat_params">
+<span class="sig-prename descclassname"><span class="pre">ctrlnmod.utils.misc.</span></span><span class="sig-name descname"><span class="pre">write_flat_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ctrlnmod/utils/misc.html#write_flat_params"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ctrlnmod.utils.misc.write_flat_params" title="Link to this definition"></a></dt>
+<dd><p>Writes vector x to model parameters..</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>module</strong> (<em>Module</em>)</p></li>
+<li><p><strong>x</strong> (<em>Tensor</em>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-ctrlnmod.utils">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-ctrlnmod.utils" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="ctrlnmod.utils.Experiment">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ctrlnmod.utils.</span></span><span class="sig-name descname"><span class="pre">Experiment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_trainable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">d</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ctrlnmod/utils/data.html#Experiment"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ctrlnmod.utils.Experiment" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Dataset</span></code></p>
+<p>This class represents a single experiment with inputs (u), outputs (y),
+and optionally states (x) and disturbances (d). It is designed to handle
+time-series data, where each experiment can have a different number of samples.
+.. attribute:: u</p>
+<blockquote>
+<div><p>Input data of shape (n_samples, nu).</p>
+<dl class="field-list simple">
+<dt class="field-odd">type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tensor</p>
+</dd>
+</dl>
+</div></blockquote>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ctrlnmod.utils.Experiment.y">
+<span class="sig-name descname"><span class="pre">y</span></span><a class="headerlink" href="#ctrlnmod.utils.Experiment.y" title="Link to this definition"></a></dt>
+<dd><p>Output data of shape (n_samples, ny).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ctrlnmod.utils.Experiment.ts">
+<span class="sig-name descname"><span class="pre">ts</span></span><a class="headerlink" href="#ctrlnmod.utils.Experiment.ts" title="Link to this definition"></a></dt>
+<dd><p>Sampling time.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ctrlnmod.utils.Experiment.x">
+<span class="sig-name descname"><span class="pre">x</span></span><a class="headerlink" href="#ctrlnmod.utils.Experiment.x" title="Link to this definition"></a></dt>
+<dd><p>State data of shape (n_samples, nx).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tensor, optional</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ctrlnmod.utils.Experiment.nu">
+<span class="sig-name descname"><span class="pre">nu</span></span><a class="headerlink" href="#ctrlnmod.utils.Experiment.nu" title="Link to this definition"></a></dt>
+<dd><p>Number of inputs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ctrlnmod.utils.Experiment.ny">
+<span class="sig-name descname"><span class="pre">ny</span></span><a class="headerlink" href="#ctrlnmod.utils.Experiment.ny" title="Link to this definition"></a></dt>
+<dd><p>Number of outputs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ctrlnmod.utils.Experiment.nx">
+<span class="sig-name descname"><span class="pre">nx</span></span><a class="headerlink" href="#ctrlnmod.utils.Experiment.nx" title="Link to this definition"></a></dt>
+<dd><p>Number of states.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int, optional</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ctrlnmod.utils.Experiment.n_samples">
+<span class="sig-name descname"><span class="pre">n_samples</span></span><a class="headerlink" href="#ctrlnmod.utils.Experiment.n_samples" title="Link to this definition"></a></dt>
+<dd><p>Number of samples in the experiment.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ctrlnmod.utils.Experiment.x_trainable">
+<span class="sig-name descname"><span class="pre">x_trainable</span></span><a class="headerlink" href="#ctrlnmod.utils.Experiment.x_trainable" title="Link to this definition"></a></dt>
+<dd><p>Whether the state vector is trainable.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ctrlnmod.utils.Experiment.d">
+<span class="sig-name descname"><span class="pre">d</span></span><a class="headerlink" href="#ctrlnmod.utils.Experiment.d" title="Link to this definition"></a></dt>
+<dd><p>Disturbance data of shape (n_samples, nd).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tensor, optional</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ctrlnmod.utils.Experiment.__getitem__">
+<span class="sig-name descname"><span class="pre">__getitem__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seq_len</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ctrlnmod/utils/data.html#Experiment.__getitem__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ctrlnmod.utils.Experiment.__getitem__" title="Link to this definition"></a></dt>
+<dd><p>Returns a tuple of (u, y, x, x0) for the given index and sequence length.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ctrlnmod.utils.Experiment.__len__">
+<span class="sig-name descname"><span class="pre">__len__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/ctrlnmod/utils/data.html#Experiment.__len__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ctrlnmod.utils.Experiment.__len__" title="Link to this definition"></a></dt>
+<dd><p>Returns the number of samples in the experiment.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ctrlnmod.utils.Experiment.denormalize">
+<span class="sig-name descname"><span class="pre">denormalize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scaler</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ctrlnmod/utils/data.html#Experiment.denormalize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ctrlnmod.utils.Experiment.denormalize" title="Link to this definition"></a></dt>
+<dd><p>Denormalizes the data if a scaler is provided.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>u</strong> (<em>Tensor</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>y</strong> (<em>Tensor</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>x</strong> (<em>Tensor</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>d</strong> (<em>Tensor</em><em> | </em><em>None</em>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ctrlnmod.utils.Experiment.get_data">
+<span class="sig-name descname"><span class="pre">get_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">idx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unscaled</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scaler</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ctrlnmod/utils/data.html#Experiment.get_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ctrlnmod.utils.Experiment.get_data" title="Link to this definition"></a></dt>
+<dd><p>Returns the experiment data up to the specified index.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ctrlnmod.utils.Experiment.plot">
+<span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">idx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unscaled</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scaler</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ctrlnmod/utils/data.html#Experiment.plot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ctrlnmod.utils.Experiment.plot" title="Link to this definition"></a></dt>
+<dd><p>Plots the experiment data.</p>
+</dd></dl>
+
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>u</strong> (<em>np.ndarray</em>) – Input data of shape (n_samples, nu).</p></li>
+<li><p><strong>y</strong> (<em>np.ndarray</em>) – Output data of shape (n_samples, ny).</p></li>
+<li><p><strong>ts</strong> (<em>float</em>) – Sampling time.</p></li>
+<li><p><strong>x</strong> (<em>np.ndarray</em><em>, </em><em>optional</em>) – State data of shape (n_samples, nx). Defaults to None.</p></li>
+<li><p><strong>nx</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of states. If x is provided, this must match x.shape[1]. Defaults to None.</p></li>
+<li><p><strong>x_trainable</strong> (<em>bool</em>) – Whether the state vector is trainable. Defaults to False.</p></li>
+<li><p><strong>d</strong> (<em>np.ndarray</em><em>, </em><em>optional</em>) – Disturbance data of shape (n_samples, nd). Defaults to None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>ValueError</strong> – If u and y do not have the same number of samples, or if x is provided but x_trainable is True.</p></li>
+<li><p><strong>ValueError</strong> – If x is None and nx is not provided.</p></li>
+<li><p><strong>ValueError</strong> – If seq_len is invalid.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="id7">
+<span class="sig-name descname"><span class="pre">denormalize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">d</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scaler</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ctrlnmod/utils/data.html#Experiment.denormalize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id7" title="Link to this definition"></a></dt>
+<dd><p>Dénormalise les données si un scaler est fourni</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>u</strong> (<em>Tensor</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>y</strong> (<em>Tensor</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>x</strong> (<em>Tensor</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>d</strong> (<em>Tensor</em><em> | </em><em>None</em>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="id8">
+<span class="sig-name descname"><span class="pre">get_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">idx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unscaled</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scaler</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ctrlnmod/utils/data.html#Experiment.get_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id8" title="Link to this definition"></a></dt>
+<dd><p>Return the experiment values up to the idx index if idx is not None
+:type idx: 
+:param idx: Optional[int] - Index jusqu’auquel récupérer les données
+:type unscaled: 
+:param unscaled: bool - Si True et si un scaler est fourni, retourne les données dénormalisées
+:type scaler: 
+:param scaler: Optional[BaseScaler] - Scaler pour la dénormalisation</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tuple[Tensor, Tensor, Tensor] - (u, y, x) normalisés ou non</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="id9">
+<span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">idx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unscaled</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scaler</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ctrlnmod/utils/data.html#Experiment.plot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id9" title="Link to this definition"></a></dt>
+<dd><p>Affiche les données de l’expérience jusqu’à l’index idx</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ctrlnmod.utils.ExperimentsDataset">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ctrlnmod.utils.</span></span><span class="sig-name descname"><span class="pre">ExperimentsDataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">exps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seq_len</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scaler</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ctrlnmod/utils/data.html#ExperimentsDataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ctrlnmod.utils.ExperimentsDataset" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Dataset</span></code></p>
+<p>This class implements methods to deal with sequences potentially
+coming from several experiments and from different length.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>exps</strong> (<em>List</em><em>[</em><a class="reference internal" href="#ctrlnmod.utils.data.Experiment" title="ctrlnmod.utils.data.Experiment"><em>Experiment</em></a><em>]</em>)</p></li>
+<li><p><strong>seq_len</strong> (<em>int</em>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="ctrlnmod.utils.ExperimentsDataset.append">
+<span class="sig-name descname"><span class="pre">append</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">exp</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ctrlnmod/utils/data.html#ExperimentsDataset.append"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ctrlnmod.utils.ExperimentsDataset.append" title="Link to this definition"></a></dt>
+<dd><p>Ajoute une nouvelle expérience au dataset</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>exp</strong> (<a class="reference internal" href="#ctrlnmod.utils.data.Experiment" title="ctrlnmod.utils.data.Experiment"><em>Experiment</em></a>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ctrlnmod.utils.ExperimentsDataset.plot">
+<span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">figsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(15,</span> <span class="pre">10)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_exp_to_plot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unscaled</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ctrlnmod/utils/data.html#ExperimentsDataset.plot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ctrlnmod.utils.ExperimentsDataset.plot" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ctrlnmod.utils.ExperimentsDataset.set_seq_len">
+<span class="sig-name descname"><span class="pre">set_seq_len</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seq_len</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ctrlnmod/utils/data.html#ExperimentsDataset.set_seq_len"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ctrlnmod.utils.ExperimentsDataset.set_seq_len" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>seq_len</strong> (<em>int</em>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ctrlnmod.utils.FrameCacheManager">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ctrlnmod.utils.</span></span><span class="sig-name descname"><span class="pre">FrameCacheManager</span></span><a class="reference internal" href="_modules/ctrlnmod/utils/misc.html#FrameCacheManager"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ctrlnmod.utils.FrameCacheManager" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="ctrlnmod.utils.FrameCacheManager.cache_frame">
+<span class="sig-name descname"><span class="pre">cache_frame</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/ctrlnmod/utils/misc.html#FrameCacheManager.cache_frame"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ctrlnmod.utils.FrameCacheManager.cache_frame" title="Link to this definition"></a></dt>
+<dd><p>Context manager to store parameterization results</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ctrlnmod.utils.FrameCacheManager.register_child">
+<span class="sig-name descname"><span class="pre">register_child</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">child_cache</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ctrlnmod/utils/misc.html#FrameCacheManager.register_child"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ctrlnmod.utils.FrameCacheManager.register_child" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>child_cache</strong> (<a class="reference internal" href="#ctrlnmod.utils.misc.FrameCacheManager" title="ctrlnmod.utils.misc.FrameCacheManager"><em>FrameCacheManager</em></a>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ctrlnmod.utils.find_module">
+<span class="sig-prename descclassname"><span class="pre">ctrlnmod.utils.</span></span><span class="sig-name descname"><span class="pre">find_module</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_class</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ctrlnmod/utils/misc.html#find_module"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ctrlnmod.utils.find_module" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>model</strong> (<em>Module</em>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ctrlnmod.utils.is_legal">
+<span class="sig-prename descclassname"><span class="pre">ctrlnmod.utils.</span></span><span class="sig-name descname"><span class="pre">is_legal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ctrlnmod/utils/misc.html#is_legal"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ctrlnmod.utils.is_legal" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ctrlnmod.utils.parse_act_f">
+<span class="sig-prename descclassname"><span class="pre">ctrlnmod.utils.</span></span><span class="sig-name descname"><span class="pre">parse_act_f</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">act_f</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ctrlnmod/utils/misc.html#parse_act_f"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ctrlnmod.utils.parse_act_f" title="Link to this definition"></a></dt>
+<dd><p>Parse the activation function from a string or a torch module.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>act_f</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>torch.nn.Module</em><em>]</em>) – The activation function as a string or a torch module.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The corresponding activation function module.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>torch.nn.Module</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="ctrlnmod.train.html" class="btn btn-neutral float-left" title="ctrlnmod.train package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Alexandre Hache.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,793 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ctrlnmod.linalg.utils &mdash; ctrlnmod 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=01f34227"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            ctrlnmod
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">ctrlnmod</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">ctrlnmod</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">ctrlnmod.linalg.utils</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for ctrlnmod.linalg.utils</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">scipy</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch.autograd</span><span class="w"> </span><span class="kn">import</span> <span class="n">Function</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch.linalg</span><span class="w"> </span><span class="kn">import</span> <span class="n">eigvals</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cvxpy.problems.problem</span><span class="w"> </span><span class="kn">import</span> <span class="n">Problem</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cvxpy.problems.objective</span><span class="w"> </span><span class="kn">import</span> <span class="n">Minimize</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cvxpy.expressions.variable</span><span class="w"> </span><span class="kn">import</span> <span class="n">Variable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cvxpy.atoms.affine.bmat</span><span class="w"> </span><span class="kn">import</span> <span class="n">bmat</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cvxpy.atoms.affine.hstack</span><span class="w"> </span><span class="kn">import</span> <span class="n">hstack</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cvxpy.atoms.affine.vstack</span><span class="w"> </span><span class="kn">import</span> <span class="n">vstack</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Union</span><span class="p">,</span> <span class="n">List</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.linalg</span><span class="w"> </span><span class="kn">import</span> <span class="n">polar</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tensor</span>
+
+
+
+
+<div class="viewcode-block" id="SoftmaxEta">
+<a class="viewcode-back" href="../../../ctrlnmod.linalg.html#ctrlnmod.linalg.utils.SoftmaxEta">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">SoftmaxEta</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eta</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span> <span class="n">epsilon</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">SoftmaxEta</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eta</span> <span class="o">=</span> <span class="n">eta</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__name__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;SoftmaxEta : eta = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">eta</span><span class="si">}</span><span class="s2">&quot;</span>
+
+<div class="viewcode-block" id="SoftmaxEta.forward">
+<a class="viewcode-back" href="../../../ctrlnmod.linalg.html#ctrlnmod.linalg.utils.SoftmaxEta.forward">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">eta</span> <span class="o">*</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">functional</span><span class="o">.</span><span class="n">softmax</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="InvSoftmaxEta">
+<a class="viewcode-back" href="../../../ctrlnmod.linalg.html#ctrlnmod.linalg.utils.InvSoftmaxEta">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">InvSoftmaxEta</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eta</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span> <span class="n">epsilon</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">InvSoftmaxEta</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eta</span> <span class="o">=</span> <span class="n">eta</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">epsilon</span> <span class="o">=</span> <span class="n">epsilon</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__name__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;SoftmaxEtaInv : eta = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">eta</span><span class="si">}</span><span class="s2">&quot;</span>
+
+<div class="viewcode-block" id="InvSoftmaxEta.forward">
+<a class="viewcode-back" href="../../../ctrlnmod.linalg.html#ctrlnmod.linalg.utils.InvSoftmaxEta.forward">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">s</span><span class="p">):</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">s</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">eta</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">x</span></div>
+</div>
+
+
+<div class="viewcode-block" id="get_lyap_exp">
+<a class="viewcode-back" href="../../../ctrlnmod.linalg.html#ctrlnmod.linalg.utils.get_lyap_exp">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_lyap_exp</span><span class="p">(</span><span class="n">A</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute the Lyapunov exponent of a matrix.</span>
+
+<span class="sd">    The Lyapunov exponent is defined as the maximum real part of the eigenvalues</span>
+<span class="sd">    of a matrix :math:`A`. It characterizes the asymptotic stability of the</span>
+<span class="sd">    linear system :math:`\dot{x} = A x`.</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        \lambda = \max \Re(\lambda_i(A))</span>
+
+<span class="sd">    where :math:`\lambda_i(A)` are the eigenvalues of :math:`A`.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        A (torch.Tensor): A square matrix of shape (n, n).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        float: The Lyapunov exponent of the matrix.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="o">-</span><span class="n">torch</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigvals</span><span class="p">(</span><span class="n">A</span><span class="p">))))</span></div>
+
+
+<div class="viewcode-block" id="block_diag">
+<a class="viewcode-back" href="../../../ctrlnmod.linalg.html#ctrlnmod.linalg.utils.block_diag">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">block_diag</span><span class="p">(</span><span class="n">arr_list</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;create a block diagonal matrix from a list of cvxpy matrices&#39;&#39;&#39;</span>
+
+    <span class="c1"># rows and cols of block diagonal matrix</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">([</span><span class="n">arr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">arr</span> <span class="ow">in</span> <span class="n">arr_list</span><span class="p">])</span>
+
+    <span class="c1"># loop to create the list for the bmat function</span>
+    <span class="n">block_list</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># list for bmat function</span>
+    <span class="n">ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+    <span class="k">for</span> <span class="n">arr</span> <span class="ow">in</span> <span class="n">arr_list</span><span class="p">:</span>
+        <span class="c1"># index of the end of arr in the block diagonal matrix</span>
+        <span class="n">ind</span> <span class="o">+=</span> <span class="n">arr</span><span class="o">.</span><span class="n">shape</span>
+
+        <span class="c1"># list of one row of blocks</span>
+        <span class="n">horz_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">arr</span><span class="p">]</span>
+
+        <span class="c1"># block of zeros to the left of arr</span>
+        <span class="n">zblock_l</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">arr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">ind</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">arr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+        <span class="k">if</span> <span class="n">zblock_l</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">horz_list</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">zblock_l</span><span class="p">)</span>
+
+        <span class="c1"># block of zeros to the right of arr</span>
+        <span class="n">zblock_r</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">arr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">n</span> <span class="o">-</span> <span class="n">ind</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+        <span class="k">if</span> <span class="n">zblock_r</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">horz_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">zblock_r</span><span class="p">)</span>
+
+        <span class="n">block_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">horz_list</span><span class="p">)</span>
+
+    <span class="n">B</span> <span class="o">=</span> <span class="n">bmat</span><span class="p">(</span><span class="n">block_list</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">B</span></div>
+
+
+
+<div class="viewcode-block" id="schur">
+<a class="viewcode-back" href="../../../ctrlnmod.linalg.html#ctrlnmod.linalg.utils.schur">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">schur</span><span class="p">(</span><span class="n">matrix</span><span class="p">,</span> <span class="n">dim_A</span><span class="p">,</span> <span class="n">dim_B</span><span class="p">,</span> <span class="n">dim_C</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute the Schur complement of the block D in a 2x2 partitioned matrix.</span>
+
+<span class="sd">    The input matrix is assumed to be partitioned as:</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        \begin{bmatrix}</span>
+<span class="sd">            A &amp; B \\</span>
+<span class="sd">            C &amp; D</span>
+<span class="sd">        \end{bmatrix}</span>
+
+<span class="sd">    where:</span>
+<span class="sd">    - :math:`A` has shape (dim_A, dim_A)</span>
+<span class="sd">    - :math:`B` has shape (dim_A, dim_B)</span>
+<span class="sd">    - :math:`C` has shape (dim_C, dim_A)</span>
+<span class="sd">    - :math:`D` has shape (dim_C, dim_B)</span>
+
+<span class="sd">    The Schur complement is computed as:</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        S = A - B D^{-1} C</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        matrix (torch.Tensor): A 2D tensor representing the full matrix.</span>
+<span class="sd">        dim_A (int): Number of rows and columns of the top-left block A.</span>
+<span class="sd">        dim_B (int): Number of columns of blocks B and D.</span>
+<span class="sd">        dim_C (int): Number of rows of blocks C and D.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        torch.Tensor: The Schur complement of the block D.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Shape verification</span>
+    <span class="n">expected_rows</span> <span class="o">=</span> <span class="n">dim_A</span> <span class="o">+</span> <span class="n">dim_C</span>
+    <span class="n">expected_cols</span> <span class="o">=</span> <span class="n">dim_A</span> <span class="o">+</span> <span class="n">dim_B</span>
+    <span class="k">if</span> <span class="n">matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">expected_rows</span> <span class="ow">or</span> <span class="n">matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">expected_cols</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Les dimensions fournies sont incompatibles avec la taille de la matrice.&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Blocks extraction</span>
+    <span class="n">A</span> <span class="o">=</span> <span class="n">matrix</span><span class="p">[:</span><span class="n">dim_A</span><span class="p">,</span> <span class="p">:</span><span class="n">dim_A</span><span class="p">]</span>
+    <span class="n">B</span> <span class="o">=</span> <span class="n">matrix</span><span class="p">[:</span><span class="n">dim_A</span><span class="p">,</span> <span class="n">dim_A</span><span class="p">:</span><span class="n">dim_A</span> <span class="o">+</span> <span class="n">dim_B</span><span class="p">]</span>
+    <span class="n">C</span> <span class="o">=</span> <span class="n">matrix</span><span class="p">[</span><span class="n">dim_A</span><span class="p">:</span><span class="n">dim_A</span> <span class="o">+</span> <span class="n">dim_C</span><span class="p">,</span> <span class="p">:</span><span class="n">dim_A</span><span class="p">]</span>
+    <span class="n">D</span> <span class="o">=</span> <span class="n">matrix</span><span class="p">[</span><span class="n">dim_A</span><span class="p">:</span><span class="n">dim_A</span> <span class="o">+</span> <span class="n">dim_C</span><span class="p">,</span> <span class="n">dim_A</span><span class="p">:</span><span class="n">dim_A</span> <span class="o">+</span> <span class="n">dim_B</span><span class="p">]</span>
+
+    <span class="c1"># D must be square and inversible</span>
+    <span class="k">if</span> <span class="n">D</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">D</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;D must be square&quot;</span><span class="p">)</span>
+    
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">D_inv</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">inverse</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">RuntimeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;D must be inversible&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
+
+    <span class="c1"># Schur : S = A - B D^{-1} C</span>
+    <span class="n">S</span> <span class="o">=</span> <span class="n">A</span> <span class="o">-</span> <span class="n">torch</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">D_inv</span><span class="p">),</span> <span class="n">C</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">S</span></div>
+
+
+
+
+<div class="viewcode-block" id="is_positive_definite">
+<a class="viewcode-back" href="../../../ctrlnmod.linalg.html#ctrlnmod.linalg.utils.is_positive_definite">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">is_positive_definite</span><span class="p">(</span><span class="n">L</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Check if a Tensor is Positive definite up to a fixed tolerance.</span>
+
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">isAllEigPos</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">eigvals</span><span class="p">(</span><span class="n">L</span><span class="p">))</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">isSymetric</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">L</span> <span class="o">-</span> <span class="n">L</span><span class="o">.</span><span class="n">T</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">tol</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">isAllEigPos</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Not all eigenvalues are positive </span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">isSymetric</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Matrix is not symmetric </span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="n">bSDP</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">isSymetric</span> <span class="ow">and</span> <span class="n">isAllEigPos</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">bSDP</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Matix is SDP </span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">bSDP</span></div>
+
+
+
+<div class="viewcode-block" id="getEigenvalues">
+<a class="viewcode-back" href="../../../ctrlnmod.linalg.html#ctrlnmod.linalg.utils.getEigenvalues">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">getEigenvalues</span><span class="p">(</span><span class="n">L</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Return the eigenvalues of a given Tensor</span>
+
+<span class="sd">        params :</span>
+<span class="sd">            - L pytorch Tensor</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigvals</span><span class="p">(</span><span class="n">L</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="is_alpha_stable">
+<a class="viewcode-back" href="../../../ctrlnmod.linalg.html#ctrlnmod.linalg.utils.is_alpha_stable">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">is_alpha_stable</span><span class="p">(</span><span class="n">A</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">alpha</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Check if all eigenvalues of A are negative and lower than - alpha</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">eigvals</span><span class="p">(</span><span class="n">A</span><span class="p">)</span> <span class="o">&lt;</span> <span class="o">-</span> <span class="n">alpha</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="cayley">
+<a class="viewcode-back" href="../../../ctrlnmod.linalg.html#ctrlnmod.linalg.utils.cayley">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">cayley</span><span class="p">(</span><span class="n">W</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Perform Cayley transform of rectangular matrix from </span>
+<span class="sd">        https://github.com/locuslab/orthogonal-convolutions</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">W</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">cayley</span><span class="p">(</span><span class="n">W</span><span class="p">[</span><span class="kc">None</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">_</span><span class="p">,</span> <span class="n">cout</span><span class="p">,</span> <span class="n">cin</span> <span class="o">=</span> <span class="n">W</span><span class="o">.</span><span class="n">shape</span>
+    <span class="k">if</span> <span class="n">cin</span> <span class="o">&gt;</span> <span class="n">cout</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">cayley</span><span class="p">(</span><span class="n">W</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="n">U</span><span class="p">,</span> <span class="n">V</span> <span class="o">=</span> <span class="n">W</span><span class="p">[:,</span> <span class="p">:</span><span class="n">cin</span><span class="p">],</span> <span class="n">W</span><span class="p">[:,</span> <span class="n">cin</span><span class="p">:]</span>
+    <span class="n">I_nin</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">cin</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">W</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">W</span><span class="o">.</span><span class="n">device</span><span class="p">)[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span>
+    <span class="n">A</span> <span class="o">=</span> <span class="n">U</span> <span class="o">-</span> <span class="n">U</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="n">V</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="o">@</span> <span class="n">V</span>
+    <span class="n">iIpA</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">inverse</span><span class="p">(</span><span class="n">I_nin</span> <span class="o">+</span> <span class="n">A</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">((</span><span class="n">iIpA</span> <span class="o">@</span> <span class="p">(</span><span class="n">I_nin</span> <span class="o">-</span> <span class="n">A</span><span class="p">),</span> <span class="o">-</span><span class="mi">2</span> <span class="o">*</span> <span class="n">V</span> <span class="o">@</span> <span class="n">iIpA</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>     <span class="c1"># type: ignore</span></div>
+
+
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tensor</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Literal</span>
+
+<div class="viewcode-block" id="fill_strictly_block_triangular">
+<a class="viewcode-back" href="../../../ctrlnmod.linalg.html#ctrlnmod.linalg.utils.fill_strictly_block_triangular">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">fill_strictly_block_triangular</span><span class="p">(</span><span class="n">A</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">blocks</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span> <span class="nb">type</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;lower&#39;</span><span class="p">,</span> <span class="s1">&#39;upper&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;lower&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Fill the matrix A on the first sub- or super-diagonal with the list of tensors in `blocks`.</span>
+
+<span class="sd">    For example if A is of the form:</span>
+<span class="sd">    .. math::</span>
+<span class="sd">        A = \begin{bmatrix}</span>
+<span class="sd">            A_{11} &amp; A_{12} &amp; A_{13} \\</span>
+<span class="sd">            A_{21} &amp; A_{22} &amp; A_{23} \\</span>
+<span class="sd">            A_{31} &amp; A_{32} &amp; A_{33} \\</span>
+<span class="sd">        \end{bmatrix}</span>
+
+<span class="sd">    and blocks contains [C, D], then it returns:</span>
+<span class="sd">    .. math::</span>
+<span class="sd">        A = \begin{bmatrix}</span>
+<span class="sd">            A_{11} &amp; A_{12} &amp; A_{13} \\</span>
+<span class="sd">            C &amp; A_{22} &amp; A_{23} \\</span>
+<span class="sd">            A_{31} &amp; D &amp; A_{33} \\</span>
+<span class="sd">        \end{bmatrix}  if type == &#39;lower&#39;</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        A (Tensor): full 2D tensor to be modified in-place (assumed square block structure)</span>
+<span class="sd">        blocks (List[Tensor]): list of blocks to insert along the first diagonal below or above the main</span>
+<span class="sd">        type (str): &#39;lower&#39; or &#39;upper&#39; to determine which diagonal to fill</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Tensor: the modified matrix A</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;lower&#39;</span><span class="p">,</span> <span class="s1">&#39;upper&#39;</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;type must be either &#39;lower&#39; or &#39;upper&#39;&quot;</span><span class="p">)</span>
+
+    <span class="n">block_sizes</span> <span class="o">=</span> <span class="p">[</span><span class="n">block</span><span class="o">.</span><span class="n">shape</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">blocks</span><span class="p">]</span>
+    <span class="n">row_sizes</span><span class="p">,</span> <span class="n">col_sizes</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">block_sizes</span><span class="p">)</span>
+
+    <span class="n">n_blocks</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">blocks</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="k">assert</span> <span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="nb">sum</span><span class="p">(</span><span class="n">row_sizes</span><span class="p">)</span> <span class="o">+</span> <span class="n">col_sizes</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">&quot;Matrix A row size mismatch&quot;</span>
+    <span class="k">assert</span> <span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="nb">sum</span><span class="p">(</span><span class="n">col_sizes</span><span class="p">)</span> <span class="o">+</span> <span class="n">row_sizes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="s2">&quot;Matrix A column size mismatch&quot;</span>
+
+    <span class="c1"># Compute block start indices</span>
+    <span class="n">row_offsets</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">row_sizes</span><span class="p">),</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+    <span class="n">col_offsets</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">col_sizes</span><span class="p">),</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+
+    <span class="c1"># Fill appropriate blocks</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">block</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">blocks</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">type</span> <span class="o">==</span> <span class="s1">&#39;lower&#39;</span><span class="p">:</span>
+            <span class="n">row_idx</span> <span class="o">=</span> <span class="n">row_offsets</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+            <span class="n">col_idx</span> <span class="o">=</span> <span class="n">col_offsets</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># upper</span>
+            <span class="n">row_idx</span> <span class="o">=</span> <span class="n">row_offsets</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">col_idx</span> <span class="o">=</span> <span class="n">col_offsets</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+
+        <span class="n">A</span><span class="p">[</span><span class="n">row_idx</span><span class="p">:</span><span class="n">row_idx</span> <span class="o">+</span> <span class="n">block</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">col_idx</span><span class="p">:</span><span class="n">col_idx</span> <span class="o">+</span> <span class="n">block</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span> <span class="o">=</span> <span class="n">block</span>
+
+    <span class="k">return</span> <span class="n">A</span></div>
+
+
+
+
+<div class="viewcode-block" id="create_block_lower_triangular">
+<a class="viewcode-back" href="../../../ctrlnmod.linalg.html#ctrlnmod.linalg.utils.create_block_lower_triangular">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">create_block_lower_triangular</span><span class="p">(</span><span class="n">block_sizes</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="s1">&#39;cpu&#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create a strictly block lower triangular matrix with non-zero blocks on the first sub-diagonal.</span>
+
+<span class="sd">    Given a list of block sizes, this function generates a block lower triangular</span>
+<span class="sd">    matrix where only the first sub-diagonal blocks are filled with random values</span>
+<span class="sd">    and all other entries are zero.</span>
+
+<span class="sd">    For example, for block sizes [2, 3, 4], the matrix has the structure:</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        \begin{bmatrix}</span>
+<span class="sd">            0 &amp; 0 &amp; 0 \\</span>
+<span class="sd">            B_{21} &amp; 0 &amp; 0 \\</span>
+<span class="sd">            0 &amp; B_{32} &amp; 0</span>
+<span class="sd">        \end{bmatrix}</span>
+
+<span class="sd">    where :math:`B_{21}` and :math:`B_{32}` are random matrices of appropriate dimensions.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        block_sizes (list of int): Sizes of each block; the total matrix will have shape</span>
+<span class="sd">            (sum(block_sizes), sum(block_sizes)).</span>
+<span class="sd">        device (str): Device on which to create the tensor (&#39;cpu&#39; or &#39;cuda&#39;).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        torch.Tensor: A block lower triangular matrix of shape (N, N), where N is the sum of block sizes.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">n_blocks</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">block_sizes</span><span class="p">)</span>
+    <span class="n">total_size</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">block_sizes</span><span class="p">)</span>
+
+    <span class="c1"># Create the full matrix of zeros</span>
+    <span class="n">matrix</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">total_size</span><span class="p">,</span> <span class="n">total_size</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
+
+    <span class="c1"># Create and place the non-zero blocks on the first sub-diagonal</span>
+    <span class="n">start_row</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">start_col</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_blocks</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">row_size</span> <span class="o">=</span> <span class="n">block_sizes</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">col_size</span> <span class="o">=</span> <span class="n">block_sizes</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">block</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">row_size</span><span class="p">,</span> <span class="n">col_size</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
+
+        <span class="n">start_row</span> <span class="o">+=</span> <span class="n">block_sizes</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">matrix</span><span class="p">[</span><span class="n">start_row</span><span class="p">:</span><span class="n">start_row</span> <span class="o">+</span> <span class="n">row_size</span><span class="p">,</span>
+               <span class="n">start_col</span><span class="p">:</span><span class="n">start_col</span> <span class="o">+</span> <span class="n">col_size</span><span class="p">]</span> <span class="o">=</span> <span class="n">block</span>
+        <span class="n">start_col</span> <span class="o">+=</span> <span class="n">col_size</span>
+
+    <span class="k">return</span> <span class="n">matrix</span></div>
+
+
+
+<div class="viewcode-block" id="MatrixSquareRoot">
+<a class="viewcode-back" href="../../../ctrlnmod.linalg.html#ctrlnmod.linalg.utils.MatrixSquareRoot">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">MatrixSquareRoot</span><span class="p">(</span><span class="n">Function</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Square root of a positive definite matrix.</span>
+
+<span class="sd">    NOTE: matrix square root is not differentiable for matrices with</span>
+<span class="sd">          zero eigenvalues.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="MatrixSquareRoot.forward">
+<a class="viewcode-back" href="../../../ctrlnmod.linalg.html#ctrlnmod.linalg.utils.MatrixSquareRoot.forward">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="nb">input</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="nb">input</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+        <span class="n">sqrtm</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">scipy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">sqrtm</span><span class="p">(</span><span class="n">m</span><span class="p">)</span><span class="o">.</span><span class="n">real</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">save_for_backward</span><span class="p">(</span><span class="n">sqrtm</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">sqrtm</span></div>
+
+
+<div class="viewcode-block" id="MatrixSquareRoot.backward">
+<a class="viewcode-back" href="../../../ctrlnmod.linalg.html#ctrlnmod.linalg.utils.MatrixSquareRoot.backward">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">backward</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">grad_output</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+        <span class="n">grad_input</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">ctx</span><span class="o">.</span><span class="n">needs_input_grad</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="n">sqrtm</span><span class="p">,</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">saved_tensors</span>
+            <span class="n">sqrtm</span> <span class="o">=</span> <span class="n">sqrtm</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+            <span class="n">gm</span> <span class="o">=</span> <span class="n">grad_output</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+
+            <span class="c1"># Given a positive semi-definite matrix X,</span>
+            <span class="c1"># since X = X^{1/2}X^{1/2}, we can compute the gradient of the</span>
+            <span class="c1"># matrix square root dX^{1/2} by solving the Sylvester equation:</span>
+            <span class="c1"># dX = (d(X^{1/2})X^{1/2} + X^{1/2}(dX^{1/2}).</span>
+            <span class="n">grad_sqrtm</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve_sylvester</span><span class="p">(</span><span class="n">sqrtm</span><span class="p">,</span> <span class="n">sqrtm</span><span class="p">,</span> <span class="n">gm</span><span class="p">)</span>
+
+            <span class="n">grad_input</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">grad_sqrtm</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">grad_output</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">grad_input</span></div>
+</div>
+
+
+
+<span class="n">sqrtm</span> <span class="o">=</span> <span class="n">MatrixSquareRoot</span><span class="o">.</span><span class="n">apply</span>
+
+
+<span class="c1"># Thanks Mario Lezcano again !</span>
+<div class="viewcode-block" id="adjoint">
+<a class="viewcode-back" href="../../../ctrlnmod.linalg.html#ctrlnmod.linalg.utils.adjoint">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">adjoint</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">E</span><span class="p">,</span> <span class="n">f</span><span class="p">):</span>
+    <span class="n">A_H</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">E</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">M</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">n</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">n</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">E</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">E</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+    <span class="n">M</span><span class="p">[:</span><span class="n">n</span><span class="p">,</span> <span class="p">:</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">A_H</span>
+    <span class="n">M</span><span class="p">[</span><span class="n">n</span><span class="p">:,</span> <span class="n">n</span><span class="p">:]</span> <span class="o">=</span> <span class="n">A_H</span>
+    <span class="n">M</span><span class="p">[:</span><span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">:]</span> <span class="o">=</span> <span class="n">E</span>
+    <span class="k">return</span> <span class="n">f</span><span class="p">(</span><span class="n">M</span><span class="p">)[:</span><span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">:]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="logm_scipy">
+<a class="viewcode-back" href="../../../ctrlnmod.linalg.html#ctrlnmod.linalg.utils.logm_scipy">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">logm_scipy</span><span class="p">(</span><span class="n">A</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">scipy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">logm</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">cpu</span><span class="p">(),</span> <span class="n">disp</span><span class="o">=</span><span class="kc">False</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">device</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="Logm">
+<a class="viewcode-back" href="../../../ctrlnmod.linalg.html#ctrlnmod.linalg.utils.Logm">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Logm</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">autograd</span><span class="o">.</span><span class="n">Function</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Computes the matrix logarithm of a given sqaure matrix.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="Logm.forward">
+<a class="viewcode-back" href="../../../ctrlnmod.linalg.html#ctrlnmod.linalg.utils.Logm.forward">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">A</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="n">A</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">A</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="o">==</span> <span class="n">A</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># Square matrix</span>
+        <span class="k">assert</span> <span class="n">A</span><span class="o">.</span><span class="n">dtype</span> <span class="ow">in</span> <span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span>
+                           <span class="n">torch</span><span class="o">.</span><span class="n">complex64</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">save_for_backward</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">logm_scipy</span><span class="p">(</span><span class="n">A</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Logm.backward">
+<a class="viewcode-back" href="../../../ctrlnmod.linalg.html#ctrlnmod.linalg.utils.Logm.backward">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">backward</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">G</span><span class="p">):</span>
+        <span class="n">A</span><span class="p">,</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">saved_tensors</span>
+        <span class="k">return</span> <span class="n">adjoint</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">G</span><span class="p">,</span> <span class="n">logm_scipy</span><span class="p">)</span></div>
+</div>
+
+
+
+<span class="n">logm</span> <span class="o">=</span> <span class="n">Logm</span><span class="o">.</span><span class="n">apply</span>
+
+
+<div class="viewcode-block" id="project_onto_stiefel">
+<a class="viewcode-back" href="../../../ctrlnmod.linalg.html#ctrlnmod.linalg.utils.project_onto_stiefel">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">project_onto_stiefel</span><span class="p">(</span><span class="n">A</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Project a matrix onto the Stiefel manifold.</span>
+
+<span class="sd">    The Stiefel manifold :math:`\mathrm{St}(n, p)` is the set of all :math:`n \times p`</span>
+<span class="sd">    matrices with orthonormal columns. This function projects the input matrix</span>
+<span class="sd">    :math:`A \in \mathbb{R}^{n \times p}` onto the Stiefel manifold using polar decomposition:</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        A = U H, \quad \text{with } U \in \mathrm{St}(n, p)</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        A (torch.Tensor): A 2D tensor of shape (n, p) representing the matrix to be projected.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        numpy.ndarray: A matrix of shape (n, p) with orthonormal columns, lying on the Stiefel manifold.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">A</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+    <span class="c1"># Perform polar decomposition</span>
+    <span class="n">U</span><span class="p">,</span> <span class="n">H</span> <span class="o">=</span> <span class="n">polar</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+    
+    <span class="c1"># Verify orthogonality (for debugging)</span>
+    <span class="n">UTU</span> <span class="o">=</span> <span class="n">U</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">U</span>
+    <span class="n">deviation</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">UTU</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">U</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])))</span>
+    <span class="k">if</span> <span class="n">deviation</span> <span class="o">&gt;</span> <span class="mf">1e-10</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Warning: Maximum deviation from orthonormality: </span><span class="si">{</span><span class="n">deviation</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">U</span></div>
+
+
+
+<div class="viewcode-block" id="solve_riccati_torch">
+<a class="viewcode-back" href="../../../ctrlnmod.linalg.html#ctrlnmod.linalg.utils.solve_riccati_torch">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">solve_riccati_torch</span><span class="p">(</span><span class="n">A</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> 
+                        <span class="n">B</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> 
+                        <span class="n">C</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> 
+                        <span class="n">gamma</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+                        <span class="n">tol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-10</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Solve the continuous-time H-infinity Riccati equation using the Hamiltonian method.</span>
+
+<span class="sd">        This function computes the solution :math:`P` to the Riccati equation:</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            A^T P + P A + \frac{1}{\gamma^2} P B B^T P + C^T C = 0</span>
+
+<span class="sd">        The solution is based on the spectral decomposition of the associated Hamiltonian matrix.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            A (torch.Tensor): System matrix of shape (n_x, n_x).</span>
+<span class="sd">            B (torch.Tensor): Input matrix of shape (n_x, n_u).</span>
+<span class="sd">            C (torch.Tensor): Output matrix of shape (n_y, n_x).</span>
+<span class="sd">            gamma (float): Positive scalar defining the H-infinity bound.</span>
+<span class="sd">            tol (float, optional): Numerical tolerance for stability checks. Default is 1e-10.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            tuple:</span>
+<span class="sd">                - P (torch.Tensor or None): The symmetric solution matrix of shape (n_x, n_x), or None if the computation fails.</span>
+<span class="sd">                - info (dict): Dictionary containing:</span>
+<span class="sd">                    - &#39;success&#39; (bool): Whether the Riccati solution was successfully computed.</span>
+<span class="sd">                    - &#39;eigvals&#39; (torch.Tensor): Eigenvalues of the Hamiltonian matrix.</span>
+<span class="sd">                    - &#39;residual_norm&#39; (float, optional): Norm of the residual in the Riccati equation.</span>
+<span class="sd">                    - &#39;is_positive&#39; (bool, optional): Whether P is positive definite.</span>
+<span class="sd">                    - &#39;cond_X&#39; (float, optional): Condition number of the matrix X in the stable eigenspace.</span>
+<span class="sd">                    - &#39;error&#39; (str, optional): Error message if the computation failed.</span>
+
+<span class="sd">        References:</span>
+<span class="sd">            [1] https://web.stanford.edu/~boyd/papers/bisection_hinfty.html</span>
+<span class="sd">            </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+
+        <span class="n">nx</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">gamma_sq_inv</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="n">gamma</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+        
+        <span class="c1"># Construction de la matrice hamiltonienne</span>
+        <span class="n">H_11</span> <span class="o">=</span> <span class="n">A</span>
+        <span class="n">H_12</span> <span class="o">=</span> <span class="n">gamma_sq_inv</span> <span class="o">*</span> <span class="p">(</span><span class="n">B</span> <span class="o">@</span> <span class="n">B</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+        <span class="n">H_21</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="n">C</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">C</span><span class="p">)</span>
+        <span class="n">H_22</span> <span class="o">=</span> <span class="o">-</span><span class="n">A</span><span class="o">.</span><span class="n">T</span>
+        
+        <span class="n">H</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">block_diag</span><span class="p">(</span><span class="n">H_11</span><span class="p">,</span> <span class="n">H_22</span><span class="p">)</span>
+        <span class="n">H</span><span class="p">[:</span><span class="n">nx</span><span class="p">,</span> <span class="n">nx</span><span class="p">:]</span> <span class="o">=</span> <span class="n">H_12</span>
+        <span class="n">H</span><span class="p">[</span><span class="n">nx</span><span class="p">:,</span> <span class="p">:</span><span class="n">nx</span><span class="p">]</span> <span class="o">=</span> <span class="n">H_21</span>
+        
+        <span class="c1"># Calcul des valeurs et vecteurs propres</span>
+        <span class="c1"># Note: torch.linalg.eig retourne les valeurs complexes même pour matrices réelles</span>
+        <span class="n">eigvals</span><span class="p">,</span> <span class="n">eigvecs</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eig</span><span class="p">(</span><span class="n">H</span><span class="p">)</span>
+        
+        <span class="c1"># Conversion en valeurs réelles pour le tri</span>
+        <span class="n">real_parts</span> <span class="o">=</span> <span class="n">eigvals</span><span class="o">.</span><span class="n">real</span>
+        
+        <span class="c1"># Tri des valeurs propres par partie réelle</span>
+        <span class="n">sorted_indices</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">real_parts</span><span class="p">)</span>
+        <span class="n">eigvals</span> <span class="o">=</span> <span class="n">eigvals</span><span class="p">[</span><span class="n">sorted_indices</span><span class="p">]</span>
+        <span class="n">eigvecs</span> <span class="o">=</span> <span class="n">eigvecs</span><span class="p">[:,</span> <span class="n">sorted_indices</span><span class="p">]</span>
+        
+        <span class="c1"># Vérification du nombre de valeurs propres stables</span>
+        <span class="n">n_stable</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">real_parts</span><span class="p">[</span><span class="n">sorted_indices</span><span class="p">]</span> <span class="o">&lt;</span> <span class="o">-</span><span class="n">tol</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+        
+        <span class="k">if</span> <span class="n">n_stable</span> <span class="o">!=</span> <span class="n">nx</span><span class="p">:</span>
+            <span class="c1"># Ajuster le seuil si nécessaire</span>
+            <span class="n">alternative_tol</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">real_parts</span><span class="p">[</span><span class="n">nx</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">item</span><span class="p">())</span> <span class="o">*</span> <span class="mi">10</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Adjusting tolerance from </span><span class="si">{</span><span class="n">tol</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="n">alternative_tol</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">stable_indices</span> <span class="o">=</span> <span class="n">real_parts</span> <span class="o">&lt;</span> <span class="n">alternative_tol</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">stable_indices</span> <span class="o">=</span> <span class="n">real_parts</span> <span class="o">&lt;</span> <span class="o">-</span><span class="n">tol</span>
+        
+        <span class="c1"># Extraire les vecteurs propres stables</span>
+        <span class="n">stable_eigvecs</span> <span class="o">=</span> <span class="n">eigvecs</span><span class="p">[:,</span> <span class="n">stable_indices</span><span class="p">]</span>
+        
+        <span class="k">if</span> <span class="n">stable_eigvecs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="n">nx</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{</span>
+                <span class="s1">&#39;success&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                <span class="s1">&#39;eigvals&#39;</span><span class="p">:</span> <span class="n">eigvals</span><span class="p">,</span>
+                <span class="s1">&#39;error&#39;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;Got </span><span class="si">{</span><span class="n">stable_eigvecs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2"> stable eigenvectors, expected </span><span class="si">{</span><span class="n">nx</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">}</span>
+        
+        <span class="c1"># Extraction de X et Y</span>
+        <span class="n">X</span> <span class="o">=</span> <span class="n">stable_eigvecs</span><span class="p">[:</span><span class="n">nx</span><span class="p">,</span> <span class="p">:]</span>
+        <span class="n">Y</span> <span class="o">=</span> <span class="n">stable_eigvecs</span><span class="p">[</span><span class="n">nx</span><span class="p">:,</span> <span class="p">:]</span>
+        
+        <span class="c1"># Vérifier le conditionnement de X</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">cond_X</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">cond</span><span class="p">(</span><span class="n">X</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="n">cond_X</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s1">&#39;inf&#39;</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">cond_X</span> <span class="o">&gt;</span> <span class="mf">1e12</span><span class="p">:</span>  <span class="c1"># seuil arbitraire</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Warning: X is poorly conditioned (cond = </span><span class="si">{</span><span class="n">cond_X</span><span class="si">:</span><span class="s2">.2e</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+        
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># Utiliser la pseudo-inverse si X est mal conditionné</span>
+            <span class="k">if</span> <span class="n">cond_X</span> <span class="o">&gt;</span> <span class="mf">1e12</span><span class="p">:</span>
+                <span class="c1"># Calcul manuel de la pseudo-inverse pour plus de contrôle</span>
+                <span class="n">U</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">Vh</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">svd</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+                <span class="n">S_pinv</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">S</span> <span class="o">&gt;</span> <span class="n">tol</span> <span class="o">*</span> <span class="n">S</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">1</span><span class="o">/</span><span class="n">S</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">S</span><span class="p">))</span>
+                <span class="n">X_pinv</span> <span class="o">=</span> <span class="p">(</span><span class="n">Vh</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span> <span class="o">*</span> <span class="n">S_pinv</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span> <span class="o">@</span> <span class="n">U</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span>
+                <span class="n">P</span> <span class="o">=</span> <span class="n">Y</span> <span class="o">@</span> <span class="n">X_pinv</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">P</span> <span class="o">=</span> <span class="n">Y</span> <span class="o">@</span> <span class="n">torch</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+                
+            <span class="c1"># Prendre la partie réelle et symétriser</span>
+            <span class="n">P</span> <span class="o">=</span> <span class="n">P</span><span class="o">.</span><span class="n">real</span>
+            <span class="n">P</span> <span class="o">=</span> <span class="p">(</span><span class="n">P</span> <span class="o">+</span> <span class="n">P</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span>
+            
+            <span class="c1"># Vérifier que P est définie positive</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">L</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">cholesky</span><span class="p">(</span><span class="n">P</span><span class="p">)</span>
+                <span class="n">is_positive</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="n">is_positive</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Warning: P is not positive definite&quot;</span><span class="p">)</span>
+            
+            <span class="c1"># Calculer le résidu</span>
+            <span class="n">riccati_residual</span> <span class="o">=</span> <span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">P</span> <span class="o">+</span> <span class="n">P</span> <span class="o">@</span> <span class="n">A</span> <span class="o">+</span> 
+                            <span class="n">gamma_sq_inv</span> <span class="o">*</span> <span class="n">P</span> <span class="o">@</span> <span class="n">B</span> <span class="o">@</span> <span class="n">B</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">P</span> <span class="o">+</span>
+                            <span class="n">C</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">C</span><span class="p">)</span>
+            <span class="n">residual_norm</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">riccati_residual</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+            
+            <span class="k">return</span> <span class="n">P</span><span class="p">,</span> <span class="p">{</span>
+                <span class="s1">&#39;success&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                <span class="s1">&#39;eigvals&#39;</span><span class="p">:</span> <span class="n">eigvals</span><span class="p">,</span>
+                <span class="s1">&#39;residual_norm&#39;</span><span class="p">:</span> <span class="n">residual_norm</span><span class="p">,</span>
+                <span class="s1">&#39;is_positive&#39;</span><span class="p">:</span> <span class="n">is_positive</span><span class="p">,</span>
+                <span class="s1">&#39;cond_X&#39;</span><span class="p">:</span> <span class="n">cond_X</span>
+            <span class="p">}</span>
+            
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span><span class="p">,{</span>
+                <span class="s1">&#39;success&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                <span class="s1">&#39;eigvals&#39;</span><span class="p">:</span> <span class="n">eigvals</span><span class="p">,</span>
+                <span class="s1">&#39;error&#39;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="p">}</span></div>
+
+        
+
+<div class="viewcode-block" id="check_observability">
+<a class="viewcode-back" href="../../../ctrlnmod.linalg.html#ctrlnmod.linalg.utils.check_observability">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">check_observability</span><span class="p">(</span><span class="n">A</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">C</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">tol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-10</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Check the observability of a system defined by matrices A and C.</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        A : torch.Tensor</span>
+<span class="sd">            State transition matrix of shape (n, n).</span>
+<span class="sd">        C : torch.Tensor</span>
+<span class="sd">            Output matrix of shape (m, n).</span>
+<span class="sd">        tol : float</span>
+<span class="sd">            Tolerance for numerical stability.</span>
+<span class="sd">        </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        bool</span>
+<span class="sd">            True if the system is observable, False otherwise.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">O</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
+    
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+        <span class="n">O</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">((</span><span class="n">O</span><span class="p">,</span> <span class="n">C</span> <span class="o">@</span> <span class="n">torch</span><span class="o">.</span><span class="n">matrix_power</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">i</span><span class="p">)),</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    
+    <span class="n">rank_O</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">matrix_rank</span><span class="p">(</span><span class="n">O</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">rank_O</span> <span class="o">==</span> <span class="n">n</span></div>
+
+
+
+<div class="viewcode-block" id="check_controllability">
+<a class="viewcode-back" href="../../../ctrlnmod.linalg.html#ctrlnmod.linalg.utils.check_controllability">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">check_controllability</span><span class="p">(</span><span class="n">A</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">B</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">tol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-10</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Check the controllability of a system defined by matrices A and B.</span>
+<span class="sd">    Args:</span>
+<span class="sd">        A : torch.Tensor</span>
+<span class="sd">            State transition matrix of shape (n, n).</span>
+<span class="sd">        B : torch.Tensor</span>
+<span class="sd">            Input matrix of shape (n, m).</span>
+<span class="sd">        tol : float</span>
+<span class="sd">            Tolerance for numerical stability.</span>
+<span class="sd">    Returns:    </span>
+<span class="sd">        bool</span>
+<span class="sd">            True if the system is controllable, False otherwise.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">C</span> <span class="o">=</span> <span class="n">B</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
+    
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+        <span class="n">C</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">((</span><span class="n">C</span><span class="p">,</span> <span class="n">B</span> <span class="o">@</span> <span class="n">torch</span><span class="o">.</span><span class="n">matrix_power</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">i</span><span class="p">)),</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    
+    <span class="n">rank_C</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">matrix_rank</span><span class="p">(</span><span class="n">C</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">rank_C</span> <span class="o">==</span> <span class="n">n</span>  </div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Alexandre Hache.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
