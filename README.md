@@ -1,6 +1,8 @@
 # ctrlnmod
 This libray intends to provide tools and implementations for control-oriented neural state-space models.
 Its main features include several models based on Linear Matrix Inequalities (LMI) constraints.
+Documentation : [![Documentation Status](https://img.shields.io/badge/docs-online-blue.svg)](https://alex-hache.github.io/ctrlnnmod/)
+
 
 ## Requirements
 * PyTorch v1.9 >=
