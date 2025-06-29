@@ -8,86 +8,48 @@ from cvxpy.error import SolverError
 from .base import LMI
 from typing import Union, Tuple, Optional, List, Callable
 import numpy as np
+import math
+from abc import abstractmethod
+
 
 class HInfBase(LMI):
-    def __init__(self,  model: Optional[torch.nn.Module] = None, 
-                 extract_lmi_matrices: Optional[Callable] = None,
-                 A: Optional[Tensor] = None, 
-                 B: Optional[Tensor] = None, 
-                 C: Optional[Tensor] = None, 
-                 D: Optional[Tensor] = None,
-                 gamma: Optional[Tensor] = None, 
-                 P: Optional[Tensor] = None,
-                 alpha: Tensor = torch.zeros((1))) -> None:
-        super(HInfBase, self).__init__()
+    ExtractMatricesFn = Callable[[], Tuple[Tensor, ...]]
+    def __init__(self,  module: torch.nn.Module,
+                 extract_matrices: ExtractMatricesFn,
+                 solver: str = 'MOSEK'
+                 ) -> None:
+        super(HInfBase, self).__init__(module, extract_matrices)
 
 
-        self.model = model
-        self.extract_lmi_matrices = extract_lmi_matrices
+        self.P = None
+        self.gamma = None
 
-        if model is not None and extract_lmi_matrices is not None:
-            self.update_matrices()
-            self.hook = self.register_forward_pre_hook(self.update_matrices)
-            self.nu, self.nx, self.ny = self.B.shape[1], self.A.shape[0], self.C.shape[0]
-        else: 
-            self.A = A
-            self.B = B
-            self.C = C
-            self.D = D if D is not None else torch.zeros((self.ny, self.nu))
-
-            self.nu, self.nx, self.ny = B.shape[1], A.shape[0], C.shape[0]
-
-
-        self.shape = self.nu + self.ny + self.nx
-        self.alpha = alpha
-
-        if gamma is not None and P is not None:
-            self.gamma = gamma
-            self.P = P
-        elif gamma is not None and P is None:
-            _, obj, vars = self.solve(self.A, self.B, self.C, self.D, self.alpha)
-            if gamma > vars['gamma']:
-                self.gamma = gamma
-                self.P = vars['P']
-            else:
-                raise ValueError(f"Given gamma: {gamma} is not feasible. Lowest gamma found: {vars['gamma']}")
-        else:
-            _, gamma, P = self.solve(self.A, self.B, self.C, self.D, self.alpha)
-            self.gamma = gamma
-            self.P = torch.Tensor(P).requires_grad_(True)
-
-    
-    @classmethod
-    def solve(cls, A: Tensor, B: Tensor, C: Tensor, D: Tensor, alpha: Tensor,
-              solver: str = "MOSEK", tol: float = 1e-6) -> Tuple[np.ndarray, float, dict]:
-        raise NotImplementedError("Subclasses must implement this method")
+        # Dimensions
+        self.nu = None
+        self.ny = None
+        self.nx = None
 
     def _symP(self) -> Tensor:
         return 0.5 * (self.P + self.P.T)
 
-    def forward(self) -> Tensor:
-        raise NotImplementedError("Subclasses must implement this method")
-
-
+    
 class HInfCont(HInfBase):
     @classmethod
-    def solve(cls, A: Tensor, B: Tensor, C: Tensor, D: Tensor, alpha: Tensor,
-              solver: str = "MOSEK", tol: float = 1e-6) -> Tuple[np.ndarray, float, dict]:
+    def solve(cls, A: Tensor, B: Tensor, C: Tensor, D: Tensor, alpha: float = 0.0,
+              solver: str = "MOSEK", tol: float = 1e-8) -> Tuple[Tensor, float, Tensor]:
         A, B, C, D = [x.detach().numpy() for x in [A, B, C, D]]
         nx, nu, ny = A.shape[0], B.shape[1], C.shape[0]
 
         P = Variable((nx, nx), "P", PSD=True)
         gam = Variable()
         M = bmat([
-            [A.T @ P + P @ A, P @ B, C.T],
-            [B.T @ P, -gam * np.eye(nu), D.T],
-            [C, D, -gam * np.eye(ny)]
+            [A.T @ P + P @ A + C.T @ C, P @ B],
+            [B.T @ P, -gam * np.eye(nu)]
         ])
 
         constraints: List[Union[bool, np.ndarray]] = [
-            M << -tol * np.eye(nx + nu + ny),
+            M << -tol * np.eye(nx + nu),
             P - tol * np.eye(nx) >> 0,
-            A.T @ P + P @ A + 2 * alpha * P << -tol * np.eye(nx),
             gam - tol >= 0,
         ]
         objective = Minimize(gam)
@@ -101,30 +63,47 @@ class HInfCont(HInfBase):
         if prob.status in ["infeasible", "unbounded"]:
             raise ValueError("SDP problem is infeasible or unbounded")
 
-        return M.value, prob.value, P.value
+        return -torch.Tensor(M.value), math.sqrt(prob.value), Tensor(P.value)
 
-    def forward(self) -> Tensor:
+    def forward(self) -> Tuple[Tensor, ...]:
         P = self._symP()
-        M11 = self.A.T @ P + P @ self.A + 1 / self.gamma * self.C.T @ self.C
+        M11 = self.A.T @ P + P @ self.A + self.C.T @ self.C
         M12 = P @ self.B
-        M22 = -self.gamma * torch.eye(self.nu, device=self.A.device)
+        M22 = -self.gamma**2 * torch.eye(self.nu, device=self.A.device)
 
         M = torch.cat((torch.cat((M11, M12), 1), torch.cat((M12.T, M22), 1)), 0)
         return -M, P
 
-    def update_matrices(self, *args):
-        if self.extract_lmi_matrices is None:
-            raise ValueError("extract_lmi_matrices is not defined")
-        try:
-            A, B, C, D = self.extract_lmi_matrices()
-        except:
-            A, B, C = self.extract_lmi_matrices()
-            D = torch.zeros(C.shape[0], B.shape[1])
-        self.A = A
-        self.B = B
-        self.C = C
-        self.D = D
+    def _update_matrices(self, *args) -> None:
+            A, B, C = self.extract_matrices()
+            self.A = A
+            self.B = B
+            self.C = C
 
+            if self.P is None or self.gamma is None:
+                self.init_(self.A, self.B, self.C)
+
+    def init_(self,
+                A: Optional[Tensor] = None,
+                B: Optional[Tensor] = None,
+                C: Optional[Tensor] = None,
+                epsilon: float = 1e-4,
+                solver: str = 'MOSEK'):
+            
+        if (A is None and B is None and C is None):
+                A, B, C = self.extract_matrices()
+                
+        assert A is not None and B is not None and C is not None 
+
+        self.nx = B.shape[0]
+        self.nu = B.shape[1]
+        self.ny = C.shape[0]
+        
+        _, gamma, P = HInfCont.solve(A.detach(), B.detach(), C.detach(), torch.zeros((self.ny, self.nu)),solver=solver, tol=epsilon)
+
+        self.gamma = gamma
+        self.P = P
+        
     
 class HInfDisc(HInfBase):
     def __init__(self, *args, **kwargs):

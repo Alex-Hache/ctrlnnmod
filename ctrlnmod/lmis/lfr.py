@@ -111,7 +111,7 @@ class AbsoluteStableLFT(LMI):
 
         return Tensor(-M.value), Tensor(Lambda.value), Tensor(P.value)
 
-    def _proj(self):
+    def _proj(self) -> Tuple[Tensor, ...]:
         return 0.5 * (self.P + self.P.T), torch.diag(self.Lambda_vec)
 
     def forward(self):

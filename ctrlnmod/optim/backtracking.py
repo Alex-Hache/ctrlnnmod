@@ -1,30 +1,59 @@
 import torch.optim as optim
 import torch.nn as nn
 from typing import Callable
-import torch
-from ctrlnmod.lmis import LMI
-
-
-def is_positive_definite(lmi: LMI):
-    try:
-        _ = torch.linalg.cholesky(lmi())
-        return True
-    except RuntimeError:
-        return False
 
 
 class BackTrackOptimizer:
-    def __init__(self, optimizer: optim.Optimizer, module: nn.Module, condition_fn: Callable, beta=0.5, max_iter=20):
-        """
-        Initializes the BackTrackOptimizer.
+    """
+    Wrapper optimizer implementing backtracking line search to enforce a condition on updated parameters.
 
-        Args:
-            optimizer (torch.optim.Optimizer): The optimizer to wrap.
-            module (nn.Module): A function that takes current and candidate parameter states
-                                     and returns True if the candidate should be accepted.
-            beta (float): The beta parameter for backtracking (default: 0.8).
-            max_iter (int): The maximum number of backtracking iterations (default: 10).
-        """
+    This optimizer wraps a PyTorch optimizer and performs a backtracking line search after each step.
+    After performing the step, it checks a user-provided condition function on the updated model parameters.
+    If the condition is not satisfied, it rolls back the parameters and reduces the learning rate by
+    multiplying it by `beta`, then retries the step. This process repeats until the condition is met or
+    the maximum number of backtracking iterations is reached.
+
+    Args:
+        optimizer (torch.optim.Optimizer): The base optimizer to wrap.
+        module (nn.Module): The model whose parameters are being optimized.
+        condition_fn (Callable[[nn.Module], bool]): A callable that receives the model and returns
+            True if the updated parameters satisfy the acceptance condition.
+        beta (float, optional): Multiplicative factor to decrease learning rate during backtracking (default: 0.5).
+        max_iter (int, optional): Maximum number of backtracking iterations (default: 20).
+
+    Attributes:
+        n_backtrack_iter (int): The number of backtracking iterations performed.
+
+    Example:
+        >>> import torch
+        >>> import torch.nn as nn
+        >>> import torch.optim as optim
+        >>>
+        >>> model = MyModel()
+        >>> criterion = nn.MSELoss()
+        >>> base_optimizer = optim.SGD(model.parameters(), lr=0.1)
+        >>>
+        >>> def condition_fn(mod):
+        ...     # Example condition: loss decreases after step
+        ...     output = mod(input)
+        ...     loss = criterion(output, target)
+        ...     return loss.item() < old_loss
+        >>>
+        >>> optimizer = BackTrackOptimizer(base_optimizer, model, condition_fn)
+        >>>
+        >>> def closure():
+        ...     optimizer.zero_grad()
+        ...     output = model(input)
+        ...     loss = criterion(output, target)
+        ...     loss.backward()
+        ...     return loss
+        >>>
+        >>> for input, target in data_loader:
+        ...     old_loss = float('inf')
+        ...     optimizer.step(closure)
+    """
+
+    def __init__(self, optimizer: optim.Optimizer, module: nn.Module, condition_fn: Callable[[nn.Module], bool], beta=0.5, max_iter=20):
         self.optimizer = optimizer
         self.module = module
         self.condition_fn = condition_fn
@@ -38,54 +67,38 @@ class BackTrackOptimizer:
 
         Args:
             closure (callable): A closure that reevaluates the model and returns the loss.
+
+        Returns:
+            The loss returned by the closure after the accepted step.
         """
+        # Save current parameters state
+        state_dict_copy = {k: v.clone() for k, v in self.module.state_dict().items()}
 
-        # Save the current state of parameters
-        state_dict_copy = {}
-        state_dict = self.module.state_dict()
-        for key, value in state_dict.items():
-            state_dict_copy[key] = value.clone()
-        # Perform a single optimization step with the original optimizer
-        self.optimizer.step(closure)
+        # Perform initial optimizer step
+        loss = self.optimizer.step(closure)
 
-        t = 1.0
         iter_count = 0
 
-        while not self.condition_fn(self.module()) and iter_count < self.max_iter:
-            # Restore the previous state
+        # Backtracking loop: check condition and retry with smaller lr if necessary
+        while not self.condition_fn(self.module) and iter_count < self.max_iter:
+            # Roll back parameters
             self.module.load_state_dict(state_dict_copy)
 
-            self.n_backtrack_iter += 1  # Logging how many backtrack iter we did
+            self.n_backtrack_iter += 1
 
-            # Apply the backtracking step
+            # Reduce learning rate by factor beta in all param groups
             for param_group in self.optimizer.param_groups:
-                lr = param_group['lr']
-                for param in param_group['params']:
-                    if param.grad is not None and param in self.module():
-                        param.data.add_(t * param.grad, alpha=-self.beta * lr)
+                param_group['lr'] *= self.beta
 
-            t *= self.beta
+            # Retry step with reduced learning rate
+            loss = self.optimizer.step(closure)
+
             iter_count += 1
+
+        return loss
 
     def zero_grad(self):
         """
         Clears the gradients of all optimized parameters.
         """
         self.optimizer.zero_grad()
-
-# Example usage:
-# model = ...
-# criterion = ...
-# optimizer = optim.SGD(model.parameters(), lr=0.1)
-# condition_fn = lambda old_loss, new_loss: new_loss < old_loss
-# optimizer = BackTrackOptimizer(optimizer, condition_fn)
-
-# def closure():
-#     optimizer.zero_grad()
-#     output = model(input)
-#     loss = criterion(output, target)
-#     loss.backward()
-#     return loss
-
-# for input, target in data_loader:
-#     optimizer.step(closure)

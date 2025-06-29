@@ -5,9 +5,18 @@ import time
 import numpy as np
 import os
 import geotorch_custom.parametrize as P
+from ctrlnmod.models.ssmodels.base import SSModel
+from typing import Optional
 
+"""
+    This module implements simulators to simulate state-space models for a given sequence of inputs.
+
+    TODO : 
+        - add interpolation methods (non held u)
+        - add adjoint method for gradients 
+"""
 class Simulator(nn.Module):
-    def __init__(self, ss_model: nn.Module, ts, nb: int = 1) -> None:
+    def __init__(self, ss_model: SSModel, ts, nb: int = 1) -> None:
         super(Simulator, self).__init__()
         self.ss_model = ss_model
         self.ts = ts  # sampling time
@@ -32,10 +41,13 @@ class Simulator(nn.Module):
     def get_obs_size(self):
         return self.nb  # Number of observations needed for state estimation
 
-    def simulate(self, u: Tensor, x0: Tensor):
+    def simulate(self, u: Tensor, x0: Tensor, d: Optional[Tensor] = None):
         start_time = time.time()
         with torch.no_grad():
-            x_sim, y_sim = self(u[None, :, :], x0[None, :])  # Call to forward
+            u_in = u[None, :, :]
+            x0_in = x0[None, :]
+            d_in = d[None, :] if d is not None else None
+            x_sim, y_sim = self(u_in, x0_in, d_in)  # Call to forward
             x_sim.squeeze_(0)
             y_sim.squeeze_(0)
             sim_time = time.time() - start_time
@@ -72,23 +84,24 @@ class RK4Simulator(Simulator):
     def __str__(self) -> str:
         return f"RK4_{str(self.ss_model)}"
 
-    def forward(self, u_batch, x0_batch=torch.zeros(1)):
+    def forward(self, u_batch, x0_batch=torch.zeros(1), d_batch=None):
         X_sim_list = []
         Y_sim_list = []
         x_step = x0_batch
 
         with P.cached(), self.ss_model._frame_cache.cache_frame():
-            for u_step in u_batch.split(1, dim=1):
+            for i, u_step in enumerate(u_batch.split(1, dim=1)):
                 u_step = u_step.squeeze(1)
+                d_step = d_batch[:, i, :] if d_batch is not None else None
                 X_sim_list += [x_step]
 
                 dt2 = self.ts / 2.0
-                k1, y_step = self.ss_model(u_step, x_step)
+                k1, y_step = self.ss_model(u_step, x_step, d_step)
                 Y_sim_list += [y_step]
 
-                k2_dx, _ = self.ss_model(u_step, x_step + dt2 * k1)
-                k3_dx, _ = self.ss_model(u_step, x_step + dt2 * k2_dx)
-                k4_dx, _ = self.ss_model(u_step, x_step + self.ts * k3_dx)
+                k2_dx, _ = self.ss_model(u_step, x_step + dt2 * k1, d_step)
+                k3_dx, _ = self.ss_model(u_step, x_step + dt2 * k2_dx, d_step)
+                k4_dx, _ = self.ss_model(u_step, x_step + self.ts * k3_dx, d_step)
 
                 dx = self.ts / 6.0 * (k1 + 2.0 * k2_dx + 2.0 * k3_dx + k4_dx)
                 x_step = x_step + dx
@@ -127,25 +140,26 @@ class RK45Simulator(Simulator):
     def __str__(self) -> str:
         return f"RK45_{str(self.ss_model)}"
     
-    def forward(self, u_batch, x0_batch=torch.zeros(1)):
+    def forward(self, u_batch, x0_batch=torch.zeros(1), d_batch=None):
         X_sim_list = []
         Y_sim_list = []
         x_step = x0_batch
 
         with P.cached(), self.ss_model._frame_cache.cache_frame():
-            for u_step in u_batch.split(1, dim=1):
+            for i, u_step in enumerate(u_batch.split(1, dim=1)):
                 u_step = u_step.squeeze(1)
+                d_step = d_batch[:, i, :] if d_batch is not None else None
                 X_sim_list.append(x_step)
                 
                 dt = self.ts
-                k1, y_step = self.ss_model(u_step, x_step)
+                k1, y_step = self.ss_model(u_step, x_step, d_step)
                 Y_sim_list.append(y_step)
                 
-                k2, _ = self.ss_model(u_step, x_step + dt/4 * k1)
-                k3, _ = self.ss_model(u_step, x_step + dt/32 * (3*k1 + 9*k2))
-                k4, _ = self.ss_model(u_step, x_step + dt/2197 * (1932*k1 - 7200*k2 + 7296*k3))
-                k5, _ = self.ss_model(u_step, x_step + dt * (439*k1/216 - 8*k2 + 3680*k3/513 - 845*k4/4104))
-                k6, _ = self.ss_model(u_step, x_step + dt * (-8*k1/27 + 2*k2 - 3544*k3/2565 + 1859*k4/4104 - 11*k5/40))
+                k2, _ = self.ss_model(u_step, x_step + dt/4 * k1, d_step)
+                k3, _ = self.ss_model(u_step, x_step + dt/32 * (3*k1 + 9*k2), d_step)
+                k4, _ = self.ss_model(u_step, x_step + dt/2197 * (1932*k1 - 7200*k2 + 7296*k3), d_step)
+                k5, _ = self.ss_model(u_step, x_step + dt * (439*k1/216 - 8*k2 + 3680*k3/513 - 845*k4/4104), d_step)
+                k6, _ = self.ss_model(u_step, x_step + dt * (-8*k1/27 + 2*k2 - 3544*k3/2565 + 1859*k4/4104 - 11*k5/40), d_step)
                 
                 # Solution d'ordre 5
                 dx = dt * (16*k1/135 + 6656*k3/12825 + 28561*k4/56430 - 9*k5/50 + 2*k6/55)

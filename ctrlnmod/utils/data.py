@@ -16,20 +16,58 @@ import lightning as pl
 @typechecked
 class Experiment(Dataset):
     """
-    This class is composed of the following attributes :
-        * u : input data
-        * y : ouyput (measurement) data
-        * x : state data -- optional but necessary for training state-space models
+    This class represents a single experiment with inputs (u), outputs (y),
+    and optionally states (x) and disturbances (d). It is designed to handle
+    time-series data, where each experiment can have a different number of samples.
+
+    Attributes:
+        u (Tensor): Input data of shape (n_samples, nu).
+        y (Tensor): Output data of shape (n_samples, ny).
+        ts (float): Sampling time.
+        x (Tensor, optional): State data of shape (n_samples, nx).
+        nu (int): Number of inputs.
+        ny (int): Number of outputs.
+        nx (int, optional): Number of states.
+        n_samples (int): Number of samples in the experiment.
+        x_trainable (bool): Whether the state vector is trainable.
+        d (Tensor, optional): Disturbance data of shape (n_samples, nd).
+
+    Methods:
+        __getitem__(idx, seq_len): Returns a tuple of (u, y, x, x0) for the given index and sequence length.
+        __len__(): Returns the number of samples in the experiment.
+        denormalize(u=None, y=None, x=None, scaler=None): Denormalizes the data if a scaler is provided.
+        get_data(idx=None, unscaled=False, scaler=None): Returns the experiment data up to the specified index.
+        plot(idx=None, unscaled=False, scaler=None): Plots the experiment data.
+
+    Args:
+        u (np.ndarray): Input data of shape (n_samples, nu).
+        y (np.ndarray): Output data of shape (n_samples, ny).
+        ts (float): Sampling time.
+        x (np.ndarray, optional): State data of shape (n_samples, nx). Defaults to None.
+        nx (int, optional): Number of states. Must match x.shape[1] if x is provided. Defaults to None.
+        x_trainable (bool): Whether the state vector is trainable. Defaults to False.
+        d (np.ndarray, optional): Disturbance data of shape (n_samples, nd). Defaults to None.
+
+    Raises:
+        ValueError: If u and y do not have the same number of samples.
+        ValueError: If x is provided but x_trainable is True.
+        ValueError: If x is None and nx is not provided.
+        ValueError: If seq_len is invalid.
     """
 
     def __init__(self, u: np.ndarray, y: np.ndarray, ts: float = 1, x=None, nx=None,
-                 x_trainable: bool = False) -> None:
+                 x_trainable: bool = False, d=None) -> None:
         super(Experiment, self).__init__()
         self.u = Tensor(u)
         self.y = Tensor(y)
+        self.d = Tensor(d) if d is not None else None
         self.ts = ts
         self.nu = u.shape[1]
         self.ny = y.shape[1]
+        self.nd = d.shape[1] if d is not None else 0
+        if d is not None and self.d.shape[0] != u.shape[0]:
+            raise ValueError(
+                f"u and d do not have the same number of samples found {u.shape[0]} vs {self.d.shape[0]}")
 
         assert u.shape[0] == y.shape[0], ValueError(
             f"u and y do not have the same number or samples found {u.shape[0]} vs {y.shape[0]}")
@@ -37,6 +75,7 @@ class Experiment(Dataset):
         if x_trainable and x is not None:
             raise ValueError(
                 "A trainable x is incompatible with giving x from experiments")
+        
         if x is not None:
             self.x = Tensor(x)
             self.nx = x.shape[1]
@@ -49,32 +88,43 @@ class Experiment(Dataset):
         else:
             raise ValueError("Please specify a size for state vector")
 
-    def __getitem__(self, idx, seq_len):
+    def __getitem__(self, idx, seq_len): # type: ignore
         """
-            Returns a Tuple composed of u_idx, y_idx, x_idx
+            Returns a Tuple composed of u_idx, y_idx, x_idx and optionally d_idx
             from idx to idx+seq_len
         """
-        return (self.u[idx:idx + seq_len, :], self.y[idx:idx + seq_len, :], self.x[idx:idx + seq_len, :], self.x[idx, :])
+        return (self.u[idx:idx + seq_len, :], self.y[idx:idx + seq_len, :], self.x[idx:idx + seq_len, :], self.x[idx, :],
+                self.d[idx:idx + seq_len, :] if self.d is not None else None)
 
     def __len__(self):
         return self.n_samples
 
-    def __repr__(self):
-        return f'Experiment of length: {self.n_samples} nu={self.nu} ny={self.ny} dt={self.ts}'
+    def __repr__(self) -> str:
+        repr = f"Experiment with nu={self.nu}, ny={self.ny}, nx={self.nx}, n_samples={self.n_samples}, ts={self.ts}"
+        if self.d is not None:
+            repr += f", nd={self.nd}"
+        if self.x_trainable:
+            repr += ", x_trainable=True"
+        else:
+            repr += ", x_trainable=False"
+        return repr
 
     def __str__(self) -> str:
-        return f"Exp_nu={self.nu}_ny={self.ny}_dt={self.ts}"
+        return self.__repr__()
 
-    def denormalize(self, u: Optional[Tensor] = None, y:Optional[Tensor] =None, x: Optional[Tensor]=None, scaler =None):
+    def denormalize(self, u: Optional[Tensor] = None, y:Optional[Tensor] =None, x: Optional[Tensor]=None, 
+                    d: Optional[Tensor]=None, 
+                    scaler =None):
         """Dénormalise les données si un scaler est fourni"""
         if scaler is None:
-            return u, y, x
+            return u, y, x, d
             
         results = []
         temp_exp = Experiment(
             u=u.numpy() if u is not None else np.zeros((1, self.nu)),
             y=y.numpy() if y is not None else np.zeros((1, self.ny)),
             x=x.numpy() if x is not None else np.zeros((1, self.nx)),
+            d=d.numpy() if d is not None else np.zeros((1, self.nd)) if self.nd > 0 else None,
             ts=self.ts
         )
         
@@ -83,40 +133,44 @@ class Experiment(Dataset):
         return (
             temp_exp.u if u is not None else None,
             temp_exp.y if y is not None else None,
-            temp_exp.x if x is not None else None
+            temp_exp.x if x is not None else None,
+            temp_exp.d if d is not None else None
         )
     
     def get_data(self, idx=None, unscaled=False, scaler=None):
         '''
         Return the experiment values up to the idx index if idx is not None
+
         Args:
             idx: Optional[int] - Index jusqu'auquel récupérer les données
             unscaled: bool - Si True et si un scaler est fourni, retourne les données dénormalisées
             scaler: Optional[BaseScaler] - Scaler pour la dénormalisation
+
         Returns:
             Tuple[Tensor, Tensor, Tensor] - (u, y, x) normalisés ou non
         '''
         if idx is not None:
             if idx >= self.n_samples:
-                idx = self.n_samples - 1
-            u, y, x = self.u[:idx, :], self.y[:idx, :], self.x[:idx, :]
+                idx = self.n_samples
+            u, y, x, d = self.u[:idx, :], self.y[:idx, :], self.x[:idx, :], self.d[:idx, :] if self.d is not None else None
         else:
-            u, y, x = self.u, self.y, self.x
+            u, y, x, d = self.u, self.y, self.x, self.d if self.d is not None else None
 
         if unscaled and scaler is not None:
-            u, y, x = self.denormalize(u, y, x, scaler) 
+            u, y, x, d = self.denormalize(u, y, x, scaler) 
         
         return (
-            u.numpy(),
+            u.numpy(), 
             y.numpy(),
-            x.detach().numpy()
+            x.detach().numpy(),
+            d.numpy() if d is not None else None
         )
     
     def plot(self, idx=None, unscaled=False, scaler = None):
         """
         Affiche les données de l'expérience jusqu'à l'index idx
         """
-        u, y, x = self.get_data(idx, unscaled, scaler)
+        u, y, x, d = self.get_data(idx, unscaled, scaler)
         t = np.linspace(0, (u.shape[0]-1)*self.ts, u.shape[0])
         
         fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(12, 8), sharex=True)
@@ -125,6 +179,9 @@ class Experiment(Dataset):
         # Plot des entrées
         for i in range(self.nu):
             ax1.plot(t, u[:, i], label=f'u{i+1}')
+        if d is not None:
+            for i in range(self.nd):
+                ax1.plot(t, d[:, i], label=f'd{i+1}')
         ax1.set_ylabel('Inputs')
         ax1.grid(True)
         ax1.legend()
@@ -207,6 +264,8 @@ class ExperimentsDataset(Dataset):
             assert exp.ny == base_exp.ny, "All experiments must have same number of outputs"
             assert exp.nx == base_exp.nx, "All experiments must have same number of states"
             assert exp.ts == base_exp.ts, "All experiments must have same sampling time" 
+            assert exp.nd == base_exp.nd, "All experiments must have same number of disturbances"
+        self.ts = base_exp.ts
 
 
     def append(self, exp: Experiment) -> None:
@@ -218,6 +277,7 @@ class ExperimentsDataset(Dataset):
             assert exp.ny == base_exp.ny, "New experiment must have same number of outputs"
             assert exp.nx == base_exp.nx, "New experiment must have same number of states"
             assert exp.ts == base_exp.ts, "New experiment must have same sampling time"
+            assert exp.nd == base_exp.nd, "All experiments must have same number of disturbances"
 
         # Si scaled, application de la normalisation à la nouvelle expérience
         # Application du scaler si présent
@@ -261,11 +321,13 @@ class ExperimentsDataset(Dataset):
                 exp = self.experiments[exp_idx]
                 ax = axs[i]
 
-                u, y, _ = exp.get_data(unscaled=unscaled, scaler=self.scaler)
+                u, y, _, d = exp.get_data(unscaled=unscaled, scaler=self.scaler)
                 time = torch.arange(0, len(u)) * exp.ts
 
                 for j in range(exp.nu):
                     ax.plot(time, u[:, j], label=f'u{j+1}')
+                    if d is not None:
+                        ax.plot(time, d[:, j], label=f'd{j+1}', linestyle=':')
                 for j in range(exp.ny):
                     ax.plot(time, y[:, j], label=f'y{j+1}', linestyle='--')
 
@@ -281,13 +343,14 @@ class ExperimentsDataset(Dataset):
 
 class ExperimentsDataModule(pl.LightningDataModule):
     def __init__(self, train_set: ExperimentsDataset, val_set: ExperimentsDataset, 
-                 batch_size: int = 32, num_workers: int = 0, max_idx_val: int = None):
+                 batch_size: int = 32, num_workers: int = 0, max_idx_val: Optional[int] = None):
         super().__init__()
         self.train_set = train_set
         self.val_set = val_set
         self.batch_size = batch_size
         self.num_workers = num_workers
         self.max_idx_val = max_idx_val
+        self.ts = train_set.ts
         
     def setup(self, stage=None):
         if self.max_idx_val is None:
@@ -302,6 +365,7 @@ class ExperimentsDataModule(pl.LightningDataModule):
                     u=exp.u.clone().numpy(),
                     y=exp.y.clone().numpy(),
                     x=exp.x.clone().numpy(),
+                    d=exp.d.clone().numpy() if exp.d is not None else None,
                     ts=exp.ts
                 )
                 self.val_set.scaler.inverse_transform(temp_exp)
@@ -312,8 +376,12 @@ class ExperimentsDataModule(pl.LightningDataModule):
         batch_u = torch.stack([exp.u[:self.max_idx_val] for exp in temp_experiments])
         batch_y_true = torch.stack([exp.y[:self.max_idx_val] for exp in temp_experiments])
         batch_x0 = torch.stack([exp.x[0] for exp in temp_experiments])
+        batch_d = torch.stack([exp.d[:self.max_idx_val] for exp in temp_experiments]) if temp_experiments[0].d is not None else None
         
-        dataset = torch.utils.data.TensorDataset(batch_u, batch_y_true, batch_x0)
+        if batch_d is not None:
+            dataset = torch.utils.data.TensorDataset(batch_u, batch_y_true, batch_x0, batch_d)
+        else:
+            dataset = torch.utils.data.TensorDataset(batch_u, batch_y_true, batch_x0)
         return torch.utils.data.DataLoader(dataset, batch_size=len(self.val_set.experiments))
 
     def train_dataloader(self, unscaled=False):
@@ -324,6 +392,7 @@ class ExperimentsDataModule(pl.LightningDataModule):
                     u=exp.u.clone().numpy(),
                     y=exp.y.clone().numpy(),
                     x=exp.x.clone().numpy(),
+                    d=exp.d.clone().numpy() if exp.d is not None else None,
                     ts=exp.ts
                 ) for exp in self.train_set.experiments],
                 seq_len=self.train_set.seq_len

@@ -1,22 +1,52 @@
 import torch
 from functools import wraps
 from contextlib import contextmanager
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Union
 from torch import Tensor
 
+def parse_act_f(act_f: Union[str, torch.nn.Module]) -> torch.nn.Module:
+    """
+    Parse the activation function from a string or a torch module.
+    
+    Args:
+        act_f (Union[str, torch.nn.Module]): The activation function as a string or a torch module.
+        
+    Returns:
+        torch.nn.Module: The corresponding activation function module.
+    """
+    if isinstance(act_f, str):
+        if act_f == 'relu':
+            return torch.nn.ReLU()
+        elif act_f == 'tanh':
+            return torch.nn.Tanh()
+        elif act_f == 'sigmoid':
+            return torch.nn.Sigmoid()
+        elif act_f == 'leaky_relu':
+            return torch.nn.LeakyReLU()
+        else:
+            raise ValueError(f"Activation function not implemented yet : {act_f}")
+    elif isinstance(act_f, torch.nn.Module):
+        return act_f
+    else:
+        raise TypeError("act_f must be a string or a torch module")
 
 class FrameCacheManager:
     def __init__(self):
-        self.cache: Optional[Tuple[Tensor, Tensor, Tensor]] = None
+        self.cache: Optional[Tuple[Tensor, ...]] = None
         self.is_caching = False
+        self._children = []
     
+    def register_child(self, child_cache: 'FrameCacheManager'):
+        self._children.append(child_cache)
+
     @contextmanager
     def cache_frame(self):
-        """Context manager pour activer/désactiver la mise en cache"""
+        """Context manager to store parameterization results"""
         previous_cache_state = self.is_caching
-        # Activer la mise en cache seulement si elle n'est pas déjà active
         if not previous_cache_state:
             self.is_caching = True
+            for child in self._children:
+                child.is_caching = True
         try:
             yield
         finally:
@@ -24,6 +54,9 @@ class FrameCacheManager:
             if not previous_cache_state:
                 self.is_caching = False
                 self.cache = None
+                for child in self._children:
+                    child.is_caching = False
+                    child.cache = None
 
 def rk4_discretize(A, h):
     I = torch.eye(A.size(0), dtype=A.dtype, device=A.device)
@@ -117,3 +150,4 @@ def backtrack(module, criterion, step_ratio=0.5, max_iter=100):
                 print("Maximum iterations reached")
                 criterion.updatable = False
                 break
+

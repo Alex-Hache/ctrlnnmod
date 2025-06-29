@@ -99,7 +99,7 @@ class FitPercentLoss(BaseLoss):
         Returns:
             Tensor: The computed fit percentage loss with regularization terms added.
         """
-        loss = 1 - torch.norm(output - target) / torch.norm(target)
+        loss = (1 - torch.norm(output - target) / torch.norm(target))*100
         return self.add_regularization(loss, **kwargs)
 
 

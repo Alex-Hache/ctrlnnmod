@@ -4,17 +4,17 @@ import geotorch_custom as geo
 import torch
 from torch.linalg import cholesky, inv
 from torch import Tensor
+from typing import List, Optional
 
-
-class CustomSoftplus(nn.Softplus):
-    def __init__(
-        self, beta: int = 1, threshold: int = 20, margin: float = 1e-2
-    ) -> None:
-        super(CustomSoftplus, self).__init__(beta, threshold)
+class CustomSoftplus(nn.Module):
+    def __init__(self, beta=1.0, threshold=20.0, margin=0.01):
+        super().__init__()
+        self.softplus = nn.Softplus(beta=beta, threshold=threshold)
         self.margin = margin
 
     def forward(self, x):
-        return F.softplus(x, self.beta, self.threshold) + self.margin
+        return self.softplus(x) + self.margin  # ensures strictly positive output
+
 
 
 def softplus_epsilon(x, epsilon=1e-6):
@@ -32,172 +32,114 @@ class ScaledSoftmax(nn.Softmax):
 
 class BetaLayer(nn.Module):
     def __init__(
-        self, nu: int, nx: int, nh: int, act_f: nn.Module = nn.Tanh(), func="softplus", tol=0.01, scale=1.0
+        self,
+        n_in: int,
+        n_out: int,
+        hidden_layers: List[int],
+        act_f: nn.Module = nn.Tanh(),
+        func: str = "softplus",
+        tol: float = 0.01,
+        scale: float = 1.0,
+        use_residual: bool = False,
     ) -> None:
-
         r"""
-        This function initiates a "beta layer" whiches produce a matrix valued function
-        beta(x) where beta(x) is invertible and of size n_inputsx n_inputs :
-            * beta(x) = U sigma(x) V
-            where U,V are orthogonal matrices and
-            sigma(x) a one-layer feedforward neural network  :
-                pos_func(W_out \sigma(W_in x + b_in)+b_out)
-            It is initialized to be Identity matrix
-        """
-        super(BetaLayer, self).__init__()
+        Constructs a matrix-valued function :math:`\beta(x` \in \mathbb{R}^{n_\text{out} \times n_\text{out}}`, defined as:
 
-        self.nu = nu
-        self.nx = nx
-        self.nh = nh
+            :math:`\beta(x) = U · diag(\sigma(x)) · V^T`
+
+        where:
+
+        - :math:`\( U \in \mathbb{R}^{n_\text{out} \times n_\text{in}} \)` and :math:`\( V \in \mathbb{R}^{n_\text{in} \times n_\text{out}} \)` are orthogonal matrices.
+        - :math:`\( \sigma(x) \in \mathbb{R}^{n_\text{out}} \)` is a vector of positive scalars produced by an MLP.
+        - :math:`\( \text{diag}(\sigma(x)) \)` denotes a diagonal matrix with positive entries.
+
+        Args:
+            n_out (int): Output size of the layer. Defines the shape of the square matrix \beta(x).
+            n_in (int): Input feature size (dimensionality of x).
+            hidden_layers (List[int]): List of hidden layer sizes for the MLP computing \sigma(x).
+            act_f (nn.Module): Activation function used between hidden layers.
+            func (str): Type of positive function used at output ("softplus" or "relu").
+            tol (float): Minimum margin to enforce positive definiteness.
+            scale (float): Global scaling of the diagonal values.
+            use_residual (bool): If True, adds an identity matrix to \beta(x) for residual stabilization.
         
-        self.act_f = act_f
-        self.U = nn.Linear(self.nu, self.nx, bias=False)
-        nn.init.eye_(self.U.weight)
-        geo.orthogonal(self.U, "weight")
+        TODO:
+            - Implement support for building beta lyer with Lipschitz bounded MLPs instead of standard MLPs.
+        """
+        super().__init__()
 
-        self.V = nn.Linear(self.nx, self.nu, bias=False)
+        self.n_out = n_out
+        self.n_in = n_in
+        self.scale = scale
+        self.use_residual = use_residual
+
+        # U and V: learnable orthogonal matrices
+        self.U = nn.Linear(n_in, n_out, bias=False)
+        self.V = nn.Linear(n_out, n_in, bias=False)
+        nn.init.eye_(self.U.weight)
         nn.init.eye_(self.V.weight)
+
+        geo.orthogonal(self.U, "weight")
         geo.orthogonal(self.V, "weight")
 
-        self.W_beta_in = nn.Linear(self.nx, self.nh)
-        self.W_beta_out = nn.Linear(self.nh, self.nu)
-        nn.init.zeros_(self.W_beta_out.weight)
-        nn.init.zeros_(self.W_beta_out.bias)
+        # Build the MLP for sigma(x)
+        layers = []
+        in_dim = n_in
+        for out_dim in hidden_layers:
+            layers.append(nn.Linear(in_dim, out_dim))
+            layers.append(act_f)
+            in_dim = out_dim
+        layers.append(nn.Linear(in_dim, n_out))
+        self.mlp_sigma = nn.Sequential(*layers)
 
+        # Choose output positivity function
         if func == "softplus":
-            self.pos_func = CustomSoftplus(beta=1, threshold=20, margin=tol)
+            self.pos_func = CustomSoftplus(beta=1.0, threshold=20.0, margin=tol)
         elif func == "relu":
             self.pos_func = nn.ReLU()
         else:
-            raise NotImplementedError("Not implemented yet")
+            raise NotImplementedError(f"Positive function '{func}' not supported.")
 
-        self.scale = scale
-
-    def forward(self, x):
-        sig = self.W_beta_in(x)
-        sig = self.act_f(sig)
-        sig = self.W_beta_out(sig)
-        sig = self.pos_func(x)/self.scale  # Scaling of the singular values of the matrix
-        return self.U(sig.unsqueeze(-2) @ torch.transpose(self.V.weight, -2, -1))
-
-
-class InertiaMatrix(nn.Module):
-    """
-    Implement a SDP matrix function corresponding to an inertia matrix
-    depending on a variable q
-    """
-
-    def __init__(self, nq, nh, actF=nn.Tanh(), func="softplus", tol=0.01) -> None:
-
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         r"""
-        This function initiates a "beta layer" whiches produce a matrix valued function
-        beta(x) where beta(x) is invertible and of size n_inputsx n_inputs :
-            * beta(x) = U sigma(x) V
-            where U,V are orthogonal matrices and
-            sigma(x) a one-layer feedforward neural network  :
-            pos_func(W_out \sigma(W_in x + b_in)+b_out)
+        Compute the matrix-valued function \beta(x).
 
-            It is initialized to be Identity matrix
+        Args:
+            x (Tensor): Input tensor of shape (..., n_in)
+
+        Returns:
+            Tensor: Output tensor of shape (..., n_out, n_out)
         """
-        super(InertiaMatrix, self).__init__()
+        sig = self.mlp_sigma(x)                        # (..., n_out)
+        sig = self.pos_func(sig) / self.scale          # (..., n_out)
+        sig = sig.unsqueeze(-1)                        # (..., n_out, 1)
 
-        self.nu = nq
-        self.nh = nh
-        self.actF = actF
-        self.U = nn.Linear(self.nu, self.nu, bias=False)
-        nn.init.eye_(self.U.weight)
-        geo.orthogonal(self.U, "weight")
+        U_mat = self.U.weight                          # (n_in, n_out)
+        Vt = self.V.weight.transpose(0, 1)             # (n_out, n_out)
 
-        self.W_beta_in = nn.Linear(self.nu, self.nh)
-        self.W_beta_out = nn.Linear(self.nh, self.nu)
-        nn.init.zeros_(self.W_beta_out.weight)
-        nn.init.zeros_(self.W_beta_out.bias)
+        mid = sig * Vt                                 # (..., n_out, n_out)
+        beta = U_mat @ mid.transpose(1,2)                             # (..., n_out, n_out)
 
-        if func == "softplus":
-            self.pos_func = CustomSoftplus(beta=1, threshold=20, margin=tol)
-        elif func == "relu":
-            self.pos_func = nn.ReLU()
-        else:
-            raise NotImplementedError("Not implemented yet")
+        if self.use_residual:
+            identity = torch.eye(self.n_out, device=x.device).expand_as(beta)
+            beta = identity + beta
 
-    def forward(self, x):
-        sig = self.W_beta_in(x)
-        sig = self.actF(sig)
-        sig = self.W_beta_out(sig)
-        sig = self.pos_func(x)
-        return self.U(sig.unsqueeze(-2) @ self.U.weight.transpose(-2, -1))
+        return beta
 
-
-class CoriolisMatrix(nn.Module):
-    def __init__(self, nq, nh, actF=nn.Tanh(), func="softplus", tol=0.01) -> None:
-
-        r"""
-        This function initiates a "beta layer" whiches produce a matrix valued function
-        beta(x) where beta(x) is invertible and of size n_inputsx n_inputs :
-            * beta(x) = U sigma(x) V
-            where U,V are orthogonal matrices and
-            sigma(x) a one-layer feedforward neural network  :
-            pos_func(W_out \sigma(W_in x + b_in)+b_out)
-
-            It is initialized to be Identity matrix
+    def clone(self) -> "BetaLayer":
         """
-        super(CoriolisMatrix, self).__init__()
-
-        self.nu = nq
-        self.nh = nh
-        self.actF = actF
-        self.U = nn.Linear(self.nu, self.nu, bias=False)
-        nn.init.eye_(self.U.weight)
-        geo.orthogonal(self.U, "weight")
-
-        self.W_beta_in = nn.Linear(self.nu, self.nh)
-        self.W_beta_out = nn.Linear(self.nh, self.nu)
-        nn.init.zeros_(self.W_beta_out.weight)
-        nn.init.zeros_(self.W_beta_out.bias)
-
-        if func == "softplus":
-            self.pos_func = CustomSoftplus(beta=1, threshold=20, margin=tol)
-        elif func == "relu":
-            self.pos_func = nn.ReLU()
-        else:
-            raise NotImplementedError("Not implemented yet")
-
-    def forward(self, x):
-        sig = self.W_beta_in(x)
-        sig = self.actF(sig)
-        sig = self.W_beta_out(sig)
-        sig = self.pos_func(x)
-        return self.U(sig.unsqueeze(-2) @ torch.transpose(self.U.weight, -2, -1))
-
-
-class DDLayer(nn.Module):
-    def __init__(self, Ui: torch.Tensor) -> None:
-        super(DDLayer, self).__init__()
+        Create a clone of the BetaLayer with the same parameters.
         """
-            Ui : inverse of the upper Cholesky decomposition associated to the DD problem
-        """
-        self.Ui = Ui
-        self.act = nn.ReLU()
+        cloned_layer = BetaLayer(
+            n_in=self.n_in,
+            n_out=self.n_out,
+            hidden_layers=[layer.out_features for layer in self.mlp_sigma if isinstance(layer, nn.Linear)],
+            act_f=self.mlp_sigma[1],  # Assuming the first activation function is used
+            func="softplus",  # Default to softplus, can be changed if needed
+            tol=0.01,  # Default tolerance
+            scale=self.scale,
+            use_residual=self.use_residual,
+        )
+        cloned_layer.load_state_dict(self.state_dict())
+        return cloned_layer
 
-    def forward(self, M):
-        """
-        M : linear matrix inequality in Sn+
-        """
-
-        Q = self.Ui.T @ M @ self.Ui
-        dQ = torch.diag(Q)
-        delta_Q = self.act(torch.sum(torch.abs(Q), dim=1) - dQ - torch.abs(dQ))
-
-        DQ = torch.diag(delta_Q)  # (Une) distance à l'ensemble DD+
-
-        return DQ
-
-    def updateU_(self, M):
-        """
-        From the current M value we update U to update search region in DD+
-        If correct : DDLayer(updateU_(M)) = I
-        """
-        # Q = self(M)
-        # M_next = inv(self.Ui.T) @ Q @ inv(self.Ui)
-        # assert torch.all(M_next == M)
-        self.Ui = inv(cholesky(M).mH)

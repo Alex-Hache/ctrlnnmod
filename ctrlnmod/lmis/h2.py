@@ -70,7 +70,7 @@ class H2Cont(LMI):
             self.P = P.requires_grad_(True)
 
     @classmethod
-    def solve(cls, A: Tensor, B: Tensor, C: Tensor, solver="MOSEK", epsilon=1e-6) -> Tuple[Tensor, Tensor, Tensor]:
+    def solve(cls, A: Tensor, B: Tensor, C: Tensor, solver="MOSEK", epsilon=1e-5) -> Tuple[Tensor, Tensor, Tensor]:
 
         A = A.detach().numpy()
         B = B.detach().numpy()

@@ -7,31 +7,28 @@ from torch.nn import Linear, ReLU, Module
 from torch.nn.parameter import Parameter
 import torch.nn.functional as F
 import geotorch_custom as geo
-
+from typing import Union
 
 class SandwichLinear(Linear):
     r"""
-    A specific linear layer with Lipschitz constant equal to scale
+    A specific linear layer with Lipschitz constant bounded by scale.
 
     .. math::
         h_{out} = \sqrt{2} A^T \Psi \sigma \left( \sqrt{2} \Psi^{-1} B h_{in} + b \right)
-    '''
 
-    Attributes
-    ----------
-    alpha : Tensor
-        scaling parameter for computation
-    scale : float
-        scaling parameter to define Lipschitz constant
-    AB : bool
-        If true the product of A and B matrices is computed
-        instead of just B.
-    param : str
-        'expm' or 'cayley' way to parameterize the matrices on the Stiefel manifold
-    scale : float
-        the input tensor is multiplied by scale
+    Attributes:
+        alpha (torch.Tensor): Scaling parameter for computation.
+        scale (float): Scaling parameter to define the Lipschitz constant.
+        AB (bool): If True, the product of A and B matrices is computed instead of just B.
+        param (str): Method to parameterize the matrices on the Stiefel manifold,
+            either 'expm' or 'cayley'.
+        scale (float): The input tensor is multiplied by this scale.
+
+    References:
+        This module includes some bounded Lipschitz layers.
+        See `<https://github.com/acfr/lbdn>`_ for more details.
     """
-    def __init__(self, in_features, out_features, scale=1.0, param='expm', bias=True, AB=False):
+    def __init__(self, in_features, out_features, scale: Union[float, torch.Tensor]=1.0, param='expm', bias=True, AB=False):
 
         super().__init__(in_features + out_features, out_features, bias)
         self.scale = scale
@@ -55,31 +52,32 @@ class SandwichLayer(Linear):
 
     .. math::
         h_{out} = \sqrt{2} A^T \Psi \sigma \left( \sqrt{2} \Psi^{-1} B h_{in} + b \right)
-    '''
 
-    Attributes
-    ----------
-    alpha : Tensor
-        scaling parameter for computation
-    scale : float
-        scaling parameter to define Lipschitz constant
-    AB : bool
-        If true the product of A and B matrices is computed
-        instead of just B.
-    act_f :
-        activation function for the sandwich layer
-    param : str
-        'expm' or 'cayley' way to parameterize the matrices on the Stiefel manifold
-    scale : float
-        the input tensor is multiplied by scale
+    Attributes:
+        alpha : Tensor
+            scaling parameter for computation
+        scale : float | Tensor
+            scaling parameter to define Lipschitz constant
+        AB : bool
+            If true the product of A and B matrices is computed
+            instead of just B.
+        act_f :
+            activation function for the sandwich layer
+        param : str
+            'expm' or 'cayley' way to parameterize the matrices on the Stiefel manifold
+        scale : float
+            the input tensor is multiplied by scale
+    References:
+        This module includes some bounded Lipschitz layers.
+        See `https://github.com/acfr/LBDN`_ for more details.
     """
 
-    def __init__(self, in_features, out_features, scale=1.0, act_f: Module = ReLU(), param='expm', bias=True, AB=True):
+    def __init__(self, in_features, out_features, scale: Union[float, torch.Tensor]=1.0, act_f: Module = ReLU(), param='expm', bias=True, AB=True):
         super().__init__(in_features + out_features, out_features, bias)
         self.param = param
         geo.orthogonal(self, 'weight', triv=param)  # let geotorch handle errors
         self.scale = scale
-        self.psi = Parameter(torch.zeros(out_features, dtype=torch.float32, requires_grad=True))
+        self.psi = Parameter(torch.zeros(out_features, requires_grad=True))
         self.act_f = act_f
 
     def forward(self, x):

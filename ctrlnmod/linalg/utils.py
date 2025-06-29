@@ -9,12 +9,58 @@ from cvxpy.expressions.variable import Variable
 from cvxpy.atoms.affine.bmat import bmat
 from cvxpy.atoms.affine.hstack import hstack
 from cvxpy.atoms.affine.vstack import vstack
-from typing import Union
+from typing import Union, List
 from scipy.linalg import polar
+from torch import Tensor
 
 
-def get_lyap_exp(A):
-    return -torch.max(torch.real(torch.linalg.eigvals(A)))
+
+
+class SoftmaxEta(torch.nn.Module):
+    def __init__(self, eta: float = 1.0, epsilon=1e-6) -> None:
+        super(SoftmaxEta, self).__init__()
+        self.eta = eta
+
+    def __name__(self):
+        return f"SoftmaxEta : eta = {self.eta}"
+
+    def forward(self, x):
+        return self.eta * torch.nn.functional.softmax(x, dim=0)
+
+
+class InvSoftmaxEta(torch.nn.Module):
+    def __init__(self, eta: float = 1.0, epsilon=1e-6) -> None:
+        super(InvSoftmaxEta, self).__init__()
+        self.eta = eta
+        self.epsilon = epsilon
+
+    def __name__(self):
+        return f"SoftmaxEtaInv : eta = {self.eta}"
+
+    def forward(self, s):
+        x = torch.log(s / self.eta)
+        return x
+
+def get_lyap_exp(A) -> float:
+    r"""
+    Compute the Lyapunov exponent of a matrix.
+
+    The Lyapunov exponent is defined as the maximum real part of the eigenvalues
+    of a matrix :math:`A`. It characterizes the asymptotic stability of the
+    linear system :math:`\dot{x} = A x`.
+
+    .. math::
+        \lambda = \max \Re(\lambda_i(A))
+
+    where :math:`\lambda_i(A)` are the eigenvalues of :math:`A`.
+
+    Args:
+        A (torch.Tensor): A square matrix of shape (n, n).
+
+    Returns:
+        float: The Lyapunov exponent of the matrix.
+    """
+    return float(-torch.max(torch.real(torch.linalg.eigvals(A))))
 
 def block_diag(arr_list):
     '''create a block diagonal matrix from a list of cvxpy matrices'''
@@ -48,72 +94,74 @@ def block_diag(arr_list):
 
     return B
 
-def build_D11(weights, n):
-    """
-    Create the W' matrix as a block diagonal matrix with blocks strictly below the main diagonal.
-    
-    Parameters:
-    weights: Either a nn.Sequential model or a list/tensor of weights
-    n: The size of the square matrix (number of rows/columns)
-    
+
+def schur(matrix, dim_A, dim_B, dim_C):
+    r"""
+    Compute the Schur complement of the block D in a 2x2 partitioned matrix.
+
+    The input matrix is assumed to be partitioned as:
+
+    .. math::
+        \begin{bmatrix}
+            A & B \\
+            C & D
+        \end{bmatrix}
+
+    where:
+    - :math:`A` has shape (dim_A, dim_A)
+    - :math:`B` has shape (dim_A, dim_B)
+    - :math:`C` has shape (dim_C, dim_A)
+    - :math:`D` has shape (dim_C, dim_B)
+
+    The Schur complement is computed as:
+
+    .. math::
+        S = A - B D^{-1} C
+
+    Args:
+        matrix (torch.Tensor): A 2D tensor representing the full matrix.
+        dim_A (int): Number of rows and columns of the top-left block A.
+        dim_B (int): Number of columns of blocks B and D.
+        dim_C (int): Number of rows of blocks C and D.
+
     Returns:
-    D11: torch.Tensor representing the W' matrix
-    """
-    # Initialize W' as a zero tensor
-    D11 = torch.zeros(n, n)
-    
-    # Extract weights from the input
-    if isinstance(weights, torch.nn.Sequential):
-        # If weights is a Sequential model, extract weights from its layers
-        weight_list = [layer.weight.data for layer in weights if hasattr(layer, 'weight')]
-    elif isinstance(weights, (list, torch.Tensor)):
-        # If weights is already a list or tensor, use it directly
-        weight_list = weights if isinstance(weights, list) else weights.tolist()
-    else:
-        raise ValueError("Input must be either nn.Sequential, a list, or a tensor of weights")
-    
-    # Ensure we have the correct number of weights
-    if len(weight_list) != n - 1:
-        raise ValueError(f"Incorrect number of weights. Expected {n-1}, got {len(weight_list)}")
-    
-    # Fill the block diagonal elements of W' with the weights
-    for i in range(1, n):
-        D11[i, i-1] = weight_list[i-1]
-    
-    return D11
-
-def schur(matrix, dim_A, dim_B, dim_C, dim_D):
-    """
-    Calcule le complément de Schur pour le bloc A d'une matrice donnée avec des blocs spécifiés.
-
-    Arguments:
-    matrix -- Matrice torch (2D) en entrée.
-    dim_A -- Dimension de la matrice A (nombre de lignes et de colonnes pour un bloc carré).
-    dim_B -- Dimension de la matrice B (nombre de lignes de A et de colonnes de B).
-    dim_C -- Dimension de la matrice C (nombre de lignes de C et de colonnes de A).
-    dim_D -- Dimension de la matrice D (nombre de lignes et de colonnes pour un bloc carré).
-
-    Retourne:
-    Le complément de Schur du bloc A.
+        torch.Tensor: The Schur complement of the block D.
     """
 
-    # Extraction des blocs A, B, C, D
+    # Shape verification
+    expected_rows = dim_A + dim_C
+    expected_cols = dim_A + dim_B
+    if matrix.shape[0] < expected_rows or matrix.shape[1] < expected_cols:
+        raise ValueError("Les dimensions fournies sont incompatibles avec la taille de la matrice.")
+
+    # Blocks extraction
     A = matrix[:dim_A, :dim_A]
     B = matrix[:dim_A, dim_A:dim_A + dim_B]
     C = matrix[dim_A:dim_A + dim_C, :dim_A]
-    D = matrix[dim_A:dim_A + dim_C, dim_A:dim_A + dim_D]
+    D = matrix[dim_A:dim_A + dim_C, dim_A:dim_A + dim_B]
 
-    # Calcul du complément de Schur S = A - B D^{-1} C
-    D_inv = torch.inverse(D)
-    S = A - torch.mm(torch.mm(B, D_inv), C)
+    # D must be square and inversible
+    if D.shape[0] != D.shape[1]:
+        raise ValueError("D must be square")
+    
+    try:
+        D_inv = torch.inverse(D)
+    except RuntimeError as e:
+        raise ValueError("D must be inversible") from e
+
+    # Schur : S = A - B D^{-1} C
+    S = A - torch.matmul(torch.matmul(B, D_inv), C)
 
     return S
 
 
-def isSDP(L: torch.Tensor, tol=1e-3) -> bool:
+
+def is_positive_definite(L: torch.Tensor, tol=1e-3) -> bool:
     '''
     Check if a Tensor is Positive definite up to a fixed tolerance.
 
+    Returns:
+        bool: True if the matrix is positive definite with a maximum deviation from symmetry up to tol, False otherwise.
     '''
     isAllEigPos = torch.all(torch.real(eigvals(L)) > 0)
     isSymetric = torch.all(torch.abs(L - L.T) < tol)
@@ -130,10 +178,10 @@ def isSDP(L: torch.Tensor, tol=1e-3) -> bool:
 
 def getEigenvalues(L: torch.Tensor):
     '''
-    Return the eigenvalues of a given Tensor
+    Return the eigenvalues of a given Tensor L
 
-        params :
-            - L pytorch Tensor
+        Args:
+            torch.Tensor: the eigenvalues vector of L
     '''
     return torch.linalg.eigvals(L)
 
@@ -146,8 +194,12 @@ def is_alpha_stable(A: torch.Tensor, alpha: torch.Tensor):
     return torch.all(eigvals(A) < - alpha)
 
 
-# from https://github.com/locuslab/orthogonal-convolutions
 def cayley(W):
+    r"""
+        Perform Cayley transform of rectangular matrix from 
+        https://github.com/locuslab/orthogonal-convolutions
+
+    """
     if len(W.shape) == 2:
         return cayley(W[None])[0]
     _, cout, cin = W.shape
@@ -161,17 +213,95 @@ def cayley(W):
     return torch.cat((iIpA @ (I_nin - A), -2 * V @ iIpA), axis=1)     # type: ignore
 
 
-def create_block_lower_triangular(block_sizes, device='cpu'):
-    """
-    Create a strictly block lower triangular matrix with non-zero blocks only on the first sub-diagonal.
+import torch
+from torch import Tensor
+from typing import List, Literal
+
+def fill_strictly_block_triangular(A: Tensor, blocks: List[Tensor], type: Literal['lower', 'upper'] = 'lower') -> Tensor:
+    r"""
+    Fill the matrix A on the first sub- or super-diagonal with the list of tensors in `blocks`.
+
+    For example if A is of the form:
+    .. math::
+        A = \begin{bmatrix}
+            A_{11} & A_{12} & A_{13} \\
+            A_{21} & A_{22} & A_{23} \\
+            A_{31} & A_{32} & A_{33} \\
+        \end{bmatrix}
+
+    and blocks contains [C, D], then it returns:
+    .. math::
+        A = \begin{bmatrix}
+            A_{11} & A_{12} & A_{13} \\
+            C & A_{22} & A_{23} \\
+            A_{31} & D & A_{33} \\
+        \end{bmatrix}  if type == 'lower'
 
     Args:
-    block_sizes (list): A list of integers representing the sizes of each block.
-    device (str): The device to create the tensor on ('cpu' or 'cuda').
+        A (Tensor): full 2D tensor to be modified in-place (assumed square block structure)
+        blocks (List[Tensor]): list of blocks to insert along the first diagonal below or above the main
+        type (str): 'lower' or 'upper' to determine which diagonal to fill
 
     Returns:
-    torch.Tensor: The resulting block lower triangular matrix.
+        Tensor: the modified matrix A
     """
+    if type not in ['lower', 'upper']:
+        raise ValueError("type must be either 'lower' or 'upper'")
+
+    block_sizes = [block.shape for block in blocks]
+    row_sizes, col_sizes = zip(*block_sizes)
+
+    n_blocks = len(blocks) + 1
+    assert A.shape[0] == sum(row_sizes) + col_sizes[0], "Matrix A row size mismatch"
+    assert A.shape[1] == sum(col_sizes) + row_sizes[-1], "Matrix A column size mismatch"
+
+    # Compute block start indices
+    row_offsets = [0] + list(torch.cumsum(torch.tensor(row_sizes), dim=0).tolist())
+    col_offsets = [0] + list(torch.cumsum(torch.tensor(col_sizes), dim=0).tolist())
+
+    # Fill appropriate blocks
+    for i, block in enumerate(blocks):
+        if type == 'lower':
+            row_idx = row_offsets[i + 1]
+            col_idx = col_offsets[i]
+        else:  # upper
+            row_idx = row_offsets[i]
+            col_idx = col_offsets[i + 1]
+
+        A[row_idx:row_idx + block.shape[0], col_idx:col_idx + block.shape[1]] = block
+
+    return A
+
+
+
+def create_block_lower_triangular(block_sizes, device='cpu'):
+    r"""
+    Create a strictly block lower triangular matrix with non-zero blocks on the first sub-diagonal.
+
+    Given a list of block sizes, this function generates a block lower triangular
+    matrix where only the first sub-diagonal blocks are filled with random values
+    and all other entries are zero.
+
+    For example, for block sizes [2, 3, 4], the matrix has the structure:
+
+    .. math::
+        \begin{bmatrix}
+            0 & 0 & 0 \\
+            B_{21} & 0 & 0 \\
+            0 & B_{32} & 0
+        \end{bmatrix}
+
+    where :math:`B_{21}` and :math:`B_{32}` are random matrices of appropriate dimensions.
+
+    Args:
+        block_sizes (list of int): Sizes of each block; the total matrix will have shape
+            (sum(block_sizes), sum(block_sizes)).
+        device (str): Device on which to create the tensor ('cpu' or 'cuda').
+
+    Returns:
+        torch.Tensor: A block lower triangular matrix of shape (N, N), where N is the sum of block sizes.
+    """
+
     n_blocks = len(block_sizes)
     total_size = sum(block_sizes)
 
@@ -202,7 +332,7 @@ class MatrixSquareRoot(Function):
     """
     @staticmethod
     def forward(ctx, input) -> torch.Tensor:
-        m = input.detach().cpu().numpy().astype(np.float_)
+        m = input.detach().cpu().numpy().astype(np.float64)
         sqrtm = torch.from_numpy(scipy.linalg.sqrtm(m).real).to(input)
         ctx.save_for_backward(sqrtm)
         return sqrtm
@@ -212,8 +342,8 @@ class MatrixSquareRoot(Function):
         grad_input = None
         if ctx.needs_input_grad[0]:
             sqrtm, = ctx.saved_tensors
-            sqrtm = sqrtm.data.cpu().numpy().astype(np.float_)
-            gm = grad_output.data.cpu().numpy().astype(np.float_)
+            sqrtm = sqrtm.data.cpu().numpy().astype(np.float64)
+            gm = grad_output.data.cpu().numpy().astype(np.float64)
 
             # Given a positive semi-definite matrix X,
             # since X = X^{1/2}X^{1/2}, we can compute the gradient of the
@@ -228,84 +358,7 @@ class MatrixSquareRoot(Function):
 sqrtm = MatrixSquareRoot.apply
 
 
-def solveLipschitz(weights, beta=1, epsilon=1e-6, solver="MOSEK"):
-    r'''
-        This function solve the Linear Matrix Inequality for
-        estimating an upper bound on the Lipschitz constant of
-        a feedforward neural network without skip connections.
-        https://arxiv.org/abs/2005.02929
-        params :
-            * weights : a list of neural network weights
-            * beta : the maximum slope of activation functions
-    '''
-    n_in = weights[0].shape[1]
-    n_hidden = [w.shape[0] for w in weights[:-1]]
-    n_out = weights[-1].shape[0]
-
-    Ts = [Variable((n_h, n_h), diag=True) for n_h in n_hidden]
-    T = block_diag(Ts)
-    Ft = bmat([[np.zeros(T.shape), beta * T],
-              [beta * T, -2 * T]])  # type: ignore
-    Ws = [weight.detach().numpy() for weight in weights[:-1]]
-    W = block_diag(Ws)
-    A = hstack([W, np.zeros((W.shape[0], n_hidden[-1]))])
-
-    I_B = np.eye(sum(n_hidden))
-    B = hstack([np.zeros((I_B.shape[0], n_in)), I_B])
-    AB = vstack([A, B])
-    LMI = AB.T @ Ft @ AB
-
-    LMI_schur = block_diag([LMI, np.zeros((n_out, n_out))])
-
-    # 2eme partie LMI
-    lip = Variable()
-    L = -lip * np.eye(n_in)  # type: ignore
-
-    # Block schur last layer
-    b11 = np.zeros((n_hidden[-1], n_hidden[-1]))
-    b12 = weights[-1].T.detach().numpy()
-    b21 = weights[-1].detach().numpy()
-    b22 = -np.eye(n_out)
-    bf = bmat([[b11, b12], [b21, b22]])
-
-    dim_inter = sum(n_hidden[:-1])
-    if dim_inter > 0:
-        inter = np.zeros((dim_inter, dim_inter))
-        part2 = block_diag([L, inter, bf])
-    else:
-        part2 = block_diag([L, bf])
-
-    M = LMI_schur + part2
-
-    nM = M.shape[0]
-    nT = T.shape[0]
-    constraints = [M << -np.eye(nM) * epsilon, T - (epsilon)
-                   * np.eye(nT) >> 0, lip - epsilon >= 0]  # type: ignore
-    objective = Minimize(lip)  # Find lowest lipschitz constant
-
-    prob = Problem(objective, constraints=constraints)
-    prob.solve(solver)
-    if prob.status not in ["infeasible", "unbounded"]:
-        # Otherwise, problem.value is inf or -inf, respectively.
-        print(" Lipschitz Constant upper bound (All layer versions): \n")
-        print(np.sqrt(lip.value))
-
-    else:
-        raise ValueError("SDP problem is infeasible or unbounded")
-
-    lip = torch.Tensor(np.array(np.sqrt(lip.value))).to(dtype=torch.float32)
-    # Evaluate if it closed to the boundary of the LMI
-    # X = np.linalg.inv(np.matmul(A.T ,P.value) + np.matmul(P.value,A))
-    # t = np.matmul(-A, X) -np.matmul(X,A.T) + 2*alpha*X
-    # If it is close to zero it is at the center
-    # Ts = [torch.Tensor(tens.value.todense()).to(dtype=torch.float32) for tens in Ts]
-    # T = torch.block_diag()
-    T = torch.Tensor(T.value).to(dtype=torch.float32)
-    M = torch.Tensor(M.value).to(dtype=torch.float32)
-    return T, lip, M
-
-
-# Thanks Lezcano again !
+# Thanks Mario Lezcano again !
 def adjoint(A, E, f):
     A_H = A.T.conj().to(E.dtype)
     n = A.size(0)
@@ -342,19 +395,21 @@ logm = Logm.apply
 
 
 def project_onto_stiefel(A: torch.Tensor):
-    """
-    Projects a rectangular matrix A onto the Stiefel manifold.
-    
-    Parameters:
-    -----------
-    A : ndarray
-        Input matrix of shape (n, p)
-        
+    r"""
+    Project a matrix onto the Stiefel manifold.
+
+    The Stiefel manifold :math:`\mathrm{St}(n, p)` is the set of all :math:`n \times p`
+    matrices with orthonormal columns. This function projects the input matrix
+    :math:`A \in \mathbb{R}^{n \times p}` onto the Stiefel manifold using polar decomposition:
+
+    .. math::
+        A = U H, \quad \text{with } U \in \mathrm{St}(n, p)
+
+    Args:
+        A (torch.Tensor): A 2D tensor of shape (n, p) representing the matrix to be projected.
+
     Returns:
-    --------
-    U : ndarray
-        Projected matrix on Stiefel manifold of shape (n, p)
-        with orthonormal columns
+        numpy.ndarray: A matrix of shape (n, p) with orthonormal columns, lying on the Stiefel manifold.
     """
     A = A.detach().numpy()
     # Perform polar decomposition
@@ -367,3 +422,200 @@ def project_onto_stiefel(A: torch.Tensor):
         print(f"Warning: Maximum deviation from orthonormality: {deviation}")
     
     return U
+
+
+def solve_riccati_torch(A: torch.Tensor, 
+                        B: torch.Tensor, 
+                        C: torch.Tensor, 
+                        gamma: float,
+                        tol: float = 1e-10) -> tuple[Tensor, dict]:
+        r"""
+        Solve the continuous-time H-infinity Riccati equation using the Hamiltonian method.
+
+        This function computes the solution :math:`P` to the Riccati equation:
+
+        .. math::
+            A^T P + P A + \frac{1}{\gamma^2} P B B^T P + C^T C = 0
+
+        The solution is based on the spectral decomposition of the associated Hamiltonian matrix.
+
+        Args:
+            A (torch.Tensor): System matrix of shape (n_x, n_x).
+            B (torch.Tensor): Input matrix of shape (n_x, n_u).
+            C (torch.Tensor): Output matrix of shape (n_y, n_x).
+            gamma (float): Positive scalar defining the H-infinity bound.
+            tol (float, optional): Numerical tolerance for stability checks. Default is 1e-10.
+
+        Returns:
+            tuple:
+                - P (torch.Tensor or None): The symmetric solution matrix of shape (n_x, n_x), or None if the computation fails.
+                - info (dict): Dictionary containing:
+                    - 'success' (bool): Whether the Riccati solution was successfully computed.
+                    - 'eigvals' (torch.Tensor): Eigenvalues of the Hamiltonian matrix.
+                    - 'residual_norm' (float, optional): Norm of the residual in the Riccati equation.
+                    - 'is_positive' (bool, optional): Whether P is positive definite.
+                    - 'cond_X' (float, optional): Condition number of the matrix X in the stable eigenspace.
+                    - 'error' (str, optional): Error message if the computation failed.
+
+        References:
+            [1] https://web.stanford.edu/~boyd/papers/bisection_hinfty.html
+            
+        """
+
+
+        nx = A.shape[0]
+        gamma_sq_inv = 1/(gamma**2)
+        
+        # Construction de la matrice hamiltonienne
+        H_11 = A
+        H_12 = gamma_sq_inv * (B @ B.T)
+        H_21 = -(C.T @ C)
+        H_22 = -A.T
+        
+        H = torch.block_diag(H_11, H_22)
+        H[:nx, nx:] = H_12
+        H[nx:, :nx] = H_21
+        
+        # Calcul des valeurs et vecteurs propres
+        # Note: torch.linalg.eig retourne les valeurs complexes même pour matrices réelles
+        eigvals, eigvecs = torch.linalg.eig(H)
+        
+        # Conversion en valeurs réelles pour le tri
+        real_parts = eigvals.real
+        
+        # Tri des valeurs propres par partie réelle
+        sorted_indices = torch.argsort(real_parts)
+        eigvals = eigvals[sorted_indices]
+        eigvecs = eigvecs[:, sorted_indices]
+        
+        # Vérification du nombre de valeurs propres stables
+        n_stable = torch.sum(real_parts[sorted_indices] < -tol).item()
+        
+        if n_stable != nx:
+            # Ajuster le seuil si nécessaire
+            alternative_tol = abs(real_parts[nx-1].item()) * 10
+            print(f"Adjusting tolerance from {tol} to {alternative_tol}")
+            stable_indices = real_parts < alternative_tol
+        else:
+            stable_indices = real_parts < -tol
+        
+        # Extraire les vecteurs propres stables
+        stable_eigvecs = eigvecs[:, stable_indices]
+        
+        if stable_eigvecs.shape[1] != nx:
+            return {
+                'success': False,
+                'eigvals': eigvals,
+                'error': f"Got {stable_eigvecs.shape[1]} stable eigenvectors, expected {nx}"
+            }
+        
+        # Extraction de X et Y
+        X = stable_eigvecs[:nx, :]
+        Y = stable_eigvecs[nx:, :]
+        
+        # Vérifier le conditionnement de X
+        try:
+            cond_X = torch.linalg.cond(X).item()
+        except:
+            cond_X = float('inf')
+        
+        if cond_X > 1e12:  # seuil arbitraire
+            print(f"Warning: X is poorly conditioned (cond = {cond_X:.2e})")
+        
+        try:
+            # Utiliser la pseudo-inverse si X est mal conditionné
+            if cond_X > 1e12:
+                # Calcul manuel de la pseudo-inverse pour plus de contrôle
+                U, S, Vh = torch.linalg.svd(X)
+                S_pinv = torch.where(S > tol * S[0], 1/S, torch.zeros_like(S))
+                X_pinv = (Vh.T.conj() * S_pinv.unsqueeze(0)) @ U.T.conj()
+                P = Y @ X_pinv
+            else:
+                P = Y @ torch.linalg.inv(X)
+                
+            # Prendre la partie réelle et symétriser
+            P = P.real
+            P = (P + P.T)/2
+            
+            # Vérifier que P est définie positive
+            try:
+                L = torch.linalg.cholesky(P)
+                is_positive = True
+            except:
+                is_positive = False
+                print("Warning: P is not positive definite")
+            
+            # Calculer le résidu
+            riccati_residual = (A.T @ P + P @ A + 
+                            gamma_sq_inv * P @ B @ B.T @ P +
+                            C.T @ C)
+            residual_norm = torch.norm(riccati_residual).item()
+            
+            return P, {
+                'success': True,
+                'eigvals': eigvals,
+                'residual_norm': residual_norm,
+                'is_positive': is_positive,
+                'cond_X': cond_X
+            }
+            
+        except Exception as e:
+            return None,{
+                'success': False,
+                'eigvals': eigvals,
+                'error': str(e)
+            }
+        
+
+def check_observability(A: torch.Tensor, C: torch.Tensor, tol: float = 1e-10) -> bool:
+    """
+    Check the observability of a system defined by matrices A and C.
+    
+    Args:
+        A : torch.Tensor
+            State transition matrix of shape (n, n).
+        C : torch.Tensor
+            Output matrix of shape (m, n).
+        tol : float
+            Tolerance for numerical stability.
+        
+    Returns:
+        bool
+            True if the system is observable, False otherwise.
+    """
+    n = A.shape[0]
+    O = C.clone()
+    
+    for i in range(1, n):
+        O = torch.cat((O, C @ torch.matrix_power(A, i)), dim=0)
+    
+    rank_O = torch.linalg.matrix_rank(O)
+    
+    return rank_O == n
+
+
+def check_controllability(A: torch.Tensor, B: torch.Tensor, tol: float = 1e-10) -> bool:
+    """
+    Check the controllability of a system defined by matrices A and B.
+
+    Args:
+        A : torch.Tensor
+            State transition matrix of shape (n, n).
+        B : torch.Tensor
+            Input matrix of shape (n, m).
+        tol : float
+            Tolerance for numerical stability.
+
+    Returns:    
+        bool
+            True if the system is controllable, False otherwise.
+    """
+    n = A.shape[0]
+    C = B.clone()
+    
+    for i in range(1, n):
+        C = torch.cat((C, B @ torch.matrix_power(A, i)), dim=1)
+    
+    rank_C = torch.linalg.matrix_rank(C)
+    
+    return rank_C == n  

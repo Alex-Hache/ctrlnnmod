@@ -5,7 +5,7 @@ from typeguard import typechecked
 from ..utils import Experiment
 
 class BaseScaler(ABC):
-    """Classe de base abstraite pour les transformations linéaires"""
+    """Abstract class for all linear transformations"""
     
     def __init__(self, feature_names: List[str] = ['u', 'y', 'x']):
         self.feature_names = feature_names
@@ -15,11 +15,11 @@ class BaseScaler(ABC):
         
     @abstractmethod
     def fit(self, experiments: List['Experiment']) -> None:
-        """Calcule les paramètres de transformation à partir des données"""
+        """Compute transformation parameters from data/"""
         pass
     
     def transform(self, experiment: 'Experiment') -> None:
-        """Applique la transformation à une expérience"""
+        """Apply transform to an experiment"""
         if not self.is_fitted:
             raise RuntimeError("Scaler must be fitted before transform")
             
@@ -29,17 +29,17 @@ class BaseScaler(ABC):
                 T = self.transform_matrices[key]
                 b = self.transform_biases[key]
                 
-                # Application de la transformation linéaire
+                # Applying linear transformation
                 transformed_data = torch.matmul(data, T.T) + b
                 
-                # Préservation du gradient si nécessaire
+                # Store requires_grad value
                 if getattr(data, 'requires_grad', False):
                     transformed_data.requires_grad_(True)
                     
                 setattr(experiment, key, transformed_data)
                 
     def inverse_transform(self, experiment: 'Experiment') -> None:
-        """Applique la transformation inverse à une expérience"""
+        """Apply the inverse transform to an experiment"""
         if not self.is_fitted:
             raise RuntimeError("Scaler must be fitted before inverse_transform")
             
@@ -62,7 +62,7 @@ class BaseScaler(ABC):
 
 
     def save_parameters(self) -> Dict:
-        """Sauvegarde les paramètres du scaler"""
+        """Save scaler transformation parameters"""
         if not self.is_fitted:
             raise RuntimeError("Cannot save parameters of unfitted scaler")
             
@@ -74,7 +74,7 @@ class BaseScaler(ABC):
             'is_fitted': self.is_fitted
         }
         
-        # Ajout des paramètres spécifiques aux sous-classes
+        
         if isinstance(self, MinMaxScaler):
             params.update({
                 'data_min': {k: v.clone() for k, v in self.data_min.items()},
@@ -87,8 +87,7 @@ class BaseScaler(ABC):
                 'stds': {k: v.clone() for k, v in self.stds.items()}
             })
         elif isinstance(self, CustomTScaler):
-            # Pour CustomTScaler, les matrices et biais sont déjà sauvegardés
-            # dans transform_matrices et transform_biases
+            # For CustomTScaler, matrices and biases are already saved in transform and inverse_transform
             pass
         
         return params
