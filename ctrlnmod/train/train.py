@@ -1,20 +1,11 @@
-from alive_progress import alive_bar
-import time
 import torch
-import math
-from ..integrators.integrators import Simulator
-from abc import ABC, abstractmethod
-from ..utils.data import ExperimentsDataset
-from torch.utils.data import DataLoader
-from typing import Union, Optional
-from ..losses.losses import BaseLoss
-from ..utils.misc import is_legal, flatten_params, write_flat_params
+from typing import Optional
 import lightning as pl
 from lightning.pytorch.loggers import TensorBoardLogger
 from lightning.pytorch.callbacks import EarlyStopping, Timer, Callback, ModelCheckpoint
 from ctrlnmod.optim import ProjectedOptimizer, BackTrackOptimizer, project_to_pos_def
 import os
-from typing import Callable, Optional, Dict, Any
+from typing import Callable, Optional
 
 '''
 def backtrack(self, *args, step_ratio=0.5, max_iter=100):

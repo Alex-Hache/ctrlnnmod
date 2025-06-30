@@ -43,6 +43,6 @@ setup(
     keywords=["Neural networks", "Linear Matrix Inequalities", "Pytorch"],
     packages=find_packages(),
     python_requires=">=3.5",
-    install_requires=["torch>=2.0", "numpy", "cvxpy[MOSEK]>=1.5", "typeguard", "matplotlib", "scipy>=1.7", "lightning"],
+    install_requires=["torch>=2.0", "numpy", "cvxpy[MOSEK]>=1.5", "typeguard", "matplotlib", "scipy>=1.7", "lightning", "tensorboard"],
     extras_require={"dev": DEV_REQUIRES, "test": TEST_REQUIRES},
 )
