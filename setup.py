@@ -27,7 +27,7 @@ with open("README.md", "r", encoding="utf8") as fh:
     long_description = fh.read()
 
 
-VERSION = "0.2.7"
+VERSION = "0.2.8"
 
 setup(
     name="ctrlnmod",
@@ -43,6 +43,6 @@ setup(
     keywords=["Neural networks", "Linear Matrix Inequalities", "Pytorch"],
     packages=find_packages(),
     python_requires=">=3.5",
-    install_requires=["torch>=2.0", "numpy", "cvxpy[MOSEK]<=1.5", "typeguard", "matplotlib", "scipy>=1.7", "lightning"],
+    install_requires=["torch>=2.0", "numpy", "cvxpy[MOSEK]>=1.5", "typeguard", "matplotlib", "scipy>=1.7", "lightning"],
     extras_require={"dev": DEV_REQUIRES, "test": TEST_REQUIRES},
 )
