@@ -25,7 +25,7 @@ From these LMIs one can obtain models with certified properties such as stabilit
 
 
 ## Geotorch backend
-Finally the parametrizations involving Positive (Semi-) Definite (PSD) matrices are built using the [geotorch](https://github.com/lezcano/geotorch) library.
+Finally, the parametrizations involving Positive (Semi-) Definite (PSD) matrices are built using the [geotorch](https://github.com/lezcano/geotorch) library.
 Since the right inverse methods now involve solving a LMI, cvxpy is now needed, an extended version is then included in this library.
 
 
@@ -33,12 +33,14 @@ Since the right inverse methods now involve solving a LMI, cvxpy is now needed, 
 In order to train networks on data coming from several experiments and trajectories the class ExperimentsDataset encapsulates different experiments
 and is readily compatible with DataLoader. 
 
+## Minimalist working example :
+A minimalist working example for the simple pendulum can be found in example_pendulum.py
 
 This library is the summary of my PhD's work and is still currently under development. 
 
 ### Future updates
 * Manage compatibility with torchdiffeq integrators
 * Implement stability-based initializations strategies
-* And enabling gradient and hessian logging with TensorBoardX and [PyHessian](https://github.com/amirgholami/PyHessian)
+* And enabling hessian logging with [PyHessian](https://github.com/amirgholami/PyHessian)
 
-Feel free to contribute and you can contact me at alexandre DOT hache AT imt-atlantique DOT fr
+Feel free to contribute and you can contact me at alexandre DOT hache AT outlook DOT fr
