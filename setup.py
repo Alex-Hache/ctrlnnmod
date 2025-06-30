@@ -6,6 +6,7 @@ TEST_REQUIRES = ["pytest"]
 DEV_REQUIRES = TEST_REQUIRES + [
     "black",
     "flake8",
+    "sphinx"
 ]
 
 classifiers = [
@@ -26,7 +27,7 @@ with open("README.md", "r", encoding="utf8") as fh:
     long_description = fh.read()
 
 
-VERSION = "0.2.6"
+VERSION = "0.2.7"
 
 setup(
     name="ctrlnmod",
@@ -42,6 +43,6 @@ setup(
     keywords=["Neural networks", "Linear Matrix Inequalities", "Pytorch"],
     packages=find_packages(),
     python_requires=">=3.5",
-    install_requires=["torch>=1.9", "numpy", "cvxpy[MOSEK]<=1.5", "typeguard", "alive_progress", "matplotlib"],
+    install_requires=["torch>=2.0", "numpy", "cvxpy[MOSEK]<=1.5", "typeguard", "matplotlib", "scipy>=1.7"],
     extras_require={"dev": DEV_REQUIRES, "test": TEST_REQUIRES},
 )
