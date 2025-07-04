@@ -81,6 +81,7 @@ class ILOFController(nn.Module):
         self.ny = ny
         self.hidden_layers = hidden_layers
 
+        self.inversed = True  # A flag to specify the forward pass is the inverse of the actual controller
         if nd is not None:
             self.nd = nd
             n_inputs = ny + nd
@@ -126,6 +127,15 @@ class ILOFController(nn.Module):
         cloned_controller.alpha = self.alpha.clone()
         return cloned_controller
     
+    def inverse(self, v, y_hat, d_hat):
+        """
+            Inverse of the forward pass : it gives the linearizing control law with a new entry v.
+        """
+
+        alpha = self.alpha(torch.cat((y_hat, d_hat), dim=1))
+        # print(f"Alpha value: {alpha} ")
+        return v - alpha
+    
 class BetaILOFController(ILOFController):
     r"""
     Inverse of a Linearizing Output Feedback (ILOF) controller with a Beta decoupling matrix function.
@@ -157,6 +167,8 @@ class BetaILOFController(ILOFController):
         self.act_f = parse_act_f(act_f)
         self.beta = BetaLayer(n_in=n_inputs, n_out=nu, hidden_layers=hidden_layers, act_f=self.act_f)
 
+        self.inversed = True  # A flag to specify the forward pass is the inverse of the actual controller
+    
     def forward(self, u: Tensor, y: Tensor, d: Optional[Tensor] = None) -> Tensor:
         """
         Forward pass of the Beta ILOF controller.
@@ -190,6 +202,9 @@ class BetaILOFController(ILOFController):
         cloned_controller.alpha = self.alpha.clone()
         cloned_controller.beta = self.beta.clone()
         return cloned_controller
+    
+    def inverse(self, v, y_hat, d_hat):
+        raise NotImplementedError("TODO")
     
 class ILSFController(nn.Module):
     """
@@ -226,6 +241,8 @@ class ILSFController(nn.Module):
         self.nu = nu
         self.nx = nx
         self.hidden_layers = hidden_layers
+        self.inversed = True  # A flag to specify the forward pass is the inverse of the actual controller
+
 
         if nd is not None:
             self.nd = nd
@@ -272,7 +289,15 @@ class ILSFController(nn.Module):
         cloned_controller.alpha = self.alpha.clone()
         return cloned_controller
     
-
+    def inverse(self, v, x, d=None):
+        if d is not None:
+            inputs = torch.cat((x, d), dim=-1)
+        else:
+            inputs = x
+        
+        alpha_x = self.alpha(inputs)
+        return v - alpha_x
+    
 class BetaILSFController(ILSFController):
     r"""
     Inverse of a Linearizing State Feedback (ILSF) controller with a Beta decoupling matrix function.
@@ -459,7 +484,8 @@ class FLNSSM(SSModel):
             *args: Positional arguments for the linear model and controller.
             **kwargs: Keyword arguments for the linear model and controller.
         """
-        pass # Every initialisation must be done through the init_weights_ method of the linear model and the controller
+        torch.nn.init.zeros_(self.controller.alpha.layers.output.weight)
+
     
     def clone(self) -> 'FLNSSM':
         """
@@ -469,7 +495,7 @@ class FLNSSM(SSModel):
             FLNSSM: A new instance of the FLNSSM model with the same parameters.
         """
         cloned_model = FLNSSM(nu=self.nu, ny=self.ny, nx=self.nx, linear_model=self.linear_model.clone(),
-                             controller_type=self.controller.__class__.__name__,
+                             controller_type=self.controller_type,
                              nd=self.nd, hidden_layers=self.hidden_layers, act_f=self.act_f_str)
 
         cloned_model.linear_model = self.linear_model.clone()

@@ -74,10 +74,7 @@ class AlphaStable(ProductManifold):
             except SolverError:
                 prob.solve()  # If MOSEK is not installed then try SCS by default
 
-            if prob.status not in ["infeasible", "unbounded"]:
-                # Otherwise, problem.value is inf or -inf, respectively.
-                print(f" P eigenvalues : {np.linalg.eig(P.value)[0]}\n")
-            else:
+            if prob.status  in ["infeasible", "unbounded"]:
                 raise ValueError("SDP problem is infeasible or unbounded")
 
             # Now initialize

@@ -3,6 +3,19 @@ from torch import Tensor
 from ctrlnmod.utils import FrameCacheManager
 from abc import ABC, abstractmethod
 from typing import Tuple, Optional
+import inspect
+from importlib import import_module
+
+
+
+def get_fqn(obj):
+    return obj.__module__ + "." + obj.__class__.__name__
+
+
+def import_class(fqn: str):
+    mod, cls = fqn.rsplit(".", 1)
+    return getattr(import_module(mod), cls)
+
 
 
 class SSModel(Module, ABC):
@@ -97,3 +110,37 @@ class SSModel(Module, ABC):
             Clone the model, it has to be implemented to be compliant with simulator classes.
         """
         raise NotImplementedError("State-space models must implement a clone method")
+    
+
+    def get_config(self):
+        cls = self.__class__
+        sig = inspect.signature(cls.__init__)
+        kwargs = {}
+
+        for name, param in sig.parameters.items():
+            if name == "self":
+                continue
+            if not hasattr(self, name):
+                raise ValueError(f"Attribute '{name}' not found in {cls.__name__}")
+            value = getattr(self, name)
+
+            # Recursively get config if it's another configurable module
+            if isinstance(value, SSModel):
+                value = value.get_config()
+
+            kwargs[name] = value
+
+        return {
+            "class": get_fqn(self),
+            "kwargs": kwargs,
+        }
+
+    @classmethod
+    def from_config(cls, config):
+        kwargs = config["kwargs"]
+        # Recursively rebuild submodules
+        for k, v in kwargs.items():
+            if isinstance(v, dict) and "class" in v and "kwargs" in v:
+                sub_cls = import_class(v["class"])
+                kwargs[k] = sub_cls.from_config(v)
+        return cls(**kwargs)

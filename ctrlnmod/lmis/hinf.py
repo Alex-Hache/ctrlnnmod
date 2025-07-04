@@ -35,9 +35,14 @@ class HInfBase(LMI):
     
 class HInfCont(HInfBase):
     @classmethod
-    def solve(cls, A: Tensor, B: Tensor, C: Tensor, D: Tensor, alpha: float = 0.0,
+    def solve(cls, A: Tensor, B: Tensor, C: Tensor, D: Optional[Tensor]=None, alpha: float = 0.0,
               solver: str = "MOSEK", tol: float = 1e-8) -> Tuple[Tensor, float, Tensor]:
-        A, B, C, D = [x.detach().numpy() for x in [A, B, C, D]]
+        if D is not None:
+            A, B, C, D = [x.detach().numpy() for x in [A, B, C, D]]
+        else:
+            A, B, C = [x.detach().numpy() for x in [A, B, C]]
+            D = torch.zeros((C.shape[0], B.shape[1]))
+
         nx, nu, ny = A.shape[0], B.shape[1], C.shape[0]
 
         P = Variable((nx, nx), "P", PSD=True)
@@ -103,6 +108,10 @@ class HInfCont(HInfBase):
 
         self.gamma = gamma
         self.P = P
+
+        self.A = A
+        self.B = B
+        self.C = C
         
     
 class HInfDisc(HInfBase):

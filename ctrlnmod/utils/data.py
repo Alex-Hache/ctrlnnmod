@@ -340,6 +340,25 @@ class ExperimentsDataset(Dataset):
             plt.tight_layout()
             plt.show()
 
+    def get_experiments(self):
+
+        batch_size = self.n_exp
+        max_idx = max([len(exp) for exp in self.experiments])
+        batched_experiments_u = torch.zeros((batch_size, max_idx, self.experiments[0].u.shape[1]))
+        batched_experiments_y = torch.zeros((batch_size, max_idx, self.experiments[0].y.shape[1]))
+        if not any([exp.d is None for exp in self.experiments]):
+            batched_experiments_d = torch.zeros((batch_size, max_idx, self.experiments[0].d.shape[1]))
+        else:
+            batched_experiments_d = None
+
+
+        for idx, exp in enumerate(self.experiments):
+            batched_experiments_u[idx, :exp.u.shape[0], :] = exp.u
+            batched_experiments_y[idx, :exp.y.shape[0], :] = exp.y
+            if not any([exp.d is None for exp in self.experiments]):
+                batched_experiments_d[idx, :exp.d.shape[0], :] = exp.d
+
+        return batched_experiments_u, batched_experiments_y, batched_experiments_d
 
 class ExperimentsDataModule(pl.LightningDataModule):
     def __init__(self, train_set: ExperimentsDataset, val_set: ExperimentsDataset, 

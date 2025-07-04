@@ -24,7 +24,7 @@ def build_exo_linear(dims):
 
 
 @pytest.mark.parametrize("builder", ["build_linear", "build_exo_linear"])
-def test_lipschitz_lmi_hook(request, builder, dims):
+def test_hinf_lmi_hook(request, builder, dims):
     model = request.getfixturevalue(builder)
 
     lmi = HInfCont(model, extract_matrices=model.to_hinf)

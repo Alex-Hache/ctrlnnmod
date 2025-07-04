@@ -8,7 +8,7 @@ from tensorboard.backend.event_processing import event_accumulator
 
 def save_hyperparams_to_csv(
     hyperparams: Dict[str, Any],
-    version: str,
+    version: int,
     csv_path: str = 'hyperparameters.csv'
 ) -> None:
     """
