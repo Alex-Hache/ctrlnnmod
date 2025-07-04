@@ -15,7 +15,7 @@ def set_hyperparameters():
         'batch_size': 512,
         'nx' : 2,
         'lr' : 1e-2,
-        'epochs' : 2,
+        'epochs' : 100,
         'lambda_logdet' : 1e-2
 
     }
