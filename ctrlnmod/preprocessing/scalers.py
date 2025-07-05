@@ -7,7 +7,7 @@ from ..utils import Experiment
 class BaseScaler(ABC):
     """Abstract class for all linear transformations"""
     
-    def __init__(self, feature_names: List[str] = ['u', 'y', 'x']):
+    def __init__(self, feature_names: List[str] = ['u', 'y', 'x', 'd']):
         self.feature_names = feature_names
         self.is_fitted = False
         self.transform_matrices: Dict[str, torch.Tensor] = {}
@@ -131,7 +131,7 @@ class BaseScaler(ABC):
 class MinMaxScaler(BaseScaler):
     """Implémentation de la normalisation min-max"""
     
-    def __init__(self, feature_names: List[str] = ['u', 'y', 'x'],
+    def __init__(self, feature_names: List[str] = ['u', 'y', 'x', 'd'],
                  feature_range: tuple = (0, 1)):
         super().__init__(feature_names)
         self.feature_range = feature_range
@@ -170,7 +170,7 @@ class MinMaxScaler(BaseScaler):
 class StandardScaler(BaseScaler):
     """Implémentation de la standardisation (moyenne=0, variance=1)"""
     
-    def __init__(self, feature_names: List[str] = ['u', 'y', 'x']):
+    def __init__(self, feature_names: List[str] = ['u', 'y', 'x', 'd']):
         super().__init__(feature_names)
         self.means: Dict[str, torch.Tensor] = {}
         self.stds: Dict[str, torch.Tensor] = {}
@@ -213,7 +213,7 @@ class CustomTScaler(BaseScaler):
     
     def __init__(self, transform_matrices: Dict[str, torch.Tensor],
                  transform_biases: Optional[Dict[str, torch.Tensor]] = None,
-                 feature_names: List[str] = ['u', 'y', 'x']):
+                 feature_names: List[str] = ['u', 'y', 'x', 'd']):
         """
         Args:
             transform_matrices: Dictionnaire contenant les matrices T pour chaque feature

@@ -8,6 +8,7 @@ from . import models
 from . import train
 from . import utils
 from . import constraints
+from . import preprocessing
 __all__ = [
     'integrators',
     'linalg',
@@ -16,5 +17,6 @@ __all__ = [
     'models',
     'train',
     'utils',
-    'constraints'
+    'constraints',
+    'preprocessing'
 ]
