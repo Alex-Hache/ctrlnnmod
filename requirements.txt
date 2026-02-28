@@ -1,0 +1,8 @@
+torch>=2.0
+numpy
+cvxpy[MOSEK]>=1.5
+typeguard
+matplotlib
+scipy>=1.7
+lightning
+tensorboard
