@@ -1,8 +1,11 @@
+import logging
 import torch
 from functools import wraps
 from contextlib import contextmanager
 from typing import Optional, Tuple, Union
 from torch import Tensor
+
+logger = logging.getLogger(__name__)
 
 def parse_act_f(act_f: Union[str, torch.nn.Module]) -> torch.nn.Module:
     """
@@ -147,7 +150,7 @@ def backtrack(module, criterion, step_ratio=0.5, max_iter=100):
             write_flat_params(module, theta)
             i += 1
             if i > max_iter:
-                print("Maximum iterations reached")
+                logger.warning("Maximum iterations reached")
                 criterion.updatable = False
                 break
 

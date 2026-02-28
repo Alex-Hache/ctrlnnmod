@@ -1,3 +1,4 @@
+import logging
 from typing import Tuple
 import numpy as np
 import torch
@@ -6,6 +7,8 @@ from torch.nn import Parameter
 import cvxpy as cp
 # from ..linalg.utils import isSDP
 from .base import LMI
+
+logger = logging.getLogger(__name__)
 
 
 class LyapunovDiscrete(LMI):
@@ -158,10 +161,10 @@ if __name__ == "__main__":
 
     # Discrete-time LMI
     P_discrete, LMI_discrete = LyapunovDiscrete.solve(A, alpha)
-    print(f"Discrete-time P: {P_discrete}")
-    print(f"Discrete-time LMI: {LMI_discrete}")
+    logger.debug(f"Discrete-time P: {P_discrete}")
+    logger.debug(f"Discrete-time LMI: {LMI_discrete}")
 
     # Continuous-time LMI
     P_continuous, LMI_continuous = LyapunovContinuous.solve(A, alpha)
-    print(f"Continuous-time P: {P_continuous}")
-    print(f"Continuous-time LMI: {LMI_continuous}")
+    logger.debug(f"Continuous-time P: {P_continuous}")
+    logger.debug(f"Continuous-time LMI: {LMI_continuous}")

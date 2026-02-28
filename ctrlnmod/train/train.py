@@ -1,3 +1,4 @@
+import logging
 import torch
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from typing import Optional
@@ -8,10 +9,12 @@ from ctrlnmod.optim import ProjectedOptimizer, BackTrackOptimizer, project_to_po
 import os
 from typing import Callable, Optional
 
+logger = logging.getLogger(__name__)
+
 '''
 def backtrack(self, *args, step_ratio=0.5, max_iter=100):
     with torch.no_grad():
-        print(" Statrting backtracking")
+        logger.debug(" Statrting backtracking")
         theta0 = flatten_params(self.sim_model)
         i = 0
         while i <= max_iter:
@@ -23,21 +26,21 @@ def backtrack(self, *args, step_ratio=0.5, max_iter=100):
             else:
                 break
         if i > max_iter:
-            print("Maximum iterations reached")
+            logger.warning("Maximum iterations reached")
         return crit
 '''
 
 class StopTrainingCallback(Callback):
     def on_validation_epoch_end(self, trainer: pl.Trainer, pl_module: pl.LightningModule) -> None:
         if pl_module.stop_training_flag:
-            print("\n Stopping training because the boolean condition is set to True.")
+            logger.info("\n Stopping training because the boolean condition is set to True.")
             trainer.should_stop = True
 
 class LRSchedulerLogger(pl.Callback):
     def on_validation_epoch_end(self, trainer, pl_module):
         # Assuming the LR is scheduled per epoch
         lrs = [group['lr'] for group in trainer.optimizers[0].param_groups]
-        print(f"\n Epoch {trainer.current_epoch}: Learning rate(s): {lrs}")
+        logger.info(f"\n Epoch {trainer.current_epoch}: Learning rate(s): {lrs}")
 
 class LitNode(pl.LightningModule):
     def __init__(
@@ -122,7 +125,7 @@ class LitNode(pl.LightningModule):
                 for log_name, log_value in custom_logs.items():
                     self.log(log_name, log_value)
             except Exception as e:
-                print(f"Error in custom logging function: {e}")
+                logger.warning(f"Error in custom logging function: {e}")
                 
             if 'is_solve_ok' in custom_logs and  (not custom_logs['is_solve_ok']):
                 self.stop_training_flag = True  # Stop training if lmi is false
@@ -159,7 +162,7 @@ class LitNode(pl.LightningModule):
 
             if self.no_decrease_counter >= self.patience_soft:
                 if self.criterion.regularizers and hasattr(self.criterion, 'update') and callable(self.criterion.update):
-                    print("Updating criterion weights")
+                    logger.debug("Updating criterion weights")
                     self.criterion.update()
                     self.no_decrease_counter = 0
 

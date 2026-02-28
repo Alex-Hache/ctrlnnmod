@@ -1,3 +1,4 @@
+import logging
 from abc import ABC, abstractmethod
 import torch
 from torch.linalg import slogdet
@@ -5,6 +6,8 @@ import torch.nn as nn
 from torch import Tensor
 from typing import List, Callable
 from ..lmis.base import LMI
+
+logger = logging.getLogger(__name__)
 
 
 class Regularization(ABC, nn.Module):
@@ -40,7 +43,7 @@ class L1Regularization(Regularization):
                 for param in self.model.parameters():
                     param -= self.factor * param.sign()
             if self.verbose:
-                print(f"Updated L1 regularization lambda: {self.lambda_l1.item()}")
+                logger.debug(f"Updated L1 regularization lambda: {self.lambda_l1.item()}")
 
 
 class L2Regularization(Regularization):
@@ -58,7 +61,7 @@ class L2Regularization(Regularization):
                 for param in self.model.parameters():
                     param -= self.factor * param
             if self.verbose:
-                print(f"Updated L2 regularization lambda: {self.lambda_l2.item()}")
+                logger.debug(f"Updated L2 regularization lambda: {self.lambda_l2.item()}")
 
             
 class LogdetRegularization(Regularization):
@@ -81,9 +84,9 @@ class LogdetRegularization(Regularization):
             old_lambda = self.lambda_logdet.item()
             self.lambda_logdet *= self.factor
             if self.verbose:
-                print(f"Updated Logdet regularization lambda: {old_lambda} -> {self.lambda_logdet.item()} \n")
+                logger.debug(f"Updated Logdet regularization lambda: {old_lambda} -> {self.lambda_logdet.item()} \n")
             if self.lambda_logdet <= self.min_weight:
-                print("Minimum weight reached")
+                logger.warning("Minimum weight reached")
 
 class DDRegularization(Regularization):
     def __init__(self, lmi: LMI, lambda_dd: float, update_factor: float, actf='lse', updatable = True, verbose = False, e= 0.1):
@@ -153,7 +156,7 @@ class DDRegularization(Regularization):
         if self.updatable:
             self.lambda_dd = self.factor * self.lambda_dd
             if self.verbose:
-                print(f"Updated DD regularization lambda: {self.lambda_dd}")
+                logger.debug(f"Updated DD regularization lambda: {self.lambda_dd}")
 
 class StateRegularization(Regularization):
     def __init__(self, model: nn.Module, lambda_state: float, update_factor: float, updatable: bool = True, verbose: bool = False) -> None:
@@ -173,7 +176,7 @@ class StateRegularization(Regularization):
             old_lambda = self.lambda_state.item()
             self.lambda_state *= self.factor
             if self.verbose:
-                print(f"Updated State regularization lambda: {old_lambda} -> {self.lambda_state.item()}")
+                logger.debug(f"Updated State regularization lambda: {old_lambda} -> {self.lambda_state.item()}")
 
 
 def add_regularization(criterion: Callable[[Tensor, Tensor], Tensor], regularizers: List[Regularization]) -> Callable[[Tensor, Tensor], Tensor]:
