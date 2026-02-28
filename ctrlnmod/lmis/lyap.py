@@ -60,7 +60,10 @@ class LyapunovDiscrete(LMI):
         try:
             prob.solve(solver)
         except cp.SolverError:
-            prob.solve()  # If MOSEK is not installed then try SCS by default
+            try:
+                prob.solve("CLARABEL")
+            except cp.SolverError:
+                prob.solve()
 
         if prob.status not in ["infeasible", "unbounded"]:
             P_value = torch.tensor(P.value)
@@ -134,7 +137,10 @@ class LyapunovContinuous(LMI):
         try:
             prob.solve(solver)
         except cp.SolverError:
-            prob.solve()  # If MOSEK is not installed then try SCS by default
+            try:
+                prob.solve("CLARABEL")
+            except cp.SolverError:
+                prob.solve()
 
         if prob.status not in ["infeasible", "unbounded"]:
             P_value = torch.tensor(P.value)

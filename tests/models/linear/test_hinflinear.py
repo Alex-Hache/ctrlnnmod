@@ -233,17 +233,18 @@ class TestL2BoundedLinearInitialization:
         assert torch.norm(B_recon - B_orig) < 10.0, "B reconstruction too far from original"
         assert torch.norm(C_recon - C_orig) < 10.0, "C reconstruction too far from original"
     
+    @pytest.mark.needs_mosek
     def test_initialization_accuracy_riccati(self, dims, stable_tensors):
         """Test that right_inverse produces accurate reconstruction for riccati"""
         A_orig, B_orig, C_orig = stable_tensors
         gamma = 1.0
-        
+
         model = L2BoundedLinear(dims["nu"], dims["ny"], dims["nx"], gamma, 0.0, param='riccati', epsilon=1e-6)
-        
+
         # Try initialization with progressively higher gamma until it works
         gammas_to_try = [1.0, 15.0, 30.0, 50.0, 100.0]
         initialized = False
-        
+
         for g in gammas_to_try:
             try:
                 model.gamma = g
@@ -252,22 +253,17 @@ class TestL2BoundedLinearInitialization:
                 break
             except ValueError:
                 continue
-        
+
         assert initialized, "Could not initialize with any gamma value"
-        
+
         # Get reconstructed matrices
         A_recon, B_recon, C_recon = model._frame()
-        
-        # Check that reconstruction is reasonably close
-        print(f"A difference norm: {torch.norm(A_recon - A_orig)}")
-        print(f"B difference norm: {torch.norm(B_recon - B_orig)}")
-        print(f"C difference norm: {torch.norm(C_recon - C_orig)}")
-        
-        # The reconstruction should be reasonable
+
         assert torch.norm(A_recon - A_orig) < 0.1, "A reconstruction too far from original"
         assert torch.norm(B_recon - B_orig) < 1e-3, "B reconstruction too far from original"
         assert torch.norm(C_recon - C_orig) < 1e-3, "C reconstruction too far from original"
-    
+
+    @pytest.mark.needs_mosek
     def test_perfect_reconstruction_identity_system(self, dims):
         """Test reconstruction with a simple identity-like system"""
         # Create a very simple, well-conditioned system
@@ -591,17 +587,17 @@ class TestExoL2BoundedLinearIntegration:
             assert torch.norm(B_recon - B_orig) < 10.0, "B reconstruction too far from original"
             assert torch.norm(C_recon - C_orig) < 10.0, "C reconstruction too far from original"
     
+    @pytest.mark.needs_mosek
     def test_initialization_accuracy_riccati(self, dims, stable_tensors):
         """Test that right_inverse produces accurate reconstruction for riccati"""
         A_orig, B_orig, C_orig = stable_tensors
         gamma = 1.0
-        
+
         model = L2BoundedLinear(dims["nu"], dims["ny"], dims["nx"], gamma, 0.0, param='riccati', epsilon=1e-6)
-        
-        # Try initialization with progressively higher gamma until it works
+
         gammas_to_try = [1.0, 15.0, 30.0, 50.0, 100.0]
         initialized = False
-        
+
         for g in gammas_to_try:
             try:
                 model.gamma = g
@@ -610,18 +606,11 @@ class TestExoL2BoundedLinearIntegration:
                 break
             except ValueError:
                 continue
-        
+
         assert initialized, "Could not initialize with any gamma value"
-        
-        # Get reconstructed matrices
+
         A_recon, B_recon, C_recon = model._frame()
-        
-        # Check that reconstruction is reasonably close
-        print(f"A difference norm: {torch.norm(A_recon - A_orig)}")
-        print(f"B difference norm: {torch.norm(B_recon - B_orig)}")
-        print(f"C difference norm: {torch.norm(C_recon - C_orig)}")
-        
-        # The reconstruction should be reasonable
+
         assert torch.norm(A_recon - A_orig) < 0.1, "A reconstruction too far from original"
         assert torch.norm(B_recon - B_orig) < 1e-3, "B reconstruction too far from original"
         assert torch.norm(C_recon - C_orig) < 1e-3, "C reconstruction too far from original"

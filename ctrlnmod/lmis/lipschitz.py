@@ -170,7 +170,10 @@ class Lipschitz(LMI):
         try:
             prob.solve(solver)
         except SolverError:
-            prob.solve()  # If MOSEK is not installed then try SCS by default
+            try:
+                prob.solve("CLARABEL")
+            except SolverError:
+                prob.solve()
 
         if prob.status not in ["infeasible", "unbounded"]:
             assert lip.value is not None

@@ -63,7 +63,10 @@ class HInfCont(HInfBase):
         try:
             prob.solve(solver)
         except SolverError:
-            prob.solve()
+            try:
+                prob.solve("CLARABEL")
+            except SolverError:
+                prob.solve()
 
         if prob.status in ["infeasible", "unbounded"]:
             raise ValueError("SDP problem is infeasible or unbounded")
@@ -148,7 +151,10 @@ class HInfDisc(HInfBase):
         try:
             prob.solve(solver)
         except SolverError:
-            prob.solve()
+            try:
+                prob.solve("CLARABEL")
+            except SolverError:
+                prob.solve()
 
         if prob.status in ["infeasible", "unbounded"]:
             raise ValueError("SDP problem is infeasible or unbounded")
