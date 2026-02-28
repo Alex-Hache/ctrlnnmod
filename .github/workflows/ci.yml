@@ -1,0 +1,64 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  # -------------------------------------------------------------------------
+  # Test suite
+  # -------------------------------------------------------------------------
+  tests:
+    name: Tests (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      # Install CPU-only torch first to avoid downloading the large GPU wheel
+      - name: Install PyTorch (CPU-only)
+        run: uv pip install torch --index-url https://download.pytorch.org/whl/cpu
+
+      # Install the package itself + test extras
+      # uv pip won't reinstall torch since it's already satisfied
+      - name: Install ctrlnmod[test]
+        run: uv pip install -e ".[test]"
+
+      - name: Run tests
+        run: uv run pytest tests/ -v --tb=short
+
+  # -------------------------------------------------------------------------
+  # Lint
+  # -------------------------------------------------------------------------
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          python-version: "3.11"
+
+      - name: Install flake8
+        run: uv pip install flake8
+
+      - name: flake8
+        # E501 long lines, W503 line-break style — both tracked separately
+        run: >
+          uv run flake8 ctrlnmod/
+          --max-line-length=120
+          --ignore=E501,W503,E203
+          --count
+          --statistics
