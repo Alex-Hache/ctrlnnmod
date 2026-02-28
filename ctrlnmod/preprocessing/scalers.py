@@ -50,7 +50,7 @@ class BaseScaler(ABC):
                 b = self.transform_biases[key]
                 
                 # Application de la transformation inverse
-                T_inv = torch.inverse(T)
+                T_inv = torch.linalg.inv(T)
                 original_data = torch.matmul(data - b, T_inv.T)
                 
                 # Préservation du gradient si nécessaire
@@ -225,24 +225,28 @@ class CustomTScaler(BaseScaler):
         
         # Vérification des features fournies
         for key in transform_matrices.keys():
-            assert key in feature_names, f"Feature {key} not in feature_names {feature_names}"
-        
+            if not (key in feature_names):
+                raise ValueError(f"Feature {key} not in feature_names {feature_names}")
+
         # Vérification des matrices de transformation
         for key, matrix in transform_matrices.items():
             # Vérification que c'est bien un tenseur
-            assert isinstance(matrix, torch.Tensor), f"Matrix for {key} must be a torch.Tensor"
-            
+            if not isinstance(matrix, torch.Tensor):
+                raise ValueError(f"Matrix for {key} must be a torch.Tensor")
+
             # Vérification que la matrice est 2D
-            assert matrix.dim() == 2, f"Matrix for {key} must be 2D, got {matrix.dim()}D"
-            
+            if not (matrix.dim() == 2):
+                raise ValueError(f"Matrix for {key} must be 2D, got {matrix.dim()}D")
+
             # Vérification que la matrice est carrée
             n, m = matrix.shape
-            assert n == m, f"Matrix for {key} must be square, got shape {matrix.shape}"
-            
+            if not (n == m):
+                raise ValueError(f"Matrix for {key} must be square, got shape {matrix.shape}")
+
             # Vérification que la matrice est inversible
             det = torch.linalg.det(matrix)
-            assert not torch.isclose(det, torch.tensor(0.0)), \
-                   f"Matrix for {key} must be invertible, got determinant {det}"
+            if not (not torch.isclose(det, torch.tensor(0.0))):
+                raise ValueError(f"Matrix for {key} must be invertible, got determinant {det}")
         
         self.transform_matrices = transform_matrices
         
@@ -255,11 +259,14 @@ class CustomTScaler(BaseScaler):
         else:
             # Vérification des biais fournis
             for key, bias in transform_biases.items():
-                assert key in transform_matrices, f"Bias provided for {key} but no matrix found"
-                assert isinstance(bias, torch.Tensor), f"Bias for {key} must be a torch.Tensor"
-                assert bias.dim() == 1, f"Bias for {key} must be 1D, got {bias.dim()}D"
-                assert bias.shape[0] == transform_matrices[key].shape[0], \
-                       f"Bias dimension {bias.shape[0]} does not match matrix dimension {transform_matrices[key].shape[0]}"
+                if not (key in transform_matrices):
+                    raise ValueError(f"Bias provided for {key} but no matrix found")
+                if not isinstance(bias, torch.Tensor):
+                    raise ValueError(f"Bias for {key} must be a torch.Tensor")
+                if not (bias.dim() == 1):
+                    raise ValueError(f"Bias for {key} must be 1D, got {bias.dim()}D")
+                if not (bias.shape[0] == transform_matrices[key].shape[0]):
+                    raise ValueError(f"Bias dimension {bias.shape[0]} does not match matrix dimension {transform_matrices[key].shape[0]}")
             self.transform_biases = transform_biases
         
         self.is_fitted = True  # Le scaler est déjà configuré avec les matrices fournies
@@ -277,8 +284,8 @@ class CustomTScaler(BaseScaler):
             n_features = data.shape[1]
             matrix_size = self.transform_matrices[key].shape[0]
             
-            assert n_features == matrix_size, \
-                   f"Matrix dimension {matrix_size} does not match data dimension {n_features} for {key}"
+            if not (n_features == matrix_size):
+                raise ValueError(f"Matrix dimension {matrix_size} does not match data dimension {n_features} for {key}")
     
     @classmethod
     def from_diagonal(cls, diagonal_elements: Dict[str, torch.Tensor],
@@ -296,9 +303,10 @@ class CustomTScaler(BaseScaler):
         transform_matrices = {}
         feature_names = []
         for key, diag in diagonal_elements.items():
-            assert diag.dim() == 1, f"Diagonal elements for {key} must be 1D"
-            assert not torch.any(torch.isclose(diag, torch.tensor(0.0))), \
-                   f"Diagonal elements for {key} must be non-zero"
+            if not (diag.dim() == 1):
+                raise ValueError(f"Diagonal elements for {key} must be 1D")
+            if not (not torch.any(torch.isclose(diag, torch.tensor(0.0)))):
+                raise ValueError(f"Diagonal elements for {key} must be non-zero")
             transform_matrices[key] = torch.diag(diag)
             feature_names.append(key)
         return cls(transform_matrices, biases, feature_names)

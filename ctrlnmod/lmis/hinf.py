@@ -101,7 +101,8 @@ class HInfCont(HInfBase):
         if (A is None and B is None and C is None):
                 A, B, C = self.extract_matrices()
                 
-        assert A is not None and B is not None and C is not None 
+        if not (A is not None and B is not None and C is not None):
+            raise ValueError("A, B and C must not be None")
 
         self.nx = B.shape[0]
         self.nu = B.shape[1]

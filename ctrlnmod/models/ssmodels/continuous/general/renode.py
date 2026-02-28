@@ -179,7 +179,7 @@ class ContractingRENODE(RENODE):
     def _right_inverse(self, A: torch.Tensor, B1: torch.Tensor, C1: torch.Tensor, 
                        D11: torch.Tensor, alpha: torch.Tensor) -> Tuple[torch.Tensor, ...]:
         M, Lambda, P = AbsoluteStableLFT.solve(A, B1, C1, D11, alpha, tol=1e-4)
-        P_inv = torch.inverse(P)
+        P_inv = torch.linalg.inv(P)
         Q = M[:self.nx, :self.nx]
         S = 0.5 * Q + P @ (A + alpha * self.Ix)
         U = C1.T @ Lambda
@@ -222,7 +222,7 @@ class ContractingRENODE(RENODE):
         Lambda = 0.5 * torch.diag(torch.diag(H22))
         self.Lambda = Lambda.detach().clone()
         L = -torch.tril(H22, -1)
-        Lambda_inv = torch.inverse(Lambda)
+        Lambda_inv = torch.linalg.inv(Lambda)
         D11 = Lambda_inv @ L
         C1 = Lambda_inv @ self.U.T
 
@@ -236,7 +236,7 @@ class ContractingRENODE(RENODE):
         else:
             P_inv = self.P_inv
 
-        P = torch.inverse(P_inv)
+        P = torch.linalg.inv(P_inv)
         H11 = -(A.T @ P + P @ A + 2 * self.alpha * P)
         H12 = -(C1.T @ torch.diag(torch.diag(D11)) + P @ B1)
         H22 = 2* self.Lambda -self.Lambda @ D11 - D11.T @ self.Lambda
@@ -372,7 +372,7 @@ class DissipativeRENODE(ContractingRENODE):
                 raise ValueError("Q is not negative definite even after adjustment")
 
             # Calculate LR
-            R_tilde = R - S @ torch.inverse(self.Q) @ S.T
+            R_tilde = R - S @ torch.linalg.inv(self.Q) @ S.T
             if not torch.all(torch.linalg.eigvals(R_tilde).real > 0):
                 raise ValueError("R - SQ^(-1)S^T is not positive definite")
             self.Lr = torch.linalg.cholesky(R_tilde)
@@ -383,13 +383,13 @@ class DissipativeRENODE(ContractingRENODE):
                  self.epsilon * torch.eye(max(self.nu, self.ny), device=self.device))
 
             if self.ny >= self.nu:
-                N_upper = (torch.eye(self.nu, device=self.device) - M) @ torch.inverse(torch.eye(self.nu, device=self.device) + M)
-                N_lower = -2 * self.Z3 @ torch.inverse(torch.eye(self.nu, device=self.device) + M)
+                N_upper = (torch.eye(self.nu, device=self.device) - M) @ torch.linalg.inv(torch.eye(self.nu, device=self.device) + M)
+                N_lower = -2 * self.Z3 @ torch.linalg.inv(torch.eye(self.nu, device=self.device) + M)
                 N = torch.cat([N_upper, N_lower], dim=0)
             else:
                 N = torch.cat([
-                    torch.inverse(torch.eye(self.ny, device=self.device) + M) @ (torch.eye(self.ny, device=self.device) - M),
-                    -2 * torch.inverse(torch.eye(self.ny, device=self.device) + M) @ self.Z3.T
+                    torch.linalg.inv(torch.eye(self.ny, device=self.device) + M) @ (torch.eye(self.ny, device=self.device) - M),
+                    -2 * torch.linalg.inv(torch.eye(self.ny, device=self.device) + M) @ self.Z3.T
                 ], dim=1)
         else:
             N = self.N
@@ -402,7 +402,7 @@ class DissipativeRENODE(ContractingRENODE):
         if self.feedthrough:
             N = self._compute_N()
             # Calculate D22
-            D22 = -torch.inverse(self.Q) @ self.S.T + torch.inverse(self.Lq) @ N @ self.Lr
+            D22 = -torch.linalg.inv(self.Q) @ self.S.T + torch.linalg.inv(self.Lq) @ N @ self.Lr
         else:
             D22 = torch.zeros(self.ny, self.nu, device=self.device)
 
@@ -437,7 +437,7 @@ class DissipativeRENODE(ContractingRENODE):
         L = -torch.tril(H22, -1)
         D11 = L
 
-        A = torch.inverse(P) @ (-E - E.T + (1 / self.alpha**2) * P)
+        A = torch.linalg.inv(P) @ (-E - E.T + (1 / self.alpha**2) * P)
         B2 = self.B2
         C2 = self.C2
         D12 = self.D12
@@ -453,7 +453,7 @@ class DissipativeRENODE(ContractingRENODE):
             bool: True if the network satisfies the inequality, False otherwise.
         """
         A, B1, B2, C1, C2, D11, D12, D21, D22 = self._frame()
-        P = torch.inverse(self.P_inv)
+        P = torch.linalg.inv(self.P_inv)
         H11 = A.T @ P + P @ A + C2.T @ self.Q @ C2
         H12 = P @ B1 + C2.T @ self.Q @ D21
         H13 = P @ B2 + C2.T @ self.Q @ D22 + C2.T @ self.S

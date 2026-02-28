@@ -122,7 +122,7 @@ class H2Linear(SSLinear):
                 bool: True if the model is valid, False otherwise.  
                 float: The H2 norm of the model.
         """
-        Wo = torch.inverse(self.Wo_sqrt_inv)@torch.inverse(self.Wo_sqrt_inv)
+        Wo = torch.linalg.inv(self.Wo_sqrt_inv)@torch.linalg.inv(self.Wo_sqrt_inv)
         A, B, C = self._frame()
 
         lyap = A.T @ Wo + Wo @ A
@@ -144,9 +144,12 @@ class H2Linear(SSLinear):
                 C0 (Tensor): Initial output matrix.
                 requires_grad (bool): If True, gradients will be computed.
                 """
-        assert A0.shape == (self.nx, self.nx), f"A0 must be of shape {self.nx, self.nx}"
-        assert B0.shape == (self.nx, self.nu), f"B0 must be of shape {self.nx, self.nu}"
-        assert C0.shape == (self.ny, self.nx), f"C0 must be of shape {self.ny, self.nx}"
+        if not (A0.shape == (self.nx, self.nx)):
+            raise ValueError(f"A0 must be of shape {(self.nx, self.nx)}, got {A0.shape}")
+        if not (B0.shape == (self.nx, self.nu)):
+            raise ValueError(f"B0 must be of shape {(self.nx, self.nu)}, got {B0.shape}")
+        if not (C0.shape == (self.ny, self.nx)):
+            raise ValueError(f"C0 must be of shape {(self.ny, self.nx)}, got {C0.shape}")
         is_observable = check_observability(A0, C0)
         if not is_observable:
             raise ValueError("The system is not observable with the given A0 and C0 matrices.")
@@ -214,7 +217,7 @@ class H2Linear(SSLinear):
             if cond_Wo_sqrt > 1e6:
                 raise Warning(f"Condition number of Wo_sqrt is too high: {cond_Wo_sqrt}. The system may be ill-conditioned.")
             
-            Wo_sqrt_inv = torch.inverse(Wo_sqrt)  # type: ignore
+            Wo_sqrt_inv = torch.linalg.inv(Wo_sqrt)  # type: ignore
             Q = Tensor(-M[:self.nx, :self.nx])
             S = Wo @ Tensor(A) + 0.5 * Q
             U, sigma, Vt = torch.linalg.svd(Wo_sqrt@B, full_matrices=False)
@@ -316,10 +319,14 @@ class ExoH2Linear(ExoSSLinear):
                     G0 (Tensor): Initial disturbance matrix.
                     requires_grad (bool): If True, gradients will be computed.
                     """
-            assert A0.shape == (self.nx, self.nx), f"A0 must be of shape {self.nx, self.nx}"
-            assert B0.shape == (self.nx, self.nu), f"B0 must be of shape {self.nx, self.nu}"
-            assert C0.shape == (self.ny, self.nx), f"C0 must be of shape {self.ny, self.nx}"
-            assert G0.shape == (self.nx, self.nd), f"G0 must be of shape {self.nx, self.nd}"
+            if not (A0.shape == (self.nx, self.nx)):
+                raise ValueError(f"A0 must be of shape {(self.nx, self.nx)}, got {A0.shape}")
+            if not (B0.shape == (self.nx, self.nu)):
+                raise ValueError(f"B0 must be of shape {(self.nx, self.nu)}, got {B0.shape}")
+            if not (C0.shape == (self.ny, self.nx)):
+                raise ValueError(f"C0 must be of shape {(self.ny, self.nx)}, got {C0.shape}")
+            if not (G0.shape == (self.nx, self.nd)):
+                raise ValueError(f"G0 must be of shape {(self.nx, self.nd)}, got {G0.shape}")
 
             is_observable = check_observability(A0, C0)
             if not is_observable:
@@ -392,7 +399,7 @@ class ExoH2Linear(ExoSSLinear):
             if cond_Wo_sqrt > 1e6:
                 raise Warning(f"Condition number of Wo_sqrt is too high: {cond_Wo_sqrt}. The system may be ill-conditioned.")
             
-            Wo_sqrt_inv = torch.inverse(Wo_sqrt)  # type: ignore
+            Wo_sqrt_inv = torch.linalg.inv(Wo_sqrt)  # type: ignore
             Q = Tensor(-M[:self.nx, :self.nx])
             S = Wo @ Tensor(A) + 0.5 * Q
 

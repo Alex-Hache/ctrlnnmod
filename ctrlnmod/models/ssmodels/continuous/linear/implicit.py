@@ -29,7 +29,7 @@ class ImplicitNNLinear(nn.Module):
         self.str_savepath = strSavpath
 
     def forward(self, u, x):
-        dx = (self.F(x) + self.B(u)) @ torch.inverse(self.E).T
+        dx = (self.F(x) + self.B(u)) @ torch.linalg.inv(self.E).T
         y = self.C(x)
 
         return dx, y
@@ -87,8 +87,8 @@ class ParamImplicitNNLinear(nn.Module):
         P = H[nx:, nx:]
         F = H[nx:, :nx]
         E = 0.5 * (H11 + P + self.Y - self.Y.T)
-        dx = x @ (torch.inverse(E) @ F).T + \
-            u @ (torch.inverse(E) @ self.B.weight).T
+        dx = x @ (torch.linalg.inv(E) @ F).T + \
+            u @ (torch.linalg.inv(E) @ self.B.weight).T
         y = self.C(x)
 
         return dx, y
@@ -150,8 +150,8 @@ class ParamImplicitNNLinearAlph(nn.Module):
         P = H[nx:, nx:]
         F = H[nx:, :nx]
         E = 0.5 * (H11 + 1 / (self.alpha**2) * P + self.Y - self.Y.T)
-        dx = x @ (torch.inverse(E) @ F).T + \
-            u @ (torch.inverse(E) @ self.B.weight).T
+        dx = x @ (torch.linalg.inv(E) @ F).T + \
+            u @ (torch.linalg.inv(E) @ self.B.weight).T
         y = self.C(x)
 
         return dx, y

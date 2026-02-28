@@ -69,8 +69,9 @@ class Experiment(Dataset):
             raise ValueError(
                 f"u and d do not have the same number of samples found {u.shape[0]} vs {self.d.shape[0]}")
 
-        assert u.shape[0] == y.shape[0], ValueError(
-            f"u and y do not have the same number or samples found {u.shape[0]} vs {y.shape[0]}")
+        if not (u.shape[0] == y.shape[0]):
+            raise ValueError(
+                f"u and y do not have the same number or samples found {u.shape[0]} vs {y.shape[0]}")
         self.n_samples = u.shape[0]
         if x_trainable and x is not None:
             raise ValueError(
@@ -260,11 +261,16 @@ class ExperimentsDataset(Dataset):
 
         base_exp = self.experiments[0]
         for exp in self.experiments[1:]:
-            assert exp.nu == base_exp.nu, "All experiments must have same number of inputs"
-            assert exp.ny == base_exp.ny, "All experiments must have same number of outputs"
-            assert exp.nx == base_exp.nx, "All experiments must have same number of states"
-            assert exp.ts == base_exp.ts, "All experiments must have same sampling time" 
-            assert exp.nd == base_exp.nd, "All experiments must have same number of disturbances"
+            if not (exp.nu == base_exp.nu):
+                raise ValueError("All experiments must have same number of inputs")
+            if not (exp.ny == base_exp.ny):
+                raise ValueError("All experiments must have same number of outputs")
+            if not (exp.nx == base_exp.nx):
+                raise ValueError("All experiments must have same number of states")
+            if not (exp.ts == base_exp.ts):
+                raise ValueError("All experiments must have same sampling time")
+            if not (exp.nd == base_exp.nd):
+                raise ValueError("All experiments must have same number of disturbances")
         self.ts = base_exp.ts
 
 
@@ -273,11 +279,16 @@ class ExperimentsDataset(Dataset):
         # Vérification de la cohérence
         if self.experiments:
             base_exp = self.experiments[0]
-            assert exp.nu == base_exp.nu, "New experiment must have same number of inputs"
-            assert exp.ny == base_exp.ny, "New experiment must have same number of outputs"
-            assert exp.nx == base_exp.nx, "New experiment must have same number of states"
-            assert exp.ts == base_exp.ts, "New experiment must have same sampling time"
-            assert exp.nd == base_exp.nd, "All experiments must have same number of disturbances"
+            if not (exp.nu == base_exp.nu):
+                raise ValueError("New experiment must have same number of inputs")
+            if not (exp.ny == base_exp.ny):
+                raise ValueError("New experiment must have same number of outputs")
+            if not (exp.nx == base_exp.nx):
+                raise ValueError("New experiment must have same number of states")
+            if not (exp.ts == base_exp.ts):
+                raise ValueError("New experiment must have same sampling time")
+            if not (exp.nd == base_exp.nd):
+                raise ValueError("All experiments must have same number of disturbances")
 
         # Si scaled, application de la normalisation à la nouvelle expérience
         # Application du scaler si présent

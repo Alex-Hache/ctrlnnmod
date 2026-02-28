@@ -164,12 +164,12 @@ class SSLinear(SSModel):
             requires_grad (bool): if True, the parameters will be updated during training
         """
         # Check matrix dimensions
-        assert self.nx == A0.shape[0] == A0.shape[
-            1], f"Given A matrix has incorrect size: nx = {self.nx}, found {A0.shape}"
-        assert (
-            self.nx, self.nu) == B0.shape, f"Given B matrix has incorrect size: expected ({self.nx}, {self.nu}), found {B0.shape}"
-        assert (
-            self.ny, self.nx) == C0.shape, f"Given C matrix has incorrect size: expected ({self.ny}, {self.nx}), found {C0.shape}"
+        if not (self.nx == A0.shape[0] == A0.shape[1]):
+            raise ValueError(f"A0 must be square of size {self.nx}, got {A0.shape}")
+        if not ((self.nx, self.nu) == B0.shape):
+            raise ValueError(f"Given B matrix has incorrect size: expected ({self.nx}, {self.nu}), found {B0.shape}")
+        if not ((self.ny, self.nx) == C0.shape):
+            raise ValueError(f"Given C matrix has incorrect size: expected ({self.ny}, {self.nx}), found {C0.shape}")
         # Compute the Lyapunov exponent of A0
         A0_lyap_exp = get_lyap_exp(A0)
         if self.alpha is not None:
@@ -317,10 +317,14 @@ class ExoSSLinear(SSModel):
             G0 (Tensor): G matrix of shape (nx, nd)
             requires_grad (bool, optional): if True, the parameters will be updated during training
         """
-        assert self.nx == A0.shape[0] == A0.shape[1]
-        assert B0.shape == (self.nx, self.nu)
-        assert C0.shape == (self.ny, self.nx)
-        assert G0.shape == (self.nx, self.nd)
+        if not (self.nx == A0.shape[0] == A0.shape[1]):
+            raise ValueError(f"A0 must be square of size {self.nx}, got {A0.shape}")
+        if not (B0.shape == (self.nx, self.nu)):
+            raise ValueError(f"Given B matrix has incorrect size: expected ({self.nx}, {self.nu}), found {B0.shape}")
+        if not (C0.shape == (self.ny, self.nx)):
+            raise ValueError(f"Given C matrix has incorrect size: expected ({self.ny}, {self.nx}), found {C0.shape}")
+        if not (G0.shape == (self.nx, self.nd)):
+            raise ValueError(f"Given G matrix has incorrect size: expected ({self.nx}, {self.nd}), found {G0.shape}")
 
         A0_lyap_exp = get_lyap_exp(A0)
         if self.alpha is not None:

@@ -145,7 +145,7 @@ def schur(matrix, dim_A, dim_B, dim_C):
         raise ValueError("D must be square")
     
     try:
-        D_inv = torch.inverse(D)
+        D_inv = torch.linalg.inv(D)
     except RuntimeError as e:
         raise ValueError("D must be inversible") from e
 
@@ -208,7 +208,7 @@ def cayley(W):
     U, V = W[:, :cin], W[:, cin:]
     I_nin = torch.eye(cin, dtype=W.dtype, device=W.device)[None, :, :]
     A = U - U.conj().transpose(1, 2) + V.conj().transpose(1, 2) @ V
-    iIpA = torch.inverse(I_nin + A)
+    iIpA = torch.linalg.inv(I_nin + A)
 
     return torch.cat((iIpA @ (I_nin - A), -2 * V @ iIpA), axis=1)     # type: ignore
 

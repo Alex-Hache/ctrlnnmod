@@ -86,7 +86,7 @@ class REN(nn.Module):
         """
         self._frame()
         w = self._solve_w(x, u)
-        E_inv = torch.inverse(self.E)
+        E_inv = torch.linalg.inv(self.E)
         dx = x @ (E_inv @ self.F).T + w @ (E_inv @
                                            self.B1).T + u @ (E_inv @ self.B2).T
         if self.feedthrough:
@@ -226,7 +226,7 @@ class DissipativeREN(ContractingREN):
                     "Q is not negative definite even after adjustment")
 
             # Calculate LR
-            R_tilde = R - S @ torch.inverse(self.Q) @ S.T
+            R_tilde = R - S @ torch.linalg.inv(self.Q) @ S.T
             if not torch.all(torch.linalg.eigvals(R_tilde).real > 0):
                 raise ValueError("R - SQ^(-1)S^T is not positive definite")
             self.Lr = torch.linalg.cholesky(R_tilde)
@@ -241,16 +241,16 @@ class DissipativeREN(ContractingREN):
 
             if self.ny >= self.nu:
                 N_upper = (torch.eye(self.nu, device=self.device) -
-                           M) @ torch.inverse(torch.eye(self.nu, device=self.device) + M)
+                           M) @ torch.linalg.inv(torch.eye(self.nu, device=self.device) + M)
                 N_lower = -2 * \
-                    self.Z3 @ torch.inverse(torch.eye(self.nu,
+                    self.Z3 @ torch.linalg.inv(torch.eye(self.nu,
                                             device=self.device) + M)
                 N = torch.cat([N_upper, N_lower], dim=0)
             else:
                 N = torch.cat([
-                    torch.inverse(torch.eye(self.ny, device=self.device) +
+                    torch.linalg.inv(torch.eye(self.ny, device=self.device) +
                                   M) @ (torch.eye(self.ny, device=self.device) - M),
-                    -2 * torch.inverse(torch.eye(self.ny,
+                    -2 * torch.linalg.inv(torch.eye(self.ny,
                                        device=self.device) + M) @ self.Z3.T
                 ], dim=1)
         else:
@@ -268,8 +268,8 @@ class DissipativeREN(ContractingREN):
 
             N = self._compute_N()
             # Calculate D22
-            self.D22 = -torch.inverse(self.Q) @ self.S.T + \
-                torch.inverse(self.Lq) @ N @ self.Lr
+            self.D22 = -torch.linalg.inv(self.Q) @ self.S.T + \
+                torch.linalg.inv(self.Lq) @ N @ self.Lr
 
         R_capital = self.R + self.S @ self.D22 + \
             self.D22.T @ self.S.T + self.D22.T @ self.Q @ self.D22

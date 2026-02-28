@@ -34,10 +34,13 @@ class L2BoundedLinear(SSModel):
                  param: str = 'sqrtm', epsilon=1e-3) -> None:
         super(L2BoundedLinear, self).__init__(nu, ny, nx)
 
-        assert param in ['sqrtm', 'riccati'], "param must be 'sqrtm' or 'riccati'"
-        assert alpha >= 0.0, "alpha must be non-negative"
+        if not (param in ['sqrtm', 'riccati']):
+            raise ValueError("param must be 'sqrtm' or 'riccati'")
+        if not (alpha >= 0.0):
+            raise ValueError("alpha must be non-negative")
         if param == 'riccati':
-            assert alpha == 0.0, "alpha must be 0.0 for Riccati parameterization"
+            if not (alpha == 0.0):
+                raise ValueError("alpha must be 0.0 for Riccati parameterization")
 
 
         self.gamma = gamma
@@ -107,7 +110,7 @@ class L2BoundedLinear(SSModel):
         if self._frame_cache.is_caching and self._frame_cache.cache is not None:
             return self._frame_cache.cache
         
-        A = (-0.5 * (self.Q + self.G.T @ self.G + self.eps * self.Ix) + self.S) @ self.P -0.5* torch.inverse(self.P) @ self.M - self.alpha * self.Ix
+        A = (-0.5 * (self.Q + self.G.T @ self.G + self.eps * self.Ix) + self.S) @ self.P -0.5* torch.linalg.inv(self.P) @ self.M - self.alpha * self.Ix
         B = (self.gamma) * sqrtm(self.Q) @ self.H # type: ignore
         C = self.G @ self.P
         if self._frame_cache.is_caching:    
@@ -149,7 +152,8 @@ class L2BoundedLinear(SSModel):
             self.H = H
             self.M = M
         else:
-            assert alpha == 0.0, "Alpha must be 0.0 for Riccati parameterization"
+            if not (alpha == 0.0):
+                raise ValueError("Alpha must be 0.0 for Riccati parameterization")
             print(f"Epsilon self.eps value {self.eps}")
             P, S, G = self.submersion_inv_riccati(A0, B0, C0, gamma, epsilon=self.eps)
             self.B = Parameter(B0)
@@ -193,7 +197,7 @@ class L2BoundedLinear(SSModel):
             print(f"M value : \n {M}")
             Ms = schur(M, self.nx, self.nu, self.nu)
             
-            P_inv = torch.inverse(P)
+            P_inv = torch.linalg.inv(P)
             G = C @ P_inv
 
             # SVD of B/gamma
@@ -204,7 +208,7 @@ class L2BoundedLinear(SSModel):
 
             # compute H
             Q_sqrt = sqrtm(Q)
-            Q_inv_sqrt = torch.inverse(Q_sqrt)
+            Q_inv_sqrt = torch.linalg.inv(Q_sqrt)
             H = (1.0 / gamma_sys) * Q_inv_sqrt @ B
 
             S = A @ P_inv + 0.5 * (Q + G.T @ G + P_inv @ Ms @ P_inv)
@@ -228,9 +232,9 @@ class L2BoundedLinear(SSModel):
             with torch.no_grad():
                 Q = (1 / gamma**2) * (B @ B.T)
                 P, _ = solve_riccati_torch(A, B, C, gamma)
-                G = Tensor(C) @ torch.inverse(P)
+                G = Tensor(C) @ torch.linalg.inv(P)
 
-                S = Tensor(A) @ torch.inverse(P) + 0.5 *(Q + G.T @ G)
+                S = Tensor(A) @ torch.linalg.inv(P) + 0.5 *(Q + G.T @ G)
 
             return P, S, G
 
@@ -288,10 +292,13 @@ class ExoL2BoundedLinear(SSModel):
 
 
 
-        assert param in ['sqrtm', 'riccati'], "param must be 'sqrtm' or 'riccati'"
-        assert alpha >= 0.0, "alpha must be non-negative"
+        if not (param in ['sqrtm', 'riccati']):
+            raise ValueError("param must be 'sqrtm' or 'riccati'")
+        if not (alpha >= 0.0):
+            raise ValueError("alpha must be non-negative")
         if param == 'riccati':
-            assert alpha == 0.0, "alpha must be 0.0 for Riccati parameterization"
+            if not (alpha == 0.0):
+                raise ValueError("alpha must be 0.0 for Riccati parameterization")
 
 
         self.gamma = gamma
@@ -368,7 +375,7 @@ class ExoL2BoundedLinear(SSModel):
     
     def _frame_sqrt(self) -> tuple[Tensor, ...]:
         
-        A = (-0.5 * (self.Q + self.G.T @ self.G + self.eps * self.Ix) + self.S) @ self.P -0.5* torch.inverse(self.P) @ self.M - self.alpha * self.Ix
+        A = (-0.5 * (self.Q + self.G.T @ self.G + self.eps * self.Ix) + self.S) @ self.P -0.5* torch.linalg.inv(self.P) @ self.M - self.alpha * self.Ix
         B = (self.gamma) * sqrtm(self.Q) @  self.H # type: ignore
         C = self.G @ self.P
 
@@ -405,7 +412,8 @@ class ExoL2BoundedLinear(SSModel):
             self.H = H
             self.M = M
         else:
-            assert alpha == 0.0, "Alpha must be 0.0 for Riccati parameterization"
+            if not (alpha == 0.0):
+                raise ValueError("Alpha must be 0.0 for Riccati parameterization")
             print(f"Epsilon self.eps value {self.eps}")
             P, S, G = self.submersion_inv_riccati(A0, Bd0, C0, gamma, epsilon=self.eps)
             self.Bd = Parameter(Bd0)
@@ -450,7 +458,7 @@ class ExoL2BoundedLinear(SSModel):
             Ms = schur(M, self.nx, self.nd, self.nd)
             
             
-            P_inv = torch.inverse(P)
+            P_inv = torch.linalg.inv(P)
             G = C @ P_inv
 
             # SVD of B/gamma
@@ -461,7 +469,7 @@ class ExoL2BoundedLinear(SSModel):
 
             # compute H
             Q_sqrt = sqrtm(Q)
-            Q_inv_sqrt = torch.inverse(Q_sqrt)
+            Q_inv_sqrt = torch.linalg.inv(Q_sqrt)
             H = (1.0 / gamma_sys) * Q_inv_sqrt @ B
 
             S = A @ P_inv + 0.5 * (Q + G.T @ G + P_inv @ Ms @ P_inv)
@@ -485,9 +493,9 @@ class ExoL2BoundedLinear(SSModel):
             with torch.no_grad():
                 Q = (1 / gamma**2) * (B @ B.T)
                 P, _ = solve_riccati_torch(A, B, C, gamma)
-                G = Tensor(C) @ torch.inverse(P)
+                G = Tensor(C) @ torch.linalg.inv(P)
 
-                S = Tensor(A) @ torch.inverse(P) + 0.5 *(Q + G.T @ G)
+                S = Tensor(A) @ torch.linalg.inv(P) + 0.5 *(Q + G.T @ G)
 
             return P, S, G
 
