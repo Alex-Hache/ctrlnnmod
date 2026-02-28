@@ -117,8 +117,10 @@ class HInfCont(HInfBase):
 class HInfDisc(HInfBase):
     def __init__(self, *args, **kwargs):
         super(HInfDisc, self).__init__(*args, **kwargs)
-        self.register_buffer('Inu', torch.eye(self.nu))
-        self.register_buffer('Iny', torch.eye(self.ny))
+        # nu and ny are None until init_() is called; register as None and
+        # build the identity buffers lazily on the first forward pass.
+        self.register_buffer('Inu', None)
+        self.register_buffer('Iny', None)
 
     @classmethod
     def solve(cls, A: Tensor, B: Tensor, C: Tensor, D: Tensor, alpha: Tensor,
@@ -154,6 +156,10 @@ class HInfDisc(HInfBase):
         return M.value, prob.value,  gam.value, P.value
 
     def forward(self) -> Tensor:
+        if self.Inu is None or self.Inu.shape[0] != self.nu:
+            device = self.A.device if hasattr(self, 'A') else torch.device('cpu')
+            self.Inu = torch.eye(self.nu, device=device)
+            self.Iny = torch.eye(self.ny, device=device)
         P = self._symP()
         M11 = self.A.T @ P @ self.A - P
         M12 = self.A.T @ P @ self.B

@@ -606,16 +606,20 @@ def check_controllability(A: torch.Tensor, B: torch.Tensor, tol: float = 1e-10) 
         tol : float
             Tolerance for numerical stability.
 
-    Returns:    
+    Returns:
         bool
             True if the system is controllable, False otherwise.
     """
     n = A.shape[0]
     C = B.clone()
-    
+
     for i in range(1, n):
-        C = torch.cat((C, B @ torch.matrix_power(A, i)), dim=1)
-    
+        C = torch.cat((C, torch.matrix_power(A, i) @ B), dim=1)
+
     rank_C = torch.linalg.matrix_rank(C)
-    
-    return rank_C == n  
+
+    return rank_C == n
+
+
+# Alias for backward compatibility and cross-module imports
+isSDP = is_positive_definite

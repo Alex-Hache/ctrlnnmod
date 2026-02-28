@@ -140,10 +140,10 @@ def add_info_decorator(info_key, info_value):
 
 def backtrack(module, criterion, step_ratio=0.5, max_iter=100):
     with torch.no_grad():
-        theta0 = flatten_params(module)
+        theta = flatten_params(module)
         i = 0
         while not is_legal(criterion()) and i <= max_iter:
-            theta = theta0 * step_ratio + theta0 * (1 - step_ratio)
+            theta = theta * step_ratio
             write_flat_params(module, theta)
             i += 1
             if i > max_iter:

@@ -1,0 +1,61 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "ctrlnmod"
+version = "0.2.8"
+description = "Control oriented neural state space models and tools for SDP-constrained learning algorithms."
+readme = "README.md"
+license = { text = "MIT" }
+authors = [
+    { name = "Alexandre Hache", email = "alexandre.hache@outlook.fr" },
+]
+keywords = ["neural networks", "linear matrix inequalities", "pytorch", "system identification"]
+classifiers = [
+    "Development Status :: 1 - Alpha",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "License :: OSI Approved :: MIT License",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Mathematics",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+]
+requires-python = ">=3.9"
+dependencies = [
+    "torch>=2.0",
+    "numpy",
+    "cvxpy[MOSEK]>=1.5",
+    "typeguard",
+    "matplotlib",
+    "scipy>=1.7",
+    "lightning",
+    "tensorboard",
+]
+
+[project.optional-dependencies]
+test = ["pytest"]
+dev = ["pytest", "black", "flake8", "sphinx"]
+
+[project.urls]
+Homepage = "https://github.com/Alex-Hache/ctrlnnmod"
+Documentation = "https://alex-hache.github.io/ctrlnnmod/"
+
+[tool.hatch.build.targets.wheel]
+packages = ["ctrlnmod", "geotorch_custom"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.uv]
+dev-dependencies = [
+    "pytest",
+    "black",
+    "flake8",
+    "sphinx",
+]
