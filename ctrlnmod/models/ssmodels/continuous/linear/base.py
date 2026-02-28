@@ -1,3 +1,4 @@
+import logging
 from torch.nn import Module, Linear
 from torch.nn.parameter import Parameter
 import geotorch_custom as geo
@@ -8,6 +9,8 @@ from ctrlnmod.utils import FrameCacheManager
 from ...base import SSModel
 from typing import Dict, Tuple, Optional, Union, Any
 from ctrlnmod.linalg.utils import get_lyap_exp
+
+logger = logging.getLogger(__name__)
 
 class SSLinear(SSModel):
     r"""
@@ -101,9 +104,9 @@ class SSLinear(SSModel):
 
         # Initialize A
         if is_parametrized(self.A):
-            print(f"A before init : {self.A.weight}")
+            logger.debug(f"A before init : {self.A.weight}")
             self.A.weight = A0
-            print(f"A after init : {self.A.weight}")
+            logger.debug(f"A after init : {self.A.weight}")
         else:
             self.A.weight = Parameter(A0)
 
@@ -173,11 +176,12 @@ class SSLinear(SSModel):
         # Compute the Lyapunov exponent of A0
         A0_lyap_exp = get_lyap_exp(A0)
         if self.alpha is not None:
-            assert A0_lyap_exp > self.alpha, f"Lyapunov exponent of A0 ({A0_lyap_exp}) is not bigger than alpha ({self.alpha})"
+            if not (A0_lyap_exp > self.alpha):
+                raise ValueError(f"Lyapunov exponent of A0 ({A0_lyap_exp}) is not bigger than alpha ({self.alpha})")
         self._right_inverse(A0, B0, C0, requires_grad=requires_grad)
 
 
-    
+
 class ExoSSLinear(SSModel):
     r"""
     A continuous-time linear state-space model with exogenous inputs :
@@ -328,5 +332,6 @@ class ExoSSLinear(SSModel):
 
         A0_lyap_exp = get_lyap_exp(A0)
         if self.alpha is not None:
-            assert A0_lyap_exp > self.alpha, f"Lyapunov exponent of A0 ({A0_lyap_exp}) is not bigger than alpha ({self.alpha})"
+            if not (A0_lyap_exp > self.alpha):
+                raise ValueError(f"Lyapunov exponent of A0 ({A0_lyap_exp}) is not bigger than alpha ({self.alpha})")
         self._right_inverse(A0, B0, C0, G0, requires_grad=requires_grad)

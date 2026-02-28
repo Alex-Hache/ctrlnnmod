@@ -1,3 +1,4 @@
+import logging
 from typing import Tuple, Optional, Callable
 from torch import Tensor
 import torch
@@ -5,6 +6,8 @@ from cvxpy import Variable, bmat, Minimize, Problem, diag
 from cvxpy.error import SolverError
 import numpy as np
 from .base import LMI
+
+logger = logging.getLogger(__name__)
 
 
 
@@ -177,8 +180,8 @@ class Lipschitz(LMI):
 
         if prob.status not in ["infeasible", "unbounded"]:
             assert lip.value is not None
-            print(" Lipschitz Constant upper bound (All layer versions): \n")
-            print(np.sqrt(lip.value))
+            logger.info(" Lipschitz Constant upper bound (All layer versions): \n")
+            logger.info(str(np.sqrt(lip.value)))
         else:
             raise ValueError("SDP problem is infeasible or unbounded")
 

@@ -1,3 +1,4 @@
+import logging
 import torch
 from torch import Tensor
 import torch.nn as nn
@@ -12,6 +13,8 @@ from ctrlnmod.linalg import project_onto_stiefel
 from ctrlnmod.lmis.hinf import HInfCont
 from .base import SSModel
 from ctrlnmod.linalg.utils import solve_riccati_torch, is_positive_definite, schur
+
+logger = logging.getLogger(__name__)
 
 
 class L2BoundedLinear(SSModel):
@@ -154,7 +157,7 @@ class L2BoundedLinear(SSModel):
         else:
             if not (alpha == 0.0):
                 raise ValueError("Alpha must be 0.0 for Riccati parameterization")
-            print(f"Epsilon self.eps value {self.eps}")
+            logger.debug(f"Epsilon self.eps value {self.eps}")
             P, S, G = self.submersion_inv_riccati(A0, B0, C0, gamma, epsilon=self.eps)
             self.B = Parameter(B0)
             gmma_lmi = gamma
@@ -169,14 +172,14 @@ class L2BoundedLinear(SSModel):
     def submersion_inv_lmi(self, A: Tensor, B: Tensor, C: Tensor, gamma: float, epsilon=1e-4, solver="MOSEK"):
         """
             This function computes the parameters Q, P, S, G and H by solving the LMI problem.
-            
+
             Args:
                 A (Tensor): State matrix of shape (nx, nx)
                 B (Tensor): Input matrix of shape (nx, nu)
                 C (Tensor): Output matrix of shape (ny, nx)
                 gamma (float): L2 gain
                 epsilon (float): Small positive number for numerical stability
-            
+
             Returns:
                 Q (Tensor): Solution to the LMI problem of shape (nx, nx)
                 P (Tensor): Solution to the LMI problem of shape (nx, nx)
@@ -187,14 +190,14 @@ class L2BoundedLinear(SSModel):
         """
         with torch.no_grad():
             M, gamma_sys, P = HInfCont.solve(A, B, C, torch.zeros(self.ny, self.nu), alpha=0.0, tol=epsilon, solver=solver)
-            
+
             if gamma_sys > gamma:
                 raise ValueError(f"Infeasible problem with prescribed gamma : {gamma} min value = {gamma_sys}")
             else:
                 self.gamma = gamma_sys  # Assign lowest gamma found if it's higher than the one prescribed
-                
 
-            print(f"M value : \n {M}")
+
+            logger.debug(f"M value : \n {M}")
             Ms = schur(M, self.nx, self.nu, self.nu)
             
             P_inv = torch.linalg.inv(P)
@@ -414,7 +417,7 @@ class ExoL2BoundedLinear(SSModel):
         else:
             if not (alpha == 0.0):
                 raise ValueError("Alpha must be 0.0 for Riccati parameterization")
-            print(f"Epsilon self.eps value {self.eps}")
+            logger.debug(f"Epsilon self.eps value {self.eps}")
             P, S, G = self.submersion_inv_riccati(A0, Bd0, C0, gamma, epsilon=self.eps)
             self.Bd = Parameter(Bd0)
             gmma_lmi = gamma
@@ -454,7 +457,7 @@ class ExoL2BoundedLinear(SSModel):
                 self.gamma = gamma_sys  # Assign lowest gamma found if it's higher than the one prescribed
                 
 
-            print(f"M value : \n {M}")
+            logger.debug(f"M value : \n {M}")
             Ms = schur(M, self.nx, self.nd, self.nd)
             
             

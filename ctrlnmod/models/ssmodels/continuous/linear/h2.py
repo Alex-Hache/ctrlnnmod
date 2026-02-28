@@ -1,3 +1,4 @@
+import logging
 import torch
 from torch import Tensor
 import torch.nn as nn
@@ -7,6 +8,8 @@ from ctrlnmod.linalg.utils import sqrtm, check_observability, SoftmaxEta, InvSof
 from ctrlnmod.utils import FrameCacheManager
 from ctrlnmod.lmis.h2 import H2Cont
 from ..linear import SSLinear, ExoSSLinear
+
+logger = logging.getLogger(__name__)
 
 
 class H2Linear(SSLinear):
@@ -127,11 +130,11 @@ class H2Linear(SSLinear):
 
         lyap = A.T @ Wo + Wo @ A
         dLyap = torch.dist(lyap, -C.T @ C)
-        print(f"Distance to Lyapunov equation : {dLyap}")
+        logger.debug(f"Distance to Lyapunov equation : {dLyap}")
 
         gamma_gram = torch.sqrt(torch.trace(B.T @ Wo @ B))
         dTrace = torch.dist(gamma_gram, self.gamma2)
-        print(f"Traces : gram = {gamma_gram}  gamma2 : {self.gamma2} -- dist = {dTrace}")
+        logger.debug(f"Traces : gram = {gamma_gram}  gamma2 : {self.gamma2} -- dist = {dTrace}")
 
         return bool((dLyap < epsilon) and (dTrace < epsilon)), gamma_gram
 
@@ -202,7 +205,7 @@ class H2Linear(SSLinear):
                 raise ValueError(f"Infeasible problem with prescribed gamma : {gamma2} min value = {gamma2_sys}")
             else:
                 if gamma2_sys > gamma2:
-                    print(
+                    logger.debug(
                         "Not in manifold with gamma2 = {} \n New gamma2 value assigned : g = {}".format(
                             gamma2, gamma2_sys
                         )
@@ -383,7 +386,7 @@ class ExoH2Linear(ExoSSLinear):
                 raise ValueError(f"Infeasible problem with prescribed gamma : {gamma2} min value = {gamma2_sys}")
             else:
                 if gamma2_sys > gamma2:
-                    print(
+                    logger.debug(
                         "Not in manifold with gamma2 = {} \n New gamma2 value assigned : g = {}".format(
                             gamma2, gamma2_sys
                         )

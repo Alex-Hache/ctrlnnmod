@@ -1,3 +1,4 @@
+import logging
 import numpy as np
 import scipy
 import torch
@@ -12,6 +13,8 @@ from cvxpy.atoms.affine.vstack import vstack
 from typing import Union, List
 from scipy.linalg import polar
 from torch import Tensor
+
+logger = logging.getLogger(__name__)
 
 
 
@@ -166,13 +169,13 @@ def is_positive_definite(L: torch.Tensor, tol=1e-3) -> bool:
     isAllEigPos = torch.all(torch.real(eigvals(L)) > 0)
     isSymetric = torch.all(torch.abs(L - L.T) < tol)
     if not isAllEigPos:
-        print("Not all eigenvalues are positive \n")
+        logger.warning("Not all eigenvalues are positive \n")
     if not isSymetric:
-        print("Matrix is not symmetric \n")
+        logger.warning("Matrix is not symmetric \n")
 
     bSDP = bool(isSymetric and isAllEigPos)
     if bSDP:
-        print("Matix is SDP \n")
+        logger.debug("Matix is SDP \n")
     return bSDP
 
 
@@ -419,7 +422,7 @@ def project_onto_stiefel(A: torch.Tensor):
     UTU = U.T @ U
     deviation = np.max(np.abs(UTU - np.eye(U.shape[1])))
     if deviation > 1e-10:
-        print(f"Warning: Maximum deviation from orthonormality: {deviation}")
+        logger.warning(f"Warning: Maximum deviation from orthonormality: {deviation}")
     
     return U
 
@@ -494,7 +497,7 @@ def solve_riccati_torch(A: torch.Tensor,
         if n_stable != nx:
             # Ajuster le seuil si nécessaire
             alternative_tol = abs(real_parts[nx-1].item()) * 10
-            print(f"Adjusting tolerance from {tol} to {alternative_tol}")
+            logger.debug(f"Adjusting tolerance from {tol} to {alternative_tol}")
             stable_indices = real_parts < alternative_tol
         else:
             stable_indices = real_parts < -tol
@@ -520,7 +523,7 @@ def solve_riccati_torch(A: torch.Tensor,
             cond_X = float('inf')
         
         if cond_X > 1e12:  # seuil arbitraire
-            print(f"Warning: X is poorly conditioned (cond = {cond_X:.2e})")
+            logger.warning(f"Warning: X is poorly conditioned (cond = {cond_X:.2e})")
         
         try:
             # Utiliser la pseudo-inverse si X est mal conditionné
@@ -543,7 +546,7 @@ def solve_riccati_torch(A: torch.Tensor,
                 is_positive = True
             except:
                 is_positive = False
-                print("Warning: P is not positive definite")
+                logger.warning("Warning: P is not positive definite")
             
             # Calculer le résidu
             riccati_residual = (A.T @ P + P @ A + 

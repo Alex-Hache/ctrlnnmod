@@ -1,3 +1,4 @@
+import logging
 import torch
 import torch.nn as nn
 from torch import Tensor
@@ -7,6 +8,8 @@ import os
 import geotorch_custom.parametrize as P
 from ctrlnmod.models.ssmodels.base import SSModel
 from typing import Optional
+
+logger = logging.getLogger(__name__)
 
 """
     This module implements simulators to simulate state-space models for a given sequence of inputs.
@@ -51,7 +54,7 @@ class Simulator(nn.Module):
             x_sim.squeeze_(0)
             y_sim.squeeze_(0)
             sim_time = time.time() - start_time
-            print(f"\nSim time: {sim_time:.2f}")
+            logger.info(f"\nSim time: {sim_time:.2f}")
         return x_sim, y_sim
 
     def extract_weights(self):
