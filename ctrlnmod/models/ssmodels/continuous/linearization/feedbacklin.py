@@ -554,7 +554,7 @@ class FLNSSM_Jordan(nn.Module):
         return dz, y
 
     def init_weights_(self, A0=None, B0=None, C0=None, G0=None, isLinTrainable=True):
-        # Initialisation des poids linéaires
+        # Initialise linear weights
         if A0 is not None and B0 is not None and C0 is not None:
             if isinstance(self.linmod, SSLinear):
                 self.linmod.init_weights_(A0, G0, C0, requires_grad=isLinTrainable)
@@ -566,7 +566,7 @@ class FLNSSM_Jordan(nn.Module):
                     A0, G0, C0, float(self.linmod.gamma2))
             self.B.data = B0
         else:
-            # Initialisation par défaut si les matrices ne sont pas fournies
+            # Default initialisation when no matrices are provided
             nn.init.xavier_uniform_(self.B)
         self.alpha.init_weights_()
 

@@ -116,7 +116,7 @@ class Experiment(Dataset):
     def denormalize(self, u: Optional[Tensor] = None, y:Optional[Tensor] =None, x: Optional[Tensor]=None, 
                     d: Optional[Tensor]=None, 
                     scaler =None):
-        """Dénormalise les données si un scaler est fourni"""
+        """Denormalize data if a scaler is provided."""
         if scaler is None:
             return u, y, x, d
             
@@ -140,15 +140,15 @@ class Experiment(Dataset):
     
     def get_data(self, idx=None, unscaled=False, scaler=None):
         '''
-        Return the experiment values up to the idx index if idx is not None
+        Return the experiment values up to the idx index if idx is not None.
 
         Args:
-            idx: Optional[int] - Index jusqu'auquel récupérer les données
-            unscaled: bool - Si True et si un scaler est fourni, retourne les données dénormalisées
-            scaler: Optional[BaseScaler] - Scaler pour la dénormalisation
+            idx: Optional[int] - Index up to which data is retrieved.
+            unscaled: bool - If True and a scaler is provided, return denormalized data.
+            scaler: Optional[BaseScaler] - Scaler used for denormalization.
 
         Returns:
-            Tuple[Tensor, Tensor, Tensor] - (u, y, x) normalisés ou non
+            Tuple[Tensor, Tensor, Tensor] - (u, y, x), normalized or not.
         '''
         if idx is not None:
             if idx >= self.n_samples:
@@ -168,16 +168,14 @@ class Experiment(Dataset):
         )
     
     def plot(self, idx=None, unscaled=False, scaler = None):
-        """
-        Affiche les données de l'expérience jusqu'à l'index idx
-        """
+        """Plot experiment data up to sample index idx."""
         u, y, x, d = self.get_data(idx, unscaled, scaler)
         t = np.linspace(0, (u.shape[0]-1)*self.ts, u.shape[0])
         
         fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(12, 8), sharex=True)
         fig.suptitle('Experiment Data Visualization')
         
-        # Plot des entrées
+        # Plot inputs
         for i in range(self.nu):
             ax1.plot(t, u[:, i], label=f'u{i+1}')
         if d is not None:
@@ -194,7 +192,7 @@ class Experiment(Dataset):
         ax2.grid(True)
         ax2.legend()
         
-        # Plot des états
+        # Plot states
         for i in range(self.nx):
             ax3.plot(t, x[:, i], label=f'x{i+1}')
         ax3.set_xlabel('Time [s]')
@@ -222,10 +220,10 @@ class ExperimentsDataset(Dataset):
 
         self.scaler = scaler
 
-        # Vérification de la cohérence des données
+        # Validate consistency across experiments
         self._check_consistency()
-        
-        # Calcul des facteurs d'échelle globaux si nécessaire
+
+        # Fit and apply scaler if provided
         if self.scaler is not None:
             self.scaler.fit(self.experiments)
             for exp in self.experiments:
@@ -255,7 +253,7 @@ class ExperimentsDataset(Dataset):
 
 
     def _check_consistency(self) -> None:
-        """Vérifie la cohérence des expériences"""
+        """Validate that all experiments share the same dimensions and sampling time."""
         if not self.experiments:
             return
 
@@ -275,8 +273,8 @@ class ExperimentsDataset(Dataset):
 
 
     def append(self, exp: Experiment) -> None:
-        """Ajoute une nouvelle expérience au dataset"""
-        # Vérification de la cohérence
+        """Append a new experiment to the dataset."""
+        # Validate consistency with existing experiments
         if self.experiments:
             base_exp = self.experiments[0]
             if not (exp.nu == base_exp.nu):
@@ -290,8 +288,7 @@ class ExperimentsDataset(Dataset):
             if not (exp.nd == base_exp.nd):
                 raise ValueError("All experiments must have same number of disturbances")
 
-        # Si scaled, application de la normalisation à la nouvelle expérience
-        # Application du scaler si présent
+        # Apply scaler to the new experiment if the scaler is fitted
         if self.scaler is not None and self.scaler.is_fitted:
             self.scaler.transform(exp)
 
@@ -388,7 +385,7 @@ class ExperimentsDataModule(pl.LightningDataModule):
 
     def val_dataloader(self, unscaled=False):
         if unscaled and self.val_set.scaler is not None:
-            # Créer une copie temporaire des expériences
+            # Create a temporary copy of experiments with inverse-transformed data
             temp_experiments = []
             for exp in self.val_set.experiments:
                 temp_exp = Experiment(
@@ -416,7 +413,7 @@ class ExperimentsDataModule(pl.LightningDataModule):
 
     def train_dataloader(self, unscaled=False):
         if unscaled:
-            # Créer un dataloader temporaire avec données dénormalisées
+            # Create a temporary dataset with denormalized data
             temp_dataset = ExperimentsDataset(
                 [Experiment(
                     u=exp.u.clone().numpy(),

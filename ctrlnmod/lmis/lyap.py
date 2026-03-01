@@ -27,7 +27,7 @@ class LyapunovDiscrete(LMI):
         super().__init__()
         self.A = Parameter(A)
         self.alpha = alpha
-        self.P = Parameter(torch.eye(A.size(0)))
+        self.P = Parameter(torch.eye(A.size(0), device=A.device))
 
     def forward(self) -> Tensor:
         """
@@ -93,7 +93,7 @@ class LyapunovContinuous(LMI):
         super().__init__()
         self.A = Parameter(A)
         self.alpha = alpha
-        self.P = Parameter(torch.eye(A.size(0)))
+        self.P = Parameter(torch.eye(A.size(0), device=A.device))
 
     def _symP(self):
         return 0.5 * (self.P + self.P.T)

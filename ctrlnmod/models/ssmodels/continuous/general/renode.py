@@ -88,15 +88,15 @@ class RENODE(SSModel):
             y = x @ C2.T + w @ D21.T + self.by.T
         return dx, y
 
-    def _solve_w(self, x: torch.Tensor, u: torch.Tensor, C1: torch.Tensor, 
+    def _solve_w(self, x: torch.Tensor, u: torch.Tensor, C1: torch.Tensor,
                  D11: torch.Tensor, D12: torch.Tensor) -> torch.Tensor:
         nb = x.shape[0]
-        w = torch.zeros(nb, self.nq, device=self.device)
-        v = torch.zeros(nb, self.nq, device=self.device)
-
+        # Pre-compute input contributions once via batch matmuls
+        base = x @ C1.T + u @ D12.T + self.bv.squeeze(-1)  # (nb, nq)
+        w = torch.zeros(nb, self.nq, device=x.device)
         for k in range(self.nq):
-            v[:, k] = x @ C1[k, :] + w.clone() @ D11[k, :] + u @ D12[k, :] + self.bv[k]
-            w[:, k] = self.act(v[:, k])
+            v_k = base[:, k] + w @ D11[k, :]
+            w[:, k] = self.act(v_k)
         return w
 
     def check(self) -> Tuple[bool, dict]:

@@ -53,7 +53,7 @@ class FrameCacheManager:
         try:
             yield
         finally:
-            # Restaurer l'état précédent et nettoyer le cache seulement si on était pas déjà en train de cacher
+            # Restore previous state and clear cache only if we were not already caching
             if not previous_cache_state:
                 self.is_caching = False
                 self.cache = None
@@ -108,7 +108,7 @@ def flatten_params(module: torch.nn.Module) -> torch.Tensor:
     return torch.cat(views, 0)
 
 
-# Définir le décorateur pour le suivi
+# Decorator for training monitoring
 def monitor_training(func):
     @wraps(func)
     def wrapper(*args, **kwargs):

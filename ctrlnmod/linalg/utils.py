@@ -135,7 +135,7 @@ def schur(matrix, dim_A, dim_B, dim_C):
     expected_rows = dim_A + dim_C
     expected_cols = dim_A + dim_B
     if matrix.shape[0] < expected_rows or matrix.shape[1] < expected_cols:
-        raise ValueError("Les dimensions fournies sont incompatibles avec la taille de la matrice.")
+        raise ValueError("Provided dimensions are incompatible with the matrix size.")
 
     # Blocks extraction
     A = matrix[:dim_A, :dim_A]
@@ -479,23 +479,23 @@ def solve_riccati_torch(A: torch.Tensor,
         H[:nx, nx:] = H_12
         H[nx:, :nx] = H_21
         
-        # Calcul des valeurs et vecteurs propres
-        # Note: torch.linalg.eig retourne les valeurs complexes même pour matrices réelles
+        # Compute eigenvalues and eigenvectors
+        # Note: torch.linalg.eig returns complex values even for real matrices
         eigvals, eigvecs = torch.linalg.eig(H)
-        
-        # Conversion en valeurs réelles pour le tri
+
+        # Extract real parts for sorting
         real_parts = eigvals.real
-        
-        # Tri des valeurs propres par partie réelle
+
+        # Sort eigenvalues by real part (ascending)
         sorted_indices = torch.argsort(real_parts)
         eigvals = eigvals[sorted_indices]
         eigvecs = eigvecs[:, sorted_indices]
-        
-        # Vérification du nombre de valeurs propres stables
+
+        # Check number of stable eigenvalues
         n_stable = torch.sum(real_parts[sorted_indices] < -tol).item()
-        
+
         if n_stable != nx:
-            # Ajuster le seuil si nécessaire
+            # Adjust threshold if needed
             alternative_tol = abs(real_parts[nx-1].item()) * 10
             logger.debug(f"Adjusting tolerance from {tol} to {alternative_tol}")
             stable_indices = real_parts < alternative_tol
@@ -516,19 +516,19 @@ def solve_riccati_torch(A: torch.Tensor,
         X = stable_eigvecs[:nx, :]
         Y = stable_eigvecs[nx:, :]
         
-        # Vérifier le conditionnement de X
+        # Check conditioning of X
         try:
             cond_X = torch.linalg.cond(X).item()
         except:
             cond_X = float('inf')
-        
-        if cond_X > 1e12:  # seuil arbitraire
+
+        if cond_X > 1e12:  # arbitrary threshold
             logger.warning(f"Warning: X is poorly conditioned (cond = {cond_X:.2e})")
-        
+
         try:
-            # Utiliser la pseudo-inverse si X est mal conditionné
+            # Use pseudoinverse when X is ill-conditioned
             if cond_X > 1e12:
-                # Calcul manuel de la pseudo-inverse pour plus de contrôle
+                # Manual pseudoinverse via SVD for numerical control
                 U, S, Vh = torch.linalg.svd(X)
                 S_pinv = torch.where(S > tol * S[0], 1/S, torch.zeros_like(S))
                 X_pinv = (Vh.T.conj() * S_pinv.unsqueeze(0)) @ U.T.conj()
@@ -536,11 +536,11 @@ def solve_riccati_torch(A: torch.Tensor,
             else:
                 P = Y @ torch.linalg.inv(X)
                 
-            # Prendre la partie réelle et symétriser
+            # Take real part and symmetrise
             P = P.real
             P = (P + P.T)/2
-            
-            # Vérifier que P est définie positive
+
+            # Verify that P is positive definite
             try:
                 L = torch.linalg.cholesky(P)
                 is_positive = True
@@ -548,7 +548,7 @@ def solve_riccati_torch(A: torch.Tensor,
                 is_positive = False
                 logger.warning("Warning: P is not positive definite")
             
-            # Calculer le résidu
+            # Compute the Riccati residual
             riccati_residual = (A.T @ P + P @ A + 
                             gamma_sq_inv * P @ B @ B.T @ P +
                             C.T @ C)

@@ -47,7 +47,7 @@ class L2BoundedLinear(SSModel):
 
 
         self.gamma = gamma
-        self.Ix = torch.eye(nx)
+        self.register_buffer('Ix', torch.eye(nx))
         self.eps = epsilon
         self.param = param
         self.alpha = alpha
@@ -305,7 +305,7 @@ class ExoL2BoundedLinear(SSModel):
 
 
         self.gamma = gamma
-        self.Ix = torch.eye(nx)
+        self.register_buffer('Ix', torch.eye(nx))
         self.eps = epsilon
         self.param = param
         self.alpha = alpha

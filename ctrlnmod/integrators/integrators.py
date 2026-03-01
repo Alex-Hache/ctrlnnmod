@@ -87,10 +87,11 @@ class RK4Simulator(Simulator):
     def __str__(self) -> str:
         return f"RK4_{str(self.ss_model)}"
 
-    def forward(self, u_batch, x0_batch=torch.zeros(1), d_batch=None):
+    def forward(self, u_batch, x0_batch=None, d_batch=None):
         X_sim_list = []
         Y_sim_list = []
-        x_step = x0_batch
+        x_step = x0_batch if x0_batch is not None else torch.zeros(
+            u_batch.shape[0], self.ss_model.nx, device=u_batch.device, dtype=u_batch.dtype)
 
         with P.cached(), self.ss_model._frame_cache.cache_frame():
             for i, u_step in enumerate(u_batch.split(1, dim=1)):
@@ -143,17 +144,18 @@ class RK45Simulator(Simulator):
     def __str__(self) -> str:
         return f"RK45_{str(self.ss_model)}"
     
-    def forward(self, u_batch, x0_batch=torch.zeros(1), d_batch=None):
+    def forward(self, u_batch, x0_batch=None, d_batch=None):
         X_sim_list = []
         Y_sim_list = []
-        x_step = x0_batch
+        x_step = x0_batch if x0_batch is not None else torch.zeros(
+            u_batch.shape[0], self.ss_model.nx, device=u_batch.device, dtype=u_batch.dtype)
 
         with P.cached(), self.ss_model._frame_cache.cache_frame():
             for i, u_step in enumerate(u_batch.split(1, dim=1)):
                 u_step = u_step.squeeze(1)
                 d_step = d_batch[:, i, :] if d_batch is not None else None
                 X_sim_list.append(x_step)
-                
+
                 dt = self.ts
                 k1, y_step = self.ss_model(u_step, x_step, d_step)
                 Y_sim_list.append(y_step)
@@ -164,7 +166,7 @@ class RK45Simulator(Simulator):
                 k5, _ = self.ss_model(u_step, x_step + dt * (439*k1/216 - 8*k2 + 3680*k3/513 - 845*k4/4104), d_step)
                 k6, _ = self.ss_model(u_step, x_step + dt * (-8*k1/27 + 2*k2 - 3544*k3/2565 + 1859*k4/4104 - 11*k5/40), d_step)
                 
-                # Solution d'ordre 5
+                # 5th-order solution
                 dx = dt * (16*k1/135 + 6656*k3/12825 + 28561*k4/56430 - 9*k5/50 + 2*k6/55)
                 x_step = x_step + dx
 
@@ -205,10 +207,11 @@ class Sim_discrete(Simulator):
         copy.load_state_dict(self.state_dict())
         return copy
 
-    def forward(self, u_batch, x0_batch=torch.Tensor(1)):
+    def forward(self, u_batch, x0_batch=None):
         X_sim_list = []
         Y_sim_list = []
-        x_step = x0_batch
+        x_step = x0_batch if x0_batch is not None else torch.zeros(
+            u_batch.shape[0], self.ss_model.nx, device=u_batch.device, dtype=u_batch.dtype)
         for u_step in u_batch.split(1, dim=1):
             u_step = u_step.squeeze(1)
             X_sim_list += [x_step]

@@ -191,12 +191,12 @@ def train_model(lit_model, data_module, logger, epochs, patience=100):
     timer_callback = Timer()
     break_callback = StopTrainingCallback()
     checkpoint_callback = ModelCheckpoint(
-    monitor='val_loss',                # Métrique à surveiller
-    filename='best-model-{epoch:03d}-v{logger.version:03d}',  # Format du nom
-    save_top_k=1,                      # Garde uniquement le meilleur
-    mode='min',                        # Car on minimise la loss
-    save_weights_only=False,           # Sauvegarde le modèle complet
-    save_last=False                    # Ne sauvegarde pas le dernier modèle
+    monitor='val_loss',                # Metric to monitor
+    filename='best-model-{epoch:03d}-v{logger.version:03d}',
+    save_top_k=1,                      # Keep only the best checkpoint
+    mode='min',                        # Minimise the loss
+    save_weights_only=False,           # Save the full model
+    save_last=False                    # Do not save the last epoch
 )
     store_lr_callback = LRSchedulerLogger()
 

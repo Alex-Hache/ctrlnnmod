@@ -49,11 +49,11 @@ class BaseScaler(ABC):
                 T = self.transform_matrices[key]
                 b = self.transform_biases[key]
                 
-                # Application de la transformation inverse
+                # Apply the inverse transformation
                 T_inv = torch.linalg.inv(T)
                 original_data = torch.matmul(data - b, T_inv.T)
-                
-                # Préservation du gradient si nécessaire
+
+                # Preserve gradient if needed
                 if getattr(data, 'requires_grad', False):
                     original_data.requires_grad_(True)
                     
@@ -94,7 +94,7 @@ class BaseScaler(ABC):
     
     @classmethod
     def load_parameters(cls, params: Dict) -> 'BaseScaler':
-        """Charge les paramètres dans un nouveau scaler"""
+        """Load parameters into a new scaler instance."""
         scaler_type = params['scaler_type']
         if scaler_type == 'MinMaxScaler':
             scaler = MinMaxScaler(
@@ -123,13 +123,13 @@ class BaseScaler(ABC):
         return scaler
     
     def clone(self) -> 'BaseScaler':
-        """Crée une copie exacte du scaler"""
+        """Create an exact copy of this scaler."""
         params = self.save_parameters()
         return self.load_parameters(params)
     
 
 class MinMaxScaler(BaseScaler):
-    """Implémentation de la normalisation min-max"""
+    """Min-max normalisation scaler."""
     
     def __init__(self, feature_names: List[str] = ['u', 'y', 'x', 'd'],
                  feature_range: tuple = (0, 1)):
@@ -139,25 +139,25 @@ class MinMaxScaler(BaseScaler):
         self.data_max: Dict[str, torch.Tensor] = {}
         
     def fit(self, experiments: List['Experiment']) -> None:
-        """Calcule les min et max pour chaque feature"""
+        """Compute per-feature min and max across all experiments."""
         for key in self.feature_names:
             if not hasattr(experiments[0], key):
                 continue
-                
-            # Concatenation des données pour toutes les expériences
+
+            # Concatenate data across all experiments
             all_data = torch.cat([getattr(exp, key) for exp in experiments], dim=0)
-            
-            # Calcul min/max
+
+            # Compute min/max
             self.data_min[key] = all_data.min(dim=0).values
             self.data_max[key] = all_data.max(dim=0).values
-            
-            # Calcul de la matrice de transformation
+
+            # Build transformation matrix
             data_range = self.data_max[key] - self.data_min[key]
             scale = torch.where(data_range == 0,
                               torch.ones_like(data_range),
                               data_range)
-            
-            # Création de la matrice diagonale de transformation
+
+            # Build diagonal transformation matrix
             n_features = all_data.shape[1]
             T = torch.diag(1.0 / scale)
             b = -self.data_min[key] / scale
@@ -168,32 +168,32 @@ class MinMaxScaler(BaseScaler):
         self.is_fitted = True
 
 class StandardScaler(BaseScaler):
-    """Implémentation de la standardisation (moyenne=0, variance=1)"""
-    
+    """Standardisation scaler (zero mean, unit variance)."""
+
     def __init__(self, feature_names: List[str] = ['u', 'y', 'x', 'd']):
         super().__init__(feature_names)
         self.means: Dict[str, torch.Tensor] = {}
         self.stds: Dict[str, torch.Tensor] = {}
-        
+
     def fit(self, experiments: List['Experiment']) -> None:
-        """Calcule la moyenne et l'écart-type pour chaque feature"""
+        """Compute per-feature mean and standard deviation across all experiments."""
         for key in self.feature_names:
             if not hasattr(experiments[0], key):
                 continue
-                
-            # Concatenation des données pour toutes les expériences
+
+            # Concatenate data across all experiments
             all_data = torch.cat([getattr(exp, key) for exp in experiments], dim=0)
-            
-            # Calcul moyenne/écart-type
+
+            # Compute mean/std
             self.means[key] = all_data.mean(dim=0)
             self.stds[key] = all_data.std(dim=0)
-            
-            # Gestion des variables constantes
+
+            # Handle constant features (std == 0)
             self.stds[key] = torch.where(self.stds[key] == 0,
                                        torch.ones_like(self.stds[key]),
                                        self.stds[key])
-            
-            # Création de la matrice diagonale de transformation
+
+            # Build diagonal transformation matrix
             n_features = all_data.shape[1]
             T = torch.diag(1.0 / self.stds[key])
             b = -self.means[key] / self.stds[key]
@@ -205,59 +205,55 @@ class StandardScaler(BaseScaler):
 
 class CustomTScaler(BaseScaler):
     """
-    Scaler permettant de définir directement les matrices de transformation linéaire.
-    Pour chaque feature (u, y, x), la transformation est de la forme:
+    Scaler that applies user-defined linear transformation matrices directly.
+    For each feature (u, y, x) the transformation is:
         x_transformed = x @ T.T + b
-    où T est une matrice carrée inversible et b un vecteur de biais.
+    where T is an invertible square matrix and b is a bias vector.
     """
-    
+
     def __init__(self, transform_matrices: Dict[str, torch.Tensor],
                  transform_biases: Optional[Dict[str, torch.Tensor]] = None,
                  feature_names: List[str] = ['u', 'y', 'x', 'd']):
         """
         Args:
-            transform_matrices: Dictionnaire contenant les matrices T pour chaque feature
-            transform_biases: Dictionnaire contenant les vecteurs de biais pour chaque feature
-                            Si None, les biais sont initialisés à zéro
-            feature_names: Liste des noms des features à transformer
+            transform_matrices: Dict of transformation matrices T for each feature.
+            transform_biases: Dict of bias vectors for each feature.
+                              If None, biases are initialised to zero.
+            feature_names: List of feature names to transform.
         """
         super().__init__(feature_names)
-        
-        # Vérification des features fournies
+
+        # Validate that all keys belong to the declared features
         for key in transform_matrices.keys():
             if not (key in feature_names):
                 raise ValueError(f"Feature {key} not in feature_names {feature_names}")
 
-        # Vérification des matrices de transformation
+        # Validate transformation matrices
         for key, matrix in transform_matrices.items():
-            # Vérification que c'est bien un tenseur
             if not isinstance(matrix, torch.Tensor):
                 raise ValueError(f"Matrix for {key} must be a torch.Tensor")
 
-            # Vérification que la matrice est 2D
             if not (matrix.dim() == 2):
                 raise ValueError(f"Matrix for {key} must be 2D, got {matrix.dim()}D")
 
-            # Vérification que la matrice est carrée
             n, m = matrix.shape
             if not (n == m):
                 raise ValueError(f"Matrix for {key} must be square, got shape {matrix.shape}")
 
-            # Vérification que la matrice est inversible
             det = torch.linalg.det(matrix)
             if not (not torch.isclose(det, torch.tensor(0.0))):
                 raise ValueError(f"Matrix for {key} must be invertible, got determinant {det}")
-        
+
         self.transform_matrices = transform_matrices
-        
-        # Initialisation ou vérification des biais
+
+        # Initialise or validate biases
         if transform_biases is None:
             self.transform_biases = {
                 key: torch.zeros(matrix.shape[0])
                 for key, matrix in transform_matrices.items()
             }
         else:
-            # Vérification des biais fournis
+            # Validate provided biases
             for key, bias in transform_biases.items():
                 if not (key in transform_matrices):
                     raise ValueError(f"Bias provided for {key} but no matrix found")
@@ -268,13 +264,13 @@ class CustomTScaler(BaseScaler):
                 if not (bias.shape[0] == transform_matrices[key].shape[0]):
                     raise ValueError(f"Bias dimension {bias.shape[0]} does not match matrix dimension {transform_matrices[key].shape[0]}")
             self.transform_biases = transform_biases
-        
-        self.is_fitted = True  # Le scaler est déjà configuré avec les matrices fournies
-    
+
+        self.is_fitted = True  # Matrices are provided directly; scaler is ready immediately
+
     def fit(self, experiments: List['Experiment']) -> None:
         """
-        Cette méthode ne fait rien car les matrices sont déjà définies,
-        mais on vérifie la cohérence des dimensions avec les données.
+        No-op: transformation matrices are already defined.
+        Validates that matrix dimensions are consistent with the data.
         """
         for key in self.transform_matrices.keys():
             if not hasattr(experiments[0], key):
@@ -291,14 +287,14 @@ class CustomTScaler(BaseScaler):
     def from_diagonal(cls, diagonal_elements: Dict[str, torch.Tensor],
                      biases: Optional[Dict[str, torch.Tensor]] = None) -> 'CustomTScaler':
         """
-        Crée un CustomTScaler à partir d'éléments diagonaux.
-        
+        Create a CustomTScaler from diagonal scaling factors.
+
         Args:
-            diagonal_elements: Dictionnaire contenant les éléments diagonaux pour chaque feature
-            biases: Dictionnaire optionnel contenant les biais pour chaque feature
-        
+            diagonal_elements: Dict of 1-D tensors of diagonal entries for each feature.
+            biases: Optional dict of bias vectors for each feature.
+
         Returns:
-            CustomTScaler initialisé avec des matrices diagonales
+            CustomTScaler initialised with diagonal transformation matrices.
         """
         transform_matrices = {}
         feature_names = []

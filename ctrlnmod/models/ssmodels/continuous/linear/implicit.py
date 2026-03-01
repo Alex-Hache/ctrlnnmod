@@ -21,7 +21,7 @@ class ImplicitNNLinear(nn.Module):
         self.nx = nx
         self.ny = output_dim
 
-        self.E = Parameter(torch.Tensor(torch.randn(self.nx, self.nx)))
+        self.E = Parameter(torch.randn(self.nx, self.nx))
         self.F = nn.Linear(self.nx, self.nx, bias=False)
         self.B = nn.Linear(self.nu, self.nx, bias=False)
         self.C = nn.Linear(self.nx, self.ny, bias=False)
@@ -72,17 +72,16 @@ class ParamImplicitNNLinear(nn.Module):
         self.nx = nx
         self.ny = output_dim
 
-        self.X = Parameter(torch.Tensor(torch.randn(2 * self.nx, 2 * self.nx)))
-        self.Y = Parameter(torch.Tensor(torch.randn(self.nx, self.nx)))
+        self.X = Parameter(torch.randn(2 * self.nx, 2 * self.nx))
+        self.Y = Parameter(torch.randn(self.nx, self.nx))
         self.epsilon = 1e-4
         self.B = nn.Linear(self.nu, self.nx, bias=False)
         self.C = nn.Linear(self.nx, self.ny, bias=False)
-        # self.config = config
         self.str_savepath = strSavpath
 
     def forward(self, u, x):
         nx = self.nx
-        H = self.X @ self.X.T + self.epsilon * torch.eye(2 * self.nx)
+        H = self.X @ self.X.T + self.epsilon * torch.eye(2 * self.nx, device=self.X.device)
         H11 = H[:nx, :nx]
         P = H[nx:, nx:]
         F = H[nx:, :nx]
@@ -135,17 +134,16 @@ class ParamImplicitNNLinearAlph(nn.Module):
         self.ny = output_dim
         self.alpha = alpha
 
-        self.X = Parameter(torch.Tensor(torch.randn(2 * self.nx, 2 * self.nx)))
-        self.Y = Parameter(torch.Tensor(torch.randn(self.nx, self.nx)))
+        self.X = Parameter(torch.randn(2 * self.nx, 2 * self.nx))
+        self.Y = Parameter(torch.randn(self.nx, self.nx))
         self.epsilon = 1e-4
         self.B = nn.Linear(self.nu, self.nx, bias=False)
         self.C = nn.Linear(self.nx, self.ny, bias=False)
-        # self.config = config
         self.str_savepath = strSavpath
 
     def forward(self, u, x):
         nx = self.nx
-        H = self.X @ self.X.T + self.epsilon * torch.eye(2 * self.nx)
+        H = self.X @ self.X.T + self.epsilon * torch.eye(2 * self.nx, device=self.X.device)
         H11 = H[:nx, :nx]
         P = H[nx:, nx:]
         F = H[nx:, :nx]

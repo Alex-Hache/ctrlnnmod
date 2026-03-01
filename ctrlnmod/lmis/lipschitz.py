@@ -100,19 +100,20 @@ class Lipschitz(LMI):
         # Making Lambda diagonal
         Lambda = torch.diag(self.Lambda_vec)
 
-        M11 = self.lip**2 * torch.eye(self.n_in)
+        dev = self.A.device
+        M11 = self.lip**2 * torch.eye(self.n_in, device=dev)
         M12 = - self.B.T @ Lambda
-        M13 = torch.zeros((self.n_in, self.n_out))
+        M13 = torch.zeros((self.n_in, self.n_out), device=dev)
         M22 = 2 * self.beta * Lambda - Lambda @ self.A - self.A.T @ Lambda
         M23 = - self.C.T
-        M33 = torch.eye(self.n_out)
+        M33 = torch.eye(self.n_out, device=dev)
 
         M1 = torch.cat([M11, M12, M13], dim = 1)
         M2 = torch.cat([M12.T, M22, M23], dim = 1)
         M3 = torch.cat([M13.T, M23.T, M33], dim = 1)
 
         M = torch.cat([M1, M2, M3], dim = 0)
-        return M + self.epsilon*torch.eye(M.shape[0]), Lambda
+        return M + self.epsilon*torch.eye(M.shape[0], device=dev), Lambda
 
 
     @classmethod

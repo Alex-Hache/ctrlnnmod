@@ -21,7 +21,7 @@ class DDLayer(nn.Module):
         dQ = torch.diag(Q)
         delta_Q = self.act(torch.sum(torch.abs(Q), dim=1) - dQ - torch.abs(dQ))
 
-        DQ = torch.diag(delta_Q)  # (Une) distance à l'ensemble DD+
+        DQ = torch.diag(delta_Q)  # A distance to the DD+ set
 
         return DQ
 

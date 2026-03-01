@@ -97,22 +97,28 @@ class REN(nn.Module):
 
     def _solve_w(self, x: torch.Tensor, u: torch.Tensor) -> torch.Tensor:
         """
-        Solve for the internal non-linear state w in the acyclic case
+        Solve for the internal non-linear state w in the acyclic case.
+
+        The recurrence is strictly lower-triangular (D11 is strictly lower-triangular
+        after the constrained parametrisation), so each v_k depends only on w[:k].
+        We pre-compute the input contributions once via batch matmuls and amortise
+        the per-neuron cost to a single row-vector dot product.
 
         Args:
-            x (torch.Tensor): Current state.
-            u (torch.Tensor): Input.
+            x (torch.Tensor): Current state, shape (batch, nx).
+            u (torch.Tensor): Input, shape (batch, nu).
 
         Returns:
-            torch.Tensor: Solved internal non-linear state.
+            torch.Tensor: Solved internal non-linear state, shape (batch, nq).
         """
         nb = x.shape[0]
-        w = torch.zeros(nb, self.nq, device=self.device)
-        v = torch.zeros(nb, self.nq, device=self.device)
+        lam_diag = torch.diagonal(self.Lambda)  # (nq,)
+        # Pre-compute contributions that are constant w.r.t. w (one matmul each)
+        base = (x @ self.C1.T + u @ self.D12.T + self.bv.squeeze(-1)) / lam_diag  # (nb, nq)
+        w = torch.zeros(nb, self.nq, device=x.device)
         for k in range(self.nq):
-            v[:, k] = (1 / self.Lambda[k, k]) * (x @ self.C1[k, :] +
-                                                 w.clone() @ self.D11[k, :] + u @ self.D12[k, :] + self.bv[k])
-            w[:, k] = self.act(v[:, k].clone())
+            v_k = base[:, k] + (w @ self.D11[k, :]) / lam_diag[k]
+            w[:, k] = self.act(v_k)
         return w
 
 

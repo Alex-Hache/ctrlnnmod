@@ -32,3 +32,11 @@ build/
 
 # Ignore saved pytorch models
 *.pt
+
+# Ignore compiled documentation
+docs/_build/
+docs/_static/
+docs/_sources/
+docs/*.html
+docs/*.js
+docs/*.inv

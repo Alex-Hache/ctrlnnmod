@@ -21,7 +21,7 @@ def dims():
         'nd': 1
     }
 
-# 📌 Classes de modèles linéaires avec leurs paramètres
+# Linear model classes and their parameters
 @pytest.fixture
 def linear_model_classes():
     return [

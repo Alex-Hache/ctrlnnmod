@@ -102,7 +102,7 @@ class DDRegularization(Regularization):
         # Creation of the Z matrix for the constraints
         matrices = self.model() 
         self.Z_matrices = nn.ParameterList([
-            nn.Parameter(torch.eye(mat.shape[0], mat.shape[0]).requires_grad_(True))
+            nn.Parameter(torch.eye(mat.shape[0], device=mat.device).requires_grad_(True))
             for mat in matrices
         ])
         self.e = e
