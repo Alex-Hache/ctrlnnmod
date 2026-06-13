@@ -29,6 +29,35 @@ Finally, the parametrizations involving Positive (Semi-) Definite (PSD) matrices
 Since the right inverse methods now involve solving a LMI, cvxpy is now needed, an extended version is then included in this library.
 
 
+## Block-diagram layer: a "Simulink" for neural control
+Beyond identifying single models, the library lets you wire models and controllers into
+**differentiable closed loops** — the foundation for Internal Model Control (IMC),
+reinforcement learning and MPC-style training.
+
+The key idea: every component is a `Block` with named input/output ports, and a
+closed-loop interconnection is *itself* a state-space model, so it plugs straight into
+the existing `RK4Simulator` and `LitNode` trainer with no changes.
+
+* `ctrlnmod.blocks` — `Block` base class (generalising `SSModel`) plus primitives
+  (`Sum`, `Gain`, `Constant`, `Saturation`).
+* `ctrlnmod.controllers` — `Controller` base class; the feedback-linearizing
+  controllers (`ILOFController`, `ILSFController`, ...) and a generic `NeuralController`.
+* `ctrlnmod.diagram` — the `Diagram` engine (state aggregation, topological evaluation
+  and algebraic-loop detection via `WiringGraph`), ready-made `Series`, `Parallel`,
+  `FeedbackInterconnection`, and an `IMC` block.
+
+```python
+from ctrlnmod.diagram import IMC
+from ctrlnmod.integrators import RK4Simulator
+
+imc = IMC(plant, model)            # plant + internal model + neural controller
+imc.trainable_blocks("controller") # freeze the plant, learn the controller
+sim = RK4Simulator(imc, ts=2e-2)   # a diagram IS an SSModel
+_, y = sim(reference, x0)          # differentiable closed-loop rollout
+```
+
+A full runnable example is in `examples/imc_differentiable_loop.py`.
+
 ## Experiments framework
 In order to train networks on data coming from several experiments and trajectories the class ExperimentsDataset encapsulates different experiments
 and is readily compatible with DataLoader. 
