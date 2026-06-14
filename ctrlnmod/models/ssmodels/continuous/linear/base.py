@@ -151,7 +151,7 @@ class SSLinear(SSModel):
             SSLinear: A copy of the model
         
         """  # Method called by the simulator
-        copy = type(self)(self.nu, self.ny, self.nx)
+        copy = type(self)(self.nu, self.ny, self.nx, alpha=self.alpha)
         copy.load_state_dict(self.state_dict())
         return copy
 

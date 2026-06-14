@@ -136,6 +136,38 @@ class NRMSELoss(BaseLoss):
         loss = torch.sqrt(torch.mean((output - target) ** 2)) / torch.std(target)
         return self.add_regularization(loss, **kwargs)
 
+class ReferenceTrackingLoss(BaseLoss):
+    r"""Tracking loss for closed-loop (diagram) training.
+
+    Penalises the (optionally per-output weighted) squared error between the
+    closed-loop output and a desired reference/response trajectory:
+
+    .. math:: \mathcal{L} = \mathrm{mean}\big( w \odot (y - y_\mathrm{ref})^2 \big).
+
+    Functionally this is a weighted MSE; it exists to make the *intent* explicit
+    when training controllers/models inside a
+    :class:`~ctrlnmod.diagram.diagram.Diagram` with
+    :class:`~ctrlnmod.train.LitNode` (where ``target`` is the reference signal).
+
+    Args:
+        weight: Optional per-output weight tensor of shape ``(ny,)``. Defaults to
+            uniform weighting.
+        regularizers: Optional regularization terms (same as :class:`BaseLoss`).
+    """
+
+    def __init__(self, weight: Optional[Tensor] = None,
+                 regularizers: Optional[Sequence[Regularization]] = None):
+        super().__init__(regularizers)
+        self.weight = weight
+
+    def __call__(self, output: Tensor, target: Tensor, **kwargs) -> Tensor:
+        err = (output - target) ** 2
+        if self.weight is not None:
+            err = err * self.weight.to(err.device)
+        loss = torch.mean(err)
+        return self.add_regularization(loss, **kwargs)
+
+
 # Example usage:
 # model = Model()  # Replace with your model
 # regularizers = [L1Regularization(model, lambda_l1=0.01, update_factor=0.1), StateRegularization(...)]

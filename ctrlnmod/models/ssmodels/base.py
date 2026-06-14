@@ -1,26 +1,18 @@
-from torch.nn import Module
 from torch import Tensor
-from ctrlnmod.utils import FrameCacheManager
-from abc import ABC, abstractmethod
-from typing import Tuple, Optional
-import inspect
-from importlib import import_module
+from abc import abstractmethod
+from typing import Dict, Tuple, Optional
+from ctrlnmod.blocks.base import Block, get_fqn, import_class
 
 
-
-def get_fqn(obj):
-    return obj.__module__ + "." + obj.__class__.__name__
-
-
-def import_class(fqn: str):
-    mod, cls = fqn.rsplit(".", 1)
-    return getattr(import_module(mod), cls)
-
-
-
-class SSModel(Module, ABC):
+class SSModel(Block):
     """
         Abstract base class for state-space models.
+
+        A state-space model is a *dynamic* :class:`~ctrlnmod.blocks.base.Block`
+        whose default ports are ``u`` (and optionally ``d``) as inputs and ``y`` as
+        output. This lets every existing model be wired into a
+        :class:`~ctrlnmod.diagram.diagram.Diagram` while keeping the historical
+        ``forward(u, x, d) -> (dx, y)`` API unchanged.
 
         Attributes :
             nu (int) : number of inputs
@@ -29,13 +21,17 @@ class SSModel(Module, ABC):
             nd (int, optional) : number of disturbances/exogenous signals
     """
 
-    def __init__(self, nu: int, ny:int, nx:int, nd: Optional[int] = None):
+    def __init__(self, nu: int, ny:int, nx:int, nd: Optional[int] = None,
+                 feedthrough: bool = False):
         """
             Args:
                 nu (int): Number of inputs.
                 ny (int): Number of outputs.
                 nx (int): Number of states.
                 nd (int, optional): Number of disturbances/exogenous signals. Defaults to None.
+                feedthrough (bool): Whether ``y`` depends directly on ``u``/``d``.
+                    Defaults to ``False`` (strictly-proper ``y = g(x)``), which lets
+                    the diagram engine break algebraic loops.
         """
         if not isinstance(nu, int) or nu < 0:
             raise ValueError("nu must be a non-negative integer")
@@ -43,14 +39,15 @@ class SSModel(Module, ABC):
             raise ValueError("ny must be a non-negative integer")
         if not isinstance(nx, int) or nx < 0:
             raise ValueError("nx must be a non-negative integer")
-        
-        super(SSModel, self).__init__()
+
+        in_ports = {"u": nu}
+        if nd is not None:
+            in_ports["d"] = nd
+        super().__init__(in_ports=in_ports, out_ports={"y": ny}, nx=nx,
+                         feedthrough=feedthrough)
         self.nu = nu
         self.ny = ny
-        self.nx = nx
         self.nd = nd
-
-        self._frame_cache = FrameCacheManager()
 
     @abstractmethod
     def forward(self, u, x, d=None):
@@ -110,37 +107,29 @@ class SSModel(Module, ABC):
             Clone the model, it has to be implemented to be compliant with simulator classes.
         """
         raise NotImplementedError("State-space models must implement a clone method")
-    
 
-    def get_config(self):
-        cls = self.__class__
-        sig = inspect.signature(cls.__init__)
-        kwargs = {}
+    def dynamics(self, inputs: Dict[str, Tensor], x: Tensor) -> Tuple[Tensor, Dict[str, Tensor]]:
+        """Adapter exposing the model to the diagram engine through named ports.
 
-        for name, param in sig.parameters.items():
-            if name == "self":
-                continue
-            if not hasattr(self, name):
-                raise ValueError(f"Attribute '{name}' not found in {cls.__name__}")
-            value = getattr(self, name)
+        Maps the ``forward(u, x, d) -> (dx, y)`` API onto the
+        :meth:`~ctrlnmod.blocks.base.Block.dynamics` contract.
+        """
+        u = inputs["u"]
+        d = inputs.get("d", None)
+        dx, y = self.forward(u, x, d)
+        return dx, {"y": y}
 
-            # Recursively get config if it's another configurable module
-            if isinstance(value, SSModel):
-                value = value.get_config()
+    def eval_output(self, x: Tensor, d: Optional[Tensor] = None) -> Dict[str, Tensor]:
+        """Output of a strictly-proper model from its state alone (``y = g(x)``).
 
-            kwargs[name] = value
+        Used by the diagram engine to break feedback loops: a strictly-proper model
+        (``feedthrough=False``) produces its output before its input is known. The
+        input ``u`` is irrelevant to ``y`` here, so a zero placeholder is passed.
+        """
+        u0 = x.new_zeros((x.shape[0], self.nu))
+        if self.nd is not None and d is None:
+            d = x.new_zeros((x.shape[0], self.nd))
+        _, y = self.forward(u0, x, d)
+        return {"y": y}
 
-        return {
-            "class": get_fqn(self),
-            "kwargs": kwargs,
-        }
-
-    @classmethod
-    def from_config(cls, config):
-        kwargs = config["kwargs"]
-        # Recursively rebuild submodules
-        for k, v in kwargs.items():
-            if isinstance(v, dict) and "class" in v and "kwargs" in v:
-                sub_cls = import_class(v["class"])
-                kwargs[k] = sub_cls.from_config(v)
-        return cls(**kwargs)
+    # get_config / from_config are inherited from Block (recursive over Block attrs).
