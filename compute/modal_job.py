@@ -39,7 +39,7 @@ def _run(cmd: str, label: str = "") -> bytes:
     os.chdir("/root/repo")
     out = "/root/repo/out_modal"
     os.makedirs(out, exist_ok=True)
-    env = dict(os.environ, OUT_DIR=out, NTHREADS="8", PYTHONUNBUFFERED="1",
+    env = dict(os.environ, OUT_DIR=out, NTHREADS="8", NPROC="8", PYTHONUNBUFFERED="1",
                PYTHONPATH=".:experiments/closed_loop:experiments/world_model:experiments/pixel_wm")
     t0 = time.time()
     print(f"[{label}] $ {cmd}", flush=True)

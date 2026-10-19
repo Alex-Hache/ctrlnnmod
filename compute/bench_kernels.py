@@ -90,8 +90,10 @@ for n in (128, 512, 1024, 2048):
                 s.backward()
             return f, None
 
-    for kind in tqdm(("gru_cudnn", "gru_cell_loop", "step_eager", "rollout_eager", "compile_default",
-                      "compile_cudagraphs", "triton_ieee", "triton_tf32"), desc=f"n={n}", ncols=90):
+    bar = tqdm(("gru_cudnn", "gru_cell_loop", "step_eager", "rollout_eager", "compile_default",
+                "compile_cudagraphs", "triton_ieee", "triton_tf32"), desc=f"n={n}", ncols=100)
+    for kind in bar:
+        bar.set_postfix_str(kind)                 # la compilation peut durer plusieurs minutes
         key = f"{kind}/{n}"
         try:
             torch._dynamo.reset()
@@ -106,3 +108,6 @@ for n in (128, 512, 1024, 2048):
             print(key, "ERREUR", repr(e)[:300], flush=True)
             traceback.print_exc()
         json.dump(res, open(f"{out}/bench_kernels.json", "w"), indent=1)
+        if os.path.isdir("/data"):                # copie sur le volume : survit à une coupure du client
+            os.makedirs("/data/results", exist_ok=True)
+            json.dump(res, open("/data/results/bench_kernels.json", "w"), indent=1)
