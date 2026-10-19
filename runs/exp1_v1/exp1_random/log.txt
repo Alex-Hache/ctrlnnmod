@@ -1,0 +1,6 @@
+mlp 1.0 {'reached': 0.88, 'diverged': 0.0, 'all_reached': 0.88, 'n_draws': 150}
+mlp 3.0 {'reached': 0.0, 'diverged': 0.0, 'all_reached': 0.0, 'n_draws': 150}
+pb_rnn 1.0 {'reached': 0.40208333333333335, 'diverged': 0.0, 'all_reached': 0.38666666666666666, 'n_draws': 150}
+pb_rnn 3.0 {'reached': 0.0, 'diverged': 0.0, 'all_reached': 0.0, 'n_draws': 150}
+pb_ren 1.0 {'reached': 1.0, 'diverged': 0.0, 'all_reached': 1.0, 'n_draws': 150}
+pb_ren 3.0 {'reached': 1.0, 'diverged': 0.0, 'all_reached': 1.0, 'n_draws': 150}
