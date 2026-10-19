@@ -18,6 +18,11 @@ from ctrlnmod.models.discrete.selective_ren import SelectiveREN, rollout
 out = os.environ.get("OUT_DIR", ".")
 dev = "cuda"
 B, T, NU = 64, 100, 8
+# v2 : têtes de taille fixe (nx = 32, nq = 64), n_heads = n / 32, comme dans pwm.py.
+# v1 (8 têtes, nx = n/8) dépasse la mémoire partagée du L4 dès nx = 64 : voir results/.
+NS = [int(v) for v in os.environ.get("BENCH_N", "256,512,1024,2048,4096").split(",")]
+COMPILE_N = [int(v) for v in os.environ.get("BENCH_COMPILE_N", "256,1024").split(",")]
+HEAD = 32
 res = {"gpu": torch.cuda.get_device_name(0), "torch": torch.__version__}
 
 
@@ -37,10 +42,9 @@ def timeit(fn, reps=5):
     return statistics.median(ts), first
 
 
-for n in (128, 512, 1024, 2048):
-    nx = n // 8
+for n in NS:
     torch.manual_seed(0)
-    m = SelectiveREN(NU, n_heads=8, nx=nx, nq=2 * nx).to(dev)
+    m = SelectiveREN(NU, n_heads=n // HEAD, nx=HEAD, nq=2 * HEAD).to(dev)
     u = torch.randn(B, T, NU, device=dev)
     Wt = torch.randn(B, T, n, device=dev)
 
@@ -90,8 +94,10 @@ for n in (128, 512, 1024, 2048):
                 s.backward()
             return f, None
 
-    bar = tqdm(("gru_cudnn", "gru_cell_loop", "step_eager", "rollout_eager", "compile_default",
-                "compile_cudagraphs", "triton_ieee", "triton_tf32"), desc=f"n={n}", ncols=100)
+    kinds = ["gru_cudnn", "gru_cell_loop", "step_eager", "rollout_eager", "triton_ieee", "triton_tf32"]
+    if n in COMPILE_N:                            # ~6 min de compilation par taille
+        kinds.insert(4, "compile_default")
+    bar = tqdm(kinds, desc=f"n={n}", ncols=100)
     for kind in bar:
         bar.set_postfix_str(kind)                 # la compilation peut durer plusieurs minutes
         key = f"{kind}/{n}"
@@ -107,7 +113,7 @@ for n in (128, 512, 1024, 2048):
             res[key] = {"error": repr(e)[:300]}
             print(key, "ERREUR", repr(e)[:300], flush=True)
             traceback.print_exc()
-        json.dump(res, open(f"{out}/bench_kernels.json", "w"), indent=1)
+        json.dump(res, open(f"{out}/bench_kernels_v2.json", "w"), indent=1)
         if os.path.isdir("/data"):                # copie sur le volume : survit à une coupure du client
             os.makedirs("/data/results", exist_ok=True)
-            json.dump(res, open("/data/results/bench_kernels.json", "w"), indent=1)
+            json.dump(res, open("/data/results/bench_kernels_v2.json", "w"), indent=1)

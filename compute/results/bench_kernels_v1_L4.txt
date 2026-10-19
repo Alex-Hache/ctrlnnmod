@@ -1,0 +1,12 @@
+gru_cudnn/128 {'s_per_iter': 0.0012789759999982664, 'first_call_s': 0.11087039799999943}
+gru_cell_loop/128 {'s_per_iter': 0.04676393400000123, 'first_call_s': 0.06935104800000147}
+step_eager/128 {'s_per_iter': 0.31391921000000167, 'first_call_s': 0.5124812239999983}
+rollout_eager/128 {'s_per_iter': 0.19517026299999785, 'first_call_s': 0.2012303160000002}
+compile_default/128 {'s_per_iter': 0.03466230300000461, 'first_call_s': 341.445607472}
+compile_cudagraphs/128 ERREUR AcceleratorError("CUDA error: operation failed due to a previous error during capture\nSearch for `cudaErrorStreamCaptureInvalidated' in https://docs.nvidia.com/cuda/cuda-runtime-api/group__CUDART__TYPES.html for more information.\n")
+triton_ieee/128 {'s_per_iter': 0.007570119999968483, 'first_call_s': 1.6680546830000367, 'max_err_vs_eager': 4.6193599700927734e-07}
+triton_tf32/128 {'s_per_iter': 0.007699249000097552, 'first_call_s': 1.2078082040000027, 'max_err_vs_eager': 0.0012497305870056152}
+gru_cudnn/512 {'s_per_iter': 0.005002950000061901, 'first_call_s': 0.012721435000003112}
+gru_cell_loop/512 {'s_per_iter': 0.05027761899998495, 'first_call_s': 0.08712173399999301}
+step_eager/512 {'s_per_iter': 0.31476260900001307, 'first_call_s': 0.337436356000012}
+rollout_eager/512 {'s_per_iter': 0.2064376490000086, 'first_call_s': 0.21166450800001257}
