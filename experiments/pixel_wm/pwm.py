@@ -16,6 +16,7 @@ import time
 
 import numpy as np
 import torch
+from tqdm import tqdm
 from torch import nn
 
 from ctrlnmod.models.discrete.explicit_ren import ExplicitREN
@@ -154,7 +155,8 @@ if __name__ == "__main__":
     gen = torch.Generator().manual_seed(a.seed)
     log = dict(loss=[], grad=[], val=[], nonfinite=0)
     t0 = time.time()
-    for it in range(a.iters):
+    bar = tqdm(range(a.iters), desc=f"{a.model} n={a.n} H={a.H}", mininterval=10, ncols=110)
+    for it in bar:
         img, act, o = data.batch(a.batch, a.H, gen)
         loss = ((model(img, act) - o) ** 2).mean()
         opt.zero_grad(set_to_none=True)
@@ -173,7 +175,7 @@ if __name__ == "__main__":
             with torch.no_grad():
                 vi, va_, vo = data.batch(256, a.H, torch.Generator().manual_seed(7), "va")
                 log["val"].append(((model(vi, va_) - vo) ** 2).mean().item())
-            print(it, log["loss"][-1], log["val"][-1], f"{time.time() - t0:.0f}s", flush=True)
+            bar.set_postfix(loss=f"{log['loss'][-1]:.4f}", val=f"{log['val'][-1]:.4f}")
     if dev == "cuda":
         torch.cuda.synchronize()
     log["time"] = time.time() - t0

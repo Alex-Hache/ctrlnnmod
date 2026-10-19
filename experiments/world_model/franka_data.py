@@ -13,6 +13,11 @@ import sys
 import mujoco
 import numpy as np
 
+try:
+    from tqdm import tqdm
+except ImportError:  # pragma: no cover
+    tqdm = lambda it, **k: it  # noqa: E731
+
 SUBSTEPS = 10            # 0,002 s × 10 = 0,02 s
 MENAGERIE = os.environ.get("MENAGERIE", os.path.expanduser("~/mujoco_menagerie"))
 
@@ -61,7 +66,7 @@ def generate(n, T, seed):
     mid, half = (lo + hi) / 2, (hi - lo) / 2
     lo, hi = mid - 0.85 * half, mid + 0.85 * half
     O, A = np.zeros((n, T + 1, 18), np.float32), np.zeros((n, T, 8), np.float32)
-    for i in range(n):
+    for i in tqdm(range(n), desc=f"simulation {n}×{T}", mininterval=5, ncols=90):
         A[i] = target_sequence(rng, T, lo, hi)
         q0 = np.zeros(9)
         q0[:7] = A[i, 0, :7] + 0.1 * rng.normal(size=7)

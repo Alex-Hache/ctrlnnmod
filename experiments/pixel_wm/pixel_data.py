@@ -10,6 +10,7 @@ import sys
 
 import mujoco
 import numpy as np
+from tqdm import tqdm
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "world_model"))
 import franka_data as fd  # noqa: E402
@@ -42,7 +43,8 @@ def build(n_tr, n_te, T_tr=250, T_te=1500):
     Ote, Ate = fd.generate(n_te, T_te, 2)
     m, d = fd.load()
     r, cam = renderer(m)
-    Itr = np.stack([[render_pair(m, d, r, cam, o[s, :9], o[s + 1, :9]) for s in STARTS] for o in Otr])
+    Itr = np.stack([[render_pair(m, d, r, cam, o[s, :9], o[s + 1, :9]) for s in STARTS]
+                    for o in tqdm(Otr, desc="rendu train", mininterval=5, ncols=90)])
     Iva = np.stack([[render_pair(m, d, r, cam, o[s, :9], o[s + 1, :9]) for s in STARTS] for o in Ova])
     Ite = np.stack([render_pair(m, d, r, cam, o[0, :9], o[1, :9]) for o in Ote])
     return dict(Otr=Otr, Atr=Atr, Itr=Itr, Ova=Ova, Ava=Ava, Iva=Iva, Ote=Ote, Ate=Ate, Ite=Ite,

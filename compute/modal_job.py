@@ -20,7 +20,7 @@ MENAGERIE = next((p for p in (os.environ.get("MENAGERIE_LOCAL", ""), "/home/clau
 image = (modal.Image.debian_slim(python_version="3.12")
          .apt_install("git", "libosmesa6", "libgl1", "libglib2.0-0")
          .pip_install("torch", "numpy", "scipy", "matplotlib", "mujoco", "cvxpy", "typeguard",
-                      "lightning", "tensorboard", "PyOpenGL")
+                      "lightning", "tensorboard", "PyOpenGL", "tqdm")
          .env({"MUJOCO_GL": "osmesa", "PYOPENGL_PLATFORM": "osmesa",
                "MENAGERIE": "/root/mujoco_menagerie"}))
 if MENAGERIE:
@@ -43,18 +43,19 @@ def _run(cmd: str) -> bytes:
                PYTHONPATH=".:experiments/closed_loop:experiments/world_model:experiments/pixel_wm")
     t0 = time.time()
     print(f"[{RUN_NAME}] GPU={GPU} $ {cmd}", flush=True)
-    with open(f"{out}/log_modal.txt", "w") as f:
-        f.write(f"$ {cmd}\n")
-        p = subprocess.Popen(cmd, shell=True, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                             text=True, bufsize=1)
-        for line in p.stdout:
-            stamp = f"[{RUN_NAME} {time.time() - t0:7.0f}s] "
-            sys.stdout.write(stamp + line)
+    with open(f"{out}/log_modal.txt", "wb") as f:
+        f.write(f"$ {cmd}\n".encode())
+        # sortie brute : les \r des barres de progression (tqdm) passent tels quels
+        p = subprocess.Popen(cmd, shell=True, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        while True:
+            chunk = p.stdout.read1(4096)
+            if not chunk:
+                break
+            sys.stdout.buffer.write(chunk)
             sys.stdout.flush()
-            f.write(line)
-            f.flush()
+            f.write(chunk)
         p.wait()
-        f.write(f"exit={p.returncode}\n")
+        f.write(f"exit={p.returncode}\n".encode())
     print(f"[{RUN_NAME}] fini, exit={p.returncode}, {time.time() - t0:.0f}s", flush=True)
     vol.commit()
     buf = io.BytesIO()

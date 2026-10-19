@@ -11,6 +11,7 @@ import time
 import traceback
 
 import torch
+from tqdm import tqdm
 
 from ctrlnmod.models.discrete.selective_ren import SelectiveREN, rollout
 
@@ -89,8 +90,8 @@ for n in (128, 512, 1024, 2048):
                 s.backward()
             return f, None
 
-    for kind in ("gru_cudnn", "gru_cell_loop", "step_eager", "rollout_eager", "compile_default",
-                 "compile_cudagraphs", "triton_ieee", "triton_tf32"):
+    for kind in tqdm(("gru_cudnn", "gru_cell_loop", "step_eager", "rollout_eager", "compile_default",
+                      "compile_cudagraphs", "triton_ieee", "triton_tf32"), desc=f"n={n}", ncols=90):
         key = f"{kind}/{n}"
         try:
             torch._dynamo.reset()
