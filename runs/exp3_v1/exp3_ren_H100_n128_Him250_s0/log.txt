@@ -1,0 +1,2 @@
+saved franka.npz (1000, 251, 18) (50, 1501, 18) finite: True True
+imagine_ren_H100_n128_s0_H250_s0 319s imagined 0.049 real 0.0845 baseline 0.1876 nonfinite 0

@@ -1,0 +1,2 @@
+saved franka.npz (1000, 251, 18) (50, 1501, 18) finite: True True
+imagine_mlp_1step_H25_n128_s0_H50_s0 36s imagined 0.3717 real 0.1158 baseline 0.1876 nonfinite 0
