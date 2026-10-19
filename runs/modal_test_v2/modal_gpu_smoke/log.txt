@@ -1,0 +1,26 @@
+✓ Initialized. View run at 
+https://modal.com/apps/alex-hache/main/ap-HojBbeR9jOfVljXf3d0DI1
+✓ Created objects.
+├── ✓ Uploaded /home/runner/work/ctrlnnmod/ctrlnnmod/compute/modal_job.py
+├── ✓ Uploaded /home/runner/work/ctrlnnmod/ctrlnnmod
+└── ✓ Created Function run.
+/home/runner/work/ctrlnnmod/ctrlnnmod/compute/modal_job.py:44: DeprecationWarning: Python 3.14 will, by default, filter extracted tar archives and reject files or modify their metadata. Use the filter argument to control this behavior.
+  tar.extractall(dest)
+$ python compute/gpu_smoke.py
+exit=0
+{'device': 'cuda', 'name': 'NVIDIA L4', 'nvidia_smi': 'name, memory.total [MiB]\nNVIDIA L4, 23034 MiB\n'}
+gru 256 0.037 s/it
+ren_explicit 256 0.086 s/it
+sren 256 0.195 s/it
+gru 1024 0.037 s/it
+ren_explicit 1024 0.103 s/it
+sren 1024 0.195 s/it
+gru 2048 0.144 s/it
+ren_explicit 2048 0.315 s/it
+sren 2048 0.208 s/it
+
+
+Stopping app - local entrypoint completed.
+[modal-client] 2026-10-19T16:02:40+0000 Timed out waiting for final app logs.
+✓ App completed. View run at 
+https://modal.com/apps/alex-hache/main/ap-HojBbeR9jOfVljXf3d0DI1
