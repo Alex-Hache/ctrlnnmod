@@ -26,7 +26,7 @@ class LayeredREN(ExplicitREN):
                  init_scale: float = 1.0) -> None:
         super().__init__(nu, ny, nx, sum(layers), gamma, alpha_bar, eps, act, bias, init_scale)
         self.layers = list(layers)
-        blk = torch.cat([torch.full((s,), k) for k, s in enumerate(self.layers)])
+        blk = torch.cat([torch.full((s,), k) for k, s in enumerate(self.layers)])  # buffers suivent .to(device)
         self.register_buffer("lower", (blk[None, :] < blk[:, None]).float())    # j avant i
         self.register_buffer("same", (blk[None, :] == blk[:, None]).float())
 

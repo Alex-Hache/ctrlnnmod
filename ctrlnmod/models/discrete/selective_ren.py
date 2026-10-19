@@ -50,9 +50,9 @@ class SelectiveREN(nn.Module):
     def frame(self) -> dict:
         H, nx, nq, N = self.H, self.nx, self.nq, self.N
         dt = self.X.dtype
-        Hm = self.X.transpose(1, 2) @ self.X + self.eps * torch.eye(N, dtype=dt)
-        K = torch.cat([self.C2, self.D21, torch.zeros(H, 1, nx, dtype=dt)], 2)             # (H,1,N)
-        V = torch.cat([torch.zeros(H, nx, self.nu, dtype=dt), -self.D12, self.B2], 1)     # (H,N,nu)
+        Hm = self.X.transpose(1, 2) @ self.X + self.eps * torch.eye(N, dtype=dt, device=self.X.device)
+        K = torch.cat([self.C2, self.D21, torch.zeros(H, 1, nx, dtype=dt, device=self.X.device)], 2)             # (H,1,N)
+        V = torch.cat([torch.zeros(H, nx, self.nu, dtype=dt, device=self.X.device), -self.D12, self.B2], 1)     # (H,N,nu)
         Hm = Hm + (K.transpose(1, 2) @ K + V @ V.transpose(1, 2)) / self.gamma
         H11, H21, H22 = Hm[:, :nx, :nx], Hm[:, nx:nx + nq, :nx], Hm[:, nx:nx + nq, nx:nx + nq]
         F, B1, P = Hm[:, nx + nq:, :nx], Hm[:, nx + nq:, nx:nx + nq], Hm[:, nx + nq:, nx + nq:]

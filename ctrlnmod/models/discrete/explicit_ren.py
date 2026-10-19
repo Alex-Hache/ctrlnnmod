@@ -64,10 +64,10 @@ class ExplicitREN(nn.Module):
     def H(self) -> Tensor:
         nx, nq = self.nx, self.nq
         N = 2 * nx + nq
-        H = self.X.T @ self.X + self.eps * torch.eye(N, dtype=self.X.dtype)
+        H = self.X.T @ self.X + self.eps * torch.eye(N, dtype=self.X.dtype, device=self.X.device)
         if self.gamma is not None:
-            K = torch.cat([self.C2, self.D21, torch.zeros(self.ny, nx, dtype=self.X.dtype)], 1)
-            V = torch.cat([torch.zeros(nx, self.nu, dtype=self.X.dtype), -self.D12, self.B2], 0)
+            K = torch.cat([self.C2, self.D21, torch.zeros(self.ny, nx, dtype=self.X.dtype, device=self.X.device)], 1)
+            V = torch.cat([torch.zeros(nx, self.nu, dtype=self.X.dtype, device=self.X.device), -self.D12, self.B2], 0)
             H = H + (K.T @ K + V @ V.T) / self.gamma
         return H
 
@@ -97,7 +97,7 @@ class ExplicitREN(nn.Module):
         """u: (batch, T, nu) → y: (batch, T, ny), states: (batch, T+1, nx)."""
         fr = self.frame()
         B, T, _ = u.shape
-        x = torch.zeros(B, self.nx, dtype=u.dtype) if x0 is None else x0
+        x = torch.zeros(B, self.nx, dtype=u.dtype, device=u.device) if x0 is None else x0
         xs, ys = [x], []
         for t in range(T):
             x, y = self.step(fr, x, u[:, t])
@@ -114,7 +114,7 @@ class ExplicitREN(nn.Module):
         E, F, B1, P, C1 = fr["E"], fr["F"], fr["B1"], fr["P"], fr["C1"]
         W = torch.diag(2 * fr["Lambda"])                 # D11 = 0
         g = self.gamma if self.gamma is not None else float("inf")
-        Z = lambda a, b: torch.zeros(a, b, dtype=E.dtype)  # noqa: E731
+        Z = lambda a, b: torch.zeros(a, b, dtype=E.dtype, device=E.device)  # noqa: E731
         top = torch.cat([E + E.T - P / self.alpha_bar ** 2, -C1.T, Z(nx, nu), F.T], 1)
         mid = torch.cat([-C1, W, -self.D12, B1.T], 1)
         if g == float("inf"):
@@ -123,7 +123,7 @@ class ExplicitREN(nn.Module):
                            torch.cat([mid[:, :nx + nq], B1.T], 1),
                            torch.cat([F, B1, P], 1)], 0)
             return float(torch.linalg.eigvalsh(0.5 * (M + M.T)).min())
-        urow = torch.cat([Z(nu, nx), -self.D12.T, g * torch.eye(nu, dtype=E.dtype), self.B2.T], 1)
+        urow = torch.cat([Z(nu, nx), -self.D12.T, g * torch.eye(nu, dtype=E.dtype, device=E.device), self.B2.T], 1)
         last = torch.cat([F, B1, self.B2, P], 1)
         M = torch.cat([top, mid, urow, last], 0)
         Kfull = torch.cat([self.C2, self.D21, self.D22, Z(self.ny, nx)], 1)

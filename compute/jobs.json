@@ -1,5 +1,5 @@
 {
- "tag": "modal_test_v1",
+ "tag": "modal_test_v2",
  "jobs": [
   {
    "name": "modal_gpu_smoke",
