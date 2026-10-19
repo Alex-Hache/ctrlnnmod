@@ -1,97 +1,93 @@
 {
- "tag": "exp2_v1",
+ "tag": "exp3_v1",
  "jobs": [
   {
-   "name": "exp2_scaling",
-   "cmd": "python experiments/world_model/scaling.py"
+   "name": "exp3_mlp_1step_H25_n128_Him250_s0",
+   "cmd": "git clone -q --depth 1 --filter=blob:none --sparse https://github.com/google-deepmind/mujoco_menagerie $HOME/mujoco_menagerie && git -C $HOME/mujoco_menagerie sparse-checkout set franka_emika_panda && MENAGERIE=$HOME/mujoco_menagerie python experiments/world_model/franka_data.py franka.npz && git fetch -q --depth 1 origin compute-results && git checkout FETCH_HEAD -- runs/exp2_v1 && MENAGERIE=$HOME/mujoco_menagerie python experiments/world_model/imagine.py --wm mlp_1step_H25_n128_s0 --models runs/exp2_v1 --H 250 --seed 0"
   },
   {
-   "name": "exp2_mlp_1step_H25_n128_s0",
-   "cmd": "git clone -q --depth 1 --filter=blob:none --sparse https://github.com/google-deepmind/mujoco_menagerie $HOME/mujoco_menagerie && git -C $HOME/mujoco_menagerie sparse-checkout set franka_emika_panda && MENAGERIE=$HOME/mujoco_menagerie python experiments/world_model/franka_data.py franka.npz && python experiments/world_model/wm.py --model mlp_1step --H 25 --n 128 --seed 0"
+   "name": "exp3_mlp_ms_H100_n128_Him250_s0",
+   "cmd": "git clone -q --depth 1 --filter=blob:none --sparse https://github.com/google-deepmind/mujoco_menagerie $HOME/mujoco_menagerie && git -C $HOME/mujoco_menagerie sparse-checkout set franka_emika_panda && MENAGERIE=$HOME/mujoco_menagerie python experiments/world_model/franka_data.py franka.npz && git fetch -q --depth 1 origin compute-results && git checkout FETCH_HEAD -- runs/exp2_v1 && MENAGERIE=$HOME/mujoco_menagerie python experiments/world_model/imagine.py --wm mlp_ms_H100_n128_s0 --models runs/exp2_v1 --H 250 --seed 0"
   },
   {
-   "name": "exp2_mlp_1step_H25_n128_s1",
-   "cmd": "git clone -q --depth 1 --filter=blob:none --sparse https://github.com/google-deepmind/mujoco_menagerie $HOME/mujoco_menagerie && git -C $HOME/mujoco_menagerie sparse-checkout set franka_emika_panda && MENAGERIE=$HOME/mujoco_menagerie python experiments/world_model/franka_data.py franka.npz && python experiments/world_model/wm.py --model mlp_1step --H 25 --n 128 --seed 1"
+   "name": "exp3_gru_H100_n128_Him250_s0",
+   "cmd": "git clone -q --depth 1 --filter=blob:none --sparse https://github.com/google-deepmind/mujoco_menagerie $HOME/mujoco_menagerie && git -C $HOME/mujoco_menagerie sparse-checkout set franka_emika_panda && MENAGERIE=$HOME/mujoco_menagerie python experiments/world_model/franka_data.py franka.npz && git fetch -q --depth 1 origin compute-results && git checkout FETCH_HEAD -- runs/exp2_v1 && MENAGERIE=$HOME/mujoco_menagerie python experiments/world_model/imagine.py --wm gru_H100_n128_s0 --models runs/exp2_v1 --H 250 --seed 0"
   },
   {
-   "name": "exp2_mlp_ms_H25_n128_s0",
-   "cmd": "git clone -q --depth 1 --filter=blob:none --sparse https://github.com/google-deepmind/mujoco_menagerie $HOME/mujoco_menagerie && git -C $HOME/mujoco_menagerie sparse-checkout set franka_emika_panda && MENAGERIE=$HOME/mujoco_menagerie python experiments/world_model/franka_data.py franka.npz && python experiments/world_model/wm.py --model mlp_ms --H 25 --n 128 --seed 0"
+   "name": "exp3_ren_H100_n128_Him250_s0",
+   "cmd": "git clone -q --depth 1 --filter=blob:none --sparse https://github.com/google-deepmind/mujoco_menagerie $HOME/mujoco_menagerie && git -C $HOME/mujoco_menagerie sparse-checkout set franka_emika_panda && MENAGERIE=$HOME/mujoco_menagerie python experiments/world_model/franka_data.py franka.npz && git fetch -q --depth 1 origin compute-results && git checkout FETCH_HEAD -- runs/exp2_v1 && MENAGERIE=$HOME/mujoco_menagerie python experiments/world_model/imagine.py --wm ren_H100_n128_s0 --models runs/exp2_v1 --H 250 --seed 0"
   },
   {
-   "name": "exp2_mlp_ms_H25_n128_s1",
-   "cmd": "git clone -q --depth 1 --filter=blob:none --sparse https://github.com/google-deepmind/mujoco_menagerie $HOME/mujoco_menagerie && git -C $HOME/mujoco_menagerie sparse-checkout set franka_emika_panda && MENAGERIE=$HOME/mujoco_menagerie python experiments/world_model/franka_data.py franka.npz && python experiments/world_model/wm.py --model mlp_ms --H 25 --n 128 --seed 1"
+   "name": "exp3_mlp_ms_H250_n128_Him250_s0",
+   "cmd": "git clone -q --depth 1 --filter=blob:none --sparse https://github.com/google-deepmind/mujoco_menagerie $HOME/mujoco_menagerie && git -C $HOME/mujoco_menagerie sparse-checkout set franka_emika_panda && MENAGERIE=$HOME/mujoco_menagerie python experiments/world_model/franka_data.py franka.npz && git fetch -q --depth 1 origin compute-results && git checkout FETCH_HEAD -- runs/exp2_v1 && MENAGERIE=$HOME/mujoco_menagerie python experiments/world_model/imagine.py --wm mlp_ms_H250_n128_s0 --models runs/exp2_v1 --H 250 --seed 0"
   },
   {
-   "name": "exp2_mlp_ms_H100_n128_s0",
-   "cmd": "git clone -q --depth 1 --filter=blob:none --sparse https://github.com/google-deepmind/mujoco_menagerie $HOME/mujoco_menagerie && git -C $HOME/mujoco_menagerie sparse-checkout set franka_emika_panda && MENAGERIE=$HOME/mujoco_menagerie python experiments/world_model/franka_data.py franka.npz && python experiments/world_model/wm.py --model mlp_ms --H 100 --n 128 --seed 0"
+   "name": "exp3_gru_H250_n128_Him250_s0",
+   "cmd": "git clone -q --depth 1 --filter=blob:none --sparse https://github.com/google-deepmind/mujoco_menagerie $HOME/mujoco_menagerie && git -C $HOME/mujoco_menagerie sparse-checkout set franka_emika_panda && MENAGERIE=$HOME/mujoco_menagerie python experiments/world_model/franka_data.py franka.npz && git fetch -q --depth 1 origin compute-results && git checkout FETCH_HEAD -- runs/exp2_v1 && MENAGERIE=$HOME/mujoco_menagerie python experiments/world_model/imagine.py --wm gru_H250_n128_s0 --models runs/exp2_v1 --H 250 --seed 0"
   },
   {
-   "name": "exp2_mlp_ms_H100_n128_s1",
-   "cmd": "git clone -q --depth 1 --filter=blob:none --sparse https://github.com/google-deepmind/mujoco_menagerie $HOME/mujoco_menagerie && git -C $HOME/mujoco_menagerie sparse-checkout set franka_emika_panda && MENAGERIE=$HOME/mujoco_menagerie python experiments/world_model/franka_data.py franka.npz && python experiments/world_model/wm.py --model mlp_ms --H 100 --n 128 --seed 1"
+   "name": "exp3_ren_H250_n128_Him250_s0",
+   "cmd": "git clone -q --depth 1 --filter=blob:none --sparse https://github.com/google-deepmind/mujoco_menagerie $HOME/mujoco_menagerie && git -C $HOME/mujoco_menagerie sparse-checkout set franka_emika_panda && MENAGERIE=$HOME/mujoco_menagerie python experiments/world_model/franka_data.py franka.npz && git fetch -q --depth 1 origin compute-results && git checkout FETCH_HEAD -- runs/exp2_v1 && MENAGERIE=$HOME/mujoco_menagerie python experiments/world_model/imagine.py --wm ren_H250_n128_s0 --models runs/exp2_v1 --H 250 --seed 0"
   },
   {
-   "name": "exp2_mlp_ms_H250_n128_s0",
-   "cmd": "git clone -q --depth 1 --filter=blob:none --sparse https://github.com/google-deepmind/mujoco_menagerie $HOME/mujoco_menagerie && git -C $HOME/mujoco_menagerie sparse-checkout set franka_emika_panda && MENAGERIE=$HOME/mujoco_menagerie python experiments/world_model/franka_data.py franka.npz && python experiments/world_model/wm.py --model mlp_ms --H 250 --n 128 --seed 0"
+   "name": "exp3_mlp_1step_H25_n128_Him50_s0",
+   "cmd": "git clone -q --depth 1 --filter=blob:none --sparse https://github.com/google-deepmind/mujoco_menagerie $HOME/mujoco_menagerie && git -C $HOME/mujoco_menagerie sparse-checkout set franka_emika_panda && MENAGERIE=$HOME/mujoco_menagerie python experiments/world_model/franka_data.py franka.npz && git fetch -q --depth 1 origin compute-results && git checkout FETCH_HEAD -- runs/exp2_v1 && MENAGERIE=$HOME/mujoco_menagerie python experiments/world_model/imagine.py --wm mlp_1step_H25_n128_s0 --models runs/exp2_v1 --H 50 --seed 0"
   },
   {
-   "name": "exp2_mlp_ms_H250_n128_s1",
-   "cmd": "git clone -q --depth 1 --filter=blob:none --sparse https://github.com/google-deepmind/mujoco_menagerie $HOME/mujoco_menagerie && git -C $HOME/mujoco_menagerie sparse-checkout set franka_emika_panda && MENAGERIE=$HOME/mujoco_menagerie python experiments/world_model/franka_data.py franka.npz && python experiments/world_model/wm.py --model mlp_ms --H 250 --n 128 --seed 1"
+   "name": "exp3_mlp_ms_H100_n128_Him50_s0",
+   "cmd": "git clone -q --depth 1 --filter=blob:none --sparse https://github.com/google-deepmind/mujoco_menagerie $HOME/mujoco_menagerie && git -C $HOME/mujoco_menagerie sparse-checkout set franka_emika_panda && MENAGERIE=$HOME/mujoco_menagerie python experiments/world_model/franka_data.py franka.npz && git fetch -q --depth 1 origin compute-results && git checkout FETCH_HEAD -- runs/exp2_v1 && MENAGERIE=$HOME/mujoco_menagerie python experiments/world_model/imagine.py --wm mlp_ms_H100_n128_s0 --models runs/exp2_v1 --H 50 --seed 0"
   },
   {
-   "name": "exp2_gru_H25_n128_s0",
-   "cmd": "git clone -q --depth 1 --filter=blob:none --sparse https://github.com/google-deepmind/mujoco_menagerie $HOME/mujoco_menagerie && git -C $HOME/mujoco_menagerie sparse-checkout set franka_emika_panda && MENAGERIE=$HOME/mujoco_menagerie python experiments/world_model/franka_data.py franka.npz && python experiments/world_model/wm.py --model gru --H 25 --n 128 --seed 0"
+   "name": "exp3_gru_H100_n128_Him50_s0",
+   "cmd": "git clone -q --depth 1 --filter=blob:none --sparse https://github.com/google-deepmind/mujoco_menagerie $HOME/mujoco_menagerie && git -C $HOME/mujoco_menagerie sparse-checkout set franka_emika_panda && MENAGERIE=$HOME/mujoco_menagerie python experiments/world_model/franka_data.py franka.npz && git fetch -q --depth 1 origin compute-results && git checkout FETCH_HEAD -- runs/exp2_v1 && MENAGERIE=$HOME/mujoco_menagerie python experiments/world_model/imagine.py --wm gru_H100_n128_s0 --models runs/exp2_v1 --H 50 --seed 0"
   },
   {
-   "name": "exp2_gru_H25_n128_s1",
-   "cmd": "git clone -q --depth 1 --filter=blob:none --sparse https://github.com/google-deepmind/mujoco_menagerie $HOME/mujoco_menagerie && git -C $HOME/mujoco_menagerie sparse-checkout set franka_emika_panda && MENAGERIE=$HOME/mujoco_menagerie python experiments/world_model/franka_data.py franka.npz && python experiments/world_model/wm.py --model gru --H 25 --n 128 --seed 1"
+   "name": "exp3_ren_H100_n128_Him50_s0",
+   "cmd": "git clone -q --depth 1 --filter=blob:none --sparse https://github.com/google-deepmind/mujoco_menagerie $HOME/mujoco_menagerie && git -C $HOME/mujoco_menagerie sparse-checkout set franka_emika_panda && MENAGERIE=$HOME/mujoco_menagerie python experiments/world_model/franka_data.py franka.npz && git fetch -q --depth 1 origin compute-results && git checkout FETCH_HEAD -- runs/exp2_v1 && MENAGERIE=$HOME/mujoco_menagerie python experiments/world_model/imagine.py --wm ren_H100_n128_s0 --models runs/exp2_v1 --H 50 --seed 0"
   },
   {
-   "name": "exp2_gru_H100_n128_s0",
-   "cmd": "git clone -q --depth 1 --filter=blob:none --sparse https://github.com/google-deepmind/mujoco_menagerie $HOME/mujoco_menagerie && git -C $HOME/mujoco_menagerie sparse-checkout set franka_emika_panda && MENAGERIE=$HOME/mujoco_menagerie python experiments/world_model/franka_data.py franka.npz && python experiments/world_model/wm.py --model gru --H 100 --n 128 --seed 0"
+   "name": "exp3_mlp_1step_H25_n128_Him250_s1",
+   "cmd": "git clone -q --depth 1 --filter=blob:none --sparse https://github.com/google-deepmind/mujoco_menagerie $HOME/mujoco_menagerie && git -C $HOME/mujoco_menagerie sparse-checkout set franka_emika_panda && MENAGERIE=$HOME/mujoco_menagerie python experiments/world_model/franka_data.py franka.npz && git fetch -q --depth 1 origin compute-results && git checkout FETCH_HEAD -- runs/exp2_v1 && MENAGERIE=$HOME/mujoco_menagerie python experiments/world_model/imagine.py --wm mlp_1step_H25_n128_s1 --models runs/exp2_v1 --H 250 --seed 1"
   },
   {
-   "name": "exp2_gru_H100_n128_s1",
-   "cmd": "git clone -q --depth 1 --filter=blob:none --sparse https://github.com/google-deepmind/mujoco_menagerie $HOME/mujoco_menagerie && git -C $HOME/mujoco_menagerie sparse-checkout set franka_emika_panda && MENAGERIE=$HOME/mujoco_menagerie python experiments/world_model/franka_data.py franka.npz && python experiments/world_model/wm.py --model gru --H 100 --n 128 --seed 1"
+   "name": "exp3_mlp_ms_H100_n128_Him250_s1",
+   "cmd": "git clone -q --depth 1 --filter=blob:none --sparse https://github.com/google-deepmind/mujoco_menagerie $HOME/mujoco_menagerie && git -C $HOME/mujoco_menagerie sparse-checkout set franka_emika_panda && MENAGERIE=$HOME/mujoco_menagerie python experiments/world_model/franka_data.py franka.npz && git fetch -q --depth 1 origin compute-results && git checkout FETCH_HEAD -- runs/exp2_v1 && MENAGERIE=$HOME/mujoco_menagerie python experiments/world_model/imagine.py --wm mlp_ms_H100_n128_s1 --models runs/exp2_v1 --H 250 --seed 1"
   },
   {
-   "name": "exp2_gru_H250_n128_s0",
-   "cmd": "git clone -q --depth 1 --filter=blob:none --sparse https://github.com/google-deepmind/mujoco_menagerie $HOME/mujoco_menagerie && git -C $HOME/mujoco_menagerie sparse-checkout set franka_emika_panda && MENAGERIE=$HOME/mujoco_menagerie python experiments/world_model/franka_data.py franka.npz && python experiments/world_model/wm.py --model gru --H 250 --n 128 --seed 0"
+   "name": "exp3_gru_H100_n128_Him250_s1",
+   "cmd": "git clone -q --depth 1 --filter=blob:none --sparse https://github.com/google-deepmind/mujoco_menagerie $HOME/mujoco_menagerie && git -C $HOME/mujoco_menagerie sparse-checkout set franka_emika_panda && MENAGERIE=$HOME/mujoco_menagerie python experiments/world_model/franka_data.py franka.npz && git fetch -q --depth 1 origin compute-results && git checkout FETCH_HEAD -- runs/exp2_v1 && MENAGERIE=$HOME/mujoco_menagerie python experiments/world_model/imagine.py --wm gru_H100_n128_s1 --models runs/exp2_v1 --H 250 --seed 1"
   },
   {
-   "name": "exp2_gru_H250_n128_s1",
-   "cmd": "git clone -q --depth 1 --filter=blob:none --sparse https://github.com/google-deepmind/mujoco_menagerie $HOME/mujoco_menagerie && git -C $HOME/mujoco_menagerie sparse-checkout set franka_emika_panda && MENAGERIE=$HOME/mujoco_menagerie python experiments/world_model/franka_data.py franka.npz && python experiments/world_model/wm.py --model gru --H 250 --n 128 --seed 1"
+   "name": "exp3_ren_H100_n128_Him250_s1",
+   "cmd": "git clone -q --depth 1 --filter=blob:none --sparse https://github.com/google-deepmind/mujoco_menagerie $HOME/mujoco_menagerie && git -C $HOME/mujoco_menagerie sparse-checkout set franka_emika_panda && MENAGERIE=$HOME/mujoco_menagerie python experiments/world_model/franka_data.py franka.npz && git fetch -q --depth 1 origin compute-results && git checkout FETCH_HEAD -- runs/exp2_v1 && MENAGERIE=$HOME/mujoco_menagerie python experiments/world_model/imagine.py --wm ren_H100_n128_s1 --models runs/exp2_v1 --H 250 --seed 1"
   },
   {
-   "name": "exp2_ren_H25_n128_s0",
-   "cmd": "git clone -q --depth 1 --filter=blob:none --sparse https://github.com/google-deepmind/mujoco_menagerie $HOME/mujoco_menagerie && git -C $HOME/mujoco_menagerie sparse-checkout set franka_emika_panda && MENAGERIE=$HOME/mujoco_menagerie python experiments/world_model/franka_data.py franka.npz && python experiments/world_model/wm.py --model ren --H 25 --n 128 --seed 0"
+   "name": "exp3_mlp_ms_H250_n128_Him250_s1",
+   "cmd": "git clone -q --depth 1 --filter=blob:none --sparse https://github.com/google-deepmind/mujoco_menagerie $HOME/mujoco_menagerie && git -C $HOME/mujoco_menagerie sparse-checkout set franka_emika_panda && MENAGERIE=$HOME/mujoco_menagerie python experiments/world_model/franka_data.py franka.npz && git fetch -q --depth 1 origin compute-results && git checkout FETCH_HEAD -- runs/exp2_v1 && MENAGERIE=$HOME/mujoco_menagerie python experiments/world_model/imagine.py --wm mlp_ms_H250_n128_s1 --models runs/exp2_v1 --H 250 --seed 1"
   },
   {
-   "name": "exp2_ren_H25_n128_s1",
-   "cmd": "git clone -q --depth 1 --filter=blob:none --sparse https://github.com/google-deepmind/mujoco_menagerie $HOME/mujoco_menagerie && git -C $HOME/mujoco_menagerie sparse-checkout set franka_emika_panda && MENAGERIE=$HOME/mujoco_menagerie python experiments/world_model/franka_data.py franka.npz && python experiments/world_model/wm.py --model ren --H 25 --n 128 --seed 1"
+   "name": "exp3_gru_H250_n128_Him250_s1",
+   "cmd": "git clone -q --depth 1 --filter=blob:none --sparse https://github.com/google-deepmind/mujoco_menagerie $HOME/mujoco_menagerie && git -C $HOME/mujoco_menagerie sparse-checkout set franka_emika_panda && MENAGERIE=$HOME/mujoco_menagerie python experiments/world_model/franka_data.py franka.npz && git fetch -q --depth 1 origin compute-results && git checkout FETCH_HEAD -- runs/exp2_v1 && MENAGERIE=$HOME/mujoco_menagerie python experiments/world_model/imagine.py --wm gru_H250_n128_s1 --models runs/exp2_v1 --H 250 --seed 1"
   },
   {
-   "name": "exp2_ren_H100_n128_s0",
-   "cmd": "git clone -q --depth 1 --filter=blob:none --sparse https://github.com/google-deepmind/mujoco_menagerie $HOME/mujoco_menagerie && git -C $HOME/mujoco_menagerie sparse-checkout set franka_emika_panda && MENAGERIE=$HOME/mujoco_menagerie python experiments/world_model/franka_data.py franka.npz && python experiments/world_model/wm.py --model ren --H 100 --n 128 --seed 0"
+   "name": "exp3_ren_H250_n128_Him250_s1",
+   "cmd": "git clone -q --depth 1 --filter=blob:none --sparse https://github.com/google-deepmind/mujoco_menagerie $HOME/mujoco_menagerie && git -C $HOME/mujoco_menagerie sparse-checkout set franka_emika_panda && MENAGERIE=$HOME/mujoco_menagerie python experiments/world_model/franka_data.py franka.npz && git fetch -q --depth 1 origin compute-results && git checkout FETCH_HEAD -- runs/exp2_v1 && MENAGERIE=$HOME/mujoco_menagerie python experiments/world_model/imagine.py --wm ren_H250_n128_s1 --models runs/exp2_v1 --H 250 --seed 1"
   },
   {
-   "name": "exp2_ren_H100_n128_s1",
-   "cmd": "git clone -q --depth 1 --filter=blob:none --sparse https://github.com/google-deepmind/mujoco_menagerie $HOME/mujoco_menagerie && git -C $HOME/mujoco_menagerie sparse-checkout set franka_emika_panda && MENAGERIE=$HOME/mujoco_menagerie python experiments/world_model/franka_data.py franka.npz && python experiments/world_model/wm.py --model ren --H 100 --n 128 --seed 1"
+   "name": "exp3_mlp_1step_H25_n128_Him50_s1",
+   "cmd": "git clone -q --depth 1 --filter=blob:none --sparse https://github.com/google-deepmind/mujoco_menagerie $HOME/mujoco_menagerie && git -C $HOME/mujoco_menagerie sparse-checkout set franka_emika_panda && MENAGERIE=$HOME/mujoco_menagerie python experiments/world_model/franka_data.py franka.npz && git fetch -q --depth 1 origin compute-results && git checkout FETCH_HEAD -- runs/exp2_v1 && MENAGERIE=$HOME/mujoco_menagerie python experiments/world_model/imagine.py --wm mlp_1step_H25_n128_s1 --models runs/exp2_v1 --H 50 --seed 1"
   },
   {
-   "name": "exp2_ren_H250_n128_s0",
-   "cmd": "git clone -q --depth 1 --filter=blob:none --sparse https://github.com/google-deepmind/mujoco_menagerie $HOME/mujoco_menagerie && git -C $HOME/mujoco_menagerie sparse-checkout set franka_emika_panda && MENAGERIE=$HOME/mujoco_menagerie python experiments/world_model/franka_data.py franka.npz && python experiments/world_model/wm.py --model ren --H 250 --n 128 --seed 0"
+   "name": "exp3_mlp_ms_H100_n128_Him50_s1",
+   "cmd": "git clone -q --depth 1 --filter=blob:none --sparse https://github.com/google-deepmind/mujoco_menagerie $HOME/mujoco_menagerie && git -C $HOME/mujoco_menagerie sparse-checkout set franka_emika_panda && MENAGERIE=$HOME/mujoco_menagerie python experiments/world_model/franka_data.py franka.npz && git fetch -q --depth 1 origin compute-results && git checkout FETCH_HEAD -- runs/exp2_v1 && MENAGERIE=$HOME/mujoco_menagerie python experiments/world_model/imagine.py --wm mlp_ms_H100_n128_s1 --models runs/exp2_v1 --H 50 --seed 1"
   },
   {
-   "name": "exp2_ren_H250_n128_s1",
-   "cmd": "git clone -q --depth 1 --filter=blob:none --sparse https://github.com/google-deepmind/mujoco_menagerie $HOME/mujoco_menagerie && git -C $HOME/mujoco_menagerie sparse-checkout set franka_emika_panda && MENAGERIE=$HOME/mujoco_menagerie python experiments/world_model/franka_data.py franka.npz && python experiments/world_model/wm.py --model ren --H 250 --n 128 --seed 1"
+   "name": "exp3_gru_H100_n128_Him50_s1",
+   "cmd": "git clone -q --depth 1 --filter=blob:none --sparse https://github.com/google-deepmind/mujoco_menagerie $HOME/mujoco_menagerie && git -C $HOME/mujoco_menagerie sparse-checkout set franka_emika_panda && MENAGERIE=$HOME/mujoco_menagerie python experiments/world_model/franka_data.py franka.npz && git fetch -q --depth 1 origin compute-results && git checkout FETCH_HEAD -- runs/exp2_v1 && MENAGERIE=$HOME/mujoco_menagerie python experiments/world_model/imagine.py --wm gru_H100_n128_s1 --models runs/exp2_v1 --H 50 --seed 1"
   },
   {
-   "name": "exp2_gru_H100_n256_s0",
-   "cmd": "git clone -q --depth 1 --filter=blob:none --sparse https://github.com/google-deepmind/mujoco_menagerie $HOME/mujoco_menagerie && git -C $HOME/mujoco_menagerie sparse-checkout set franka_emika_panda && MENAGERIE=$HOME/mujoco_menagerie python experiments/world_model/franka_data.py franka.npz && python experiments/world_model/wm.py --model gru --H 100 --n 256 --seed 0"
-  },
-  {
-   "name": "exp2_gru_H100_n256_s1",
-   "cmd": "git clone -q --depth 1 --filter=blob:none --sparse https://github.com/google-deepmind/mujoco_menagerie $HOME/mujoco_menagerie && git -C $HOME/mujoco_menagerie sparse-checkout set franka_emika_panda && MENAGERIE=$HOME/mujoco_menagerie python experiments/world_model/franka_data.py franka.npz && python experiments/world_model/wm.py --model gru --H 100 --n 256 --seed 1"
+   "name": "exp3_ren_H100_n128_Him50_s1",
+   "cmd": "git clone -q --depth 1 --filter=blob:none --sparse https://github.com/google-deepmind/mujoco_menagerie $HOME/mujoco_menagerie && git -C $HOME/mujoco_menagerie sparse-checkout set franka_emika_panda && MENAGERIE=$HOME/mujoco_menagerie python experiments/world_model/franka_data.py franka.npz && git fetch -q --depth 1 origin compute-results && git checkout FETCH_HEAD -- runs/exp2_v1 && MENAGERIE=$HOME/mujoco_menagerie python experiments/world_model/imagine.py --wm ren_H100_n128_s1 --models runs/exp2_v1 --H 50 --seed 1"
   }
  ]
 }
