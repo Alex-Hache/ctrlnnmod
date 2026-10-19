@@ -22,6 +22,7 @@ import torch
 from torch import nn
 
 from ctrlnmod.models.discrete.explicit_ren import ExplicitREN
+from ctrlnmod.models.discrete.selective_ren import SelectiveREN
 
 torch.set_num_threads(int(os.environ.get("NTHREADS", "2")))
 OUT = os.environ.get("OUT_DIR", "experiments/world_model/results")
@@ -58,11 +59,36 @@ class LatentWM(nn.Module):
         self.dec = mlp(n, h, NO, depth=1)
         if cell == "gru":
             self.cell = nn.GRUCell(NA, n)
+        elif cell == "sren":
+            self.cell = SelectiveREN(NA, n_heads=8, nx=n // 8, nq=2 * (n // 8), alpha_bar=0.9, g_min=0.02)
         else:
             self.cell = ExplicitREN(NA, 1, n, n, gamma=None, alpha_bar=1.0, init_scale=1.0)
 
+    # interface générique (utilisée par imagine.py)
+    def prepare(self):
+        return self.cell.frame() if self.kind in ("ren", "sren") else None
+
+    def init_state(self, o0):
+        return self.enc(o0)
+
+    def advance(self, ctx, x, a):
+        if self.kind == "gru":
+            x = self.cell(a, x)
+        elif self.kind == "sren":
+            x = self.cell.step(ctx, x, a)
+        else:
+            x = self.cell.step(ctx, x, a)[0]
+        return x, self.dec(x)
+
     def forward(self, o0, a, teacher=None):
         x = self.enc(o0)
+        if self.kind == "sren":
+            fr = self.cell.frame()
+            xs = []
+            for t in range(a.shape[1]):
+                x = self.cell.step(fr, x, a[:, t])
+                xs.append(x)
+            return self.dec(torch.stack(xs, 1))
         if self.kind == "gru":
             xs = []
             for t in range(a.shape[1]):
@@ -77,9 +103,94 @@ class LatentWM(nn.Module):
         return self.dec(torch.stack(xs, 1))
 
 
+class Mamba2Block(nn.Module):
+    """Bloc de type Mamba-2 en PyTorch pur (récurrence pas à pas, sans noyau CUDA) :
+    projection d'entrée, convolution causale courte, SSM sélectif à A scalaire par tête
+    (Δ, B, C dépendants de l'entrée), porte silu(z), normalisation RMS, projection de sortie."""
+
+    def __init__(self, d, expand=2, heads=8, N=16, k=4):
+        super().__init__()
+        self.d, self.di, self.h, self.N, self.k = d, expand * d, heads, N, k
+        self.p = self.di // heads
+        self.in_proj = nn.Linear(d, 2 * self.di + 2 * N + heads)
+        self.conv_w = nn.Parameter(torch.randn(self.di + 2 * N, k) / k ** 0.5)
+        self.conv_b = nn.Parameter(torch.zeros(self.di + 2 * N))
+        self.A_log = nn.Parameter(torch.log(torch.linspace(1, 16, heads)))
+        self.dt_bias = nn.Parameter(torch.log(torch.expm1(torch.linspace(1e-3, 1e-1, heads))))
+        self.Dskip = nn.Parameter(torch.ones(heads))
+        self.norm_w = nn.Parameter(torch.ones(self.di))
+        self.out_proj = nn.Linear(self.di, d)
+        self.pre_norm = nn.Parameter(torch.ones(d))
+
+    def init_state(self, B):
+        return (torch.zeros(B, self.h, self.p, self.N), torch.zeros(B, self.k - 1, self.di + 2 * self.N))
+
+    @staticmethod
+    def rms(x, w):
+        return x * torch.rsqrt(x.pow(2).mean(-1, keepdim=True) + 1e-6) * w
+
+    def step(self, state, u):
+        h, buf = state
+        B = u.shape[0]
+        zxbcdt = self.in_proj(self.rms(u, self.pre_norm))
+        z, xBC, dt = torch.split(zxbcdt, [self.di, self.di + 2 * self.N, self.h], -1)
+        win = torch.cat([buf, xBC[:, None]], 1)                         # (B, k, C)
+        xBC = torch.nn.functional.silu((win * self.conv_w.T[None]).sum(1) + self.conv_b)
+        buf = win[:, 1:]
+        x, Bm, Cm = torch.split(xBC, [self.di, self.N, self.N], -1)
+        dt = torch.nn.functional.softplus(dt + self.dt_bias)            # (B, H)
+        dA = torch.exp(-dt * torch.exp(self.A_log))                     # (B, H)
+        xh = x.view(B, self.h, self.p)
+        h = dA[..., None, None] * h + (dt[..., None, None] * xh[..., None]) * Bm[:, None, None, :]
+        y = (h * Cm[:, None, None, :]).sum(-1) + self.Dskip[None, :, None] * xh
+        y = self.rms(y.reshape(B, self.di) * torch.nn.functional.silu(z), self.norm_w)
+        return (h, buf), u + self.out_proj(y)
+
+
+class MambaWM(nn.Module):
+    """World model à 2 blocs Mamba-2 : jeton 0 = enc(o_0), puis un jeton par action."""
+
+    def __init__(self, d=96, layers=2, h=256):
+        super().__init__()
+        self.kind = "mamba2"
+        self.enc = mlp(NO, h, d, depth=1)
+        self.act_emb = nn.Linear(NA, d)
+        self.blocks = nn.ModuleList([Mamba2Block(d) for _ in range(layers)])
+        self.dec = mlp(d, h, NO, depth=1)
+
+    def prepare(self):
+        return None
+
+    def _run(self, states, tok):
+        new = []
+        for blk, st in zip(self.blocks, states):
+            st, tok = blk.step(st, tok)
+            new.append(st)
+        return new, tok
+
+    def init_state(self, o0):
+        states = [b.init_state(o0.shape[0]) for b in self.blocks]
+        states, _ = self._run(states, self.enc(o0))
+        return states
+
+    def advance(self, ctx, states, a):
+        states, feat = self._run(states, self.act_emb(a))
+        return states, self.dec(feat)
+
+    def forward(self, o0, a, teacher=None):
+        st = self.init_state(o0)
+        outs = []
+        for t in range(a.shape[1]):
+            st, o = self.advance(None, st, a[:, t])
+            outs.append(o)
+        return torch.stack(outs, 1)
+
+
 def build(model, n):
     if model.startswith("mlp"):
         return MLPStep()
+    if model == "mamba2":
+        return MambaWM()
     return LatentWM(model, n)
 
 

@@ -15,9 +15,12 @@ import time
 import torch
 
 from ctrlnmod.models.discrete.explicit_ren import ExplicitREN
+from ctrlnmod.models.discrete.selective_ren import SelectiveREN
+from wm import Mamba2Block
 
 torch.set_num_threads(int(os.environ.get("NTHREADS", "2")))
 OUT = os.environ.get("OUT_DIR", "experiments/world_model/results")
+ONLY = os.environ.get("ONLY", "")
 B, H, NA = 64, 100, 8
 
 
@@ -60,6 +63,33 @@ def run_ren(n, acyclic=False):
     return ren, it
 
 
+def run_sren(n):
+    m = SelectiveREN(NA, n_heads=8, nx=n // 8, nq=2 * (n // 8))
+    def it(a):
+        fr = m.frame()
+        x = torch.zeros(B, m.n_state)
+        s = 0
+        for t in range(H):
+            x = m.step(fr, x, a[:, t])
+            s = s + x.square().mean()
+        s.backward()
+    return m, it
+
+
+def run_mamba(n):
+    """n = d_model (état SSM : 2n · 16 par couche)."""
+    emb, blk = torch.nn.Linear(NA, n), Mamba2Block(n)
+    mod = torch.nn.ModuleList([emb, blk])
+    def it(a):
+        st = blk.init_state(B)
+        s = 0
+        for t in range(H):
+            st, y = blk.step(st, emb(a[:, t]))
+            s = s + y.square().mean()
+        s.backward()
+    return mod, it
+
+
 def bench(fn, n, reps=3):
     torch.manual_seed(0)
     mod, it = fn(n)
@@ -77,9 +107,11 @@ if __name__ == "__main__":
     os.makedirs(OUT, exist_ok=True)
     res = {}
     for n in (32, 64, 128, 256, 512, 1024):
-        for name, fn in (("gru", run_gru), ("ren_explicit", run_ren),
-                         ("ren_acyclic", lambda n: run_ren(n, acyclic=True))):
+        for name, fn in (("gru", run_gru), ("ren_explicit", run_ren), ("sren", run_sren),
+                         ("mamba2", run_mamba), ("ren_acyclic", lambda n: run_ren(n, acyclic=True))):
             if name == "ren_acyclic" and n > 256:
+                continue
+            if ONLY and name not in ONLY.split(","):
                 continue
             t, p = bench(fn, n)
             res[f"{name}/{n}"] = dict(sec_per_iter=t, params=p)

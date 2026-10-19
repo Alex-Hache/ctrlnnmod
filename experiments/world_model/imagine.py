@@ -21,7 +21,7 @@ import torch
 from torch import nn
 
 import franka_data as fd
-from wm import NA, NO, Data, LatentWM, MLPStep
+from wm import NA, NO, Data, LatentWM, MambaWM, MLPStep
 
 torch.set_num_threads(int(os.environ.get("NTHREADS", "2")))
 OUT = os.environ.get("OUT_DIR", "experiments/world_model/results")
@@ -63,7 +63,7 @@ class Policy(nn.Module):
 def load_wm(path, name):
     kind = name.split("_H")[0]
     n = int(name.split("_n")[1].split("_")[0])
-    model = MLPStep() if kind.startswith("mlp") else LatentWM(kind, n)
+    model = MLPStep() if kind.startswith("mlp") else (MambaWM() if kind == "mamba2" else LatentWM(kind, n))
     model.load_state_dict(torch.load(path))
     for p in model.parameters():
         p.requires_grad_(False)
@@ -87,14 +87,14 @@ def imagine(model, kind, data, policy, o0, ref):
             o = o + 0.1 * model.f(torch.cat([o, an], -1))
             qs.append((o * so + mo)[:, :7])
     else:
-        x = model.enc(on)
-        fr = model.cell.frame() if kind == "ren" else None
+        ctx = model.prepare()
+        x = model.init_state(on)
         ophys = o0
         for t in range(T):
             a = policy(ophys[:, :7], ophys[:, 9:16], ref[:, t], ref[:, t + 1:t + 1 + LOOK])
             an = (torch.cat([a, grip], -1) - ma) / sa
-            x = model.cell(an, x) if kind == "gru" else model.cell.step(fr, x, an)[0]
-            ophys = model.dec(x) * so + mo
+            x, onext = model.advance(ctx, x, an)
+            ophys = onext * so + mo
             qs.append(ophys[:, :7])
     return torch.stack(qs, 1)
 
