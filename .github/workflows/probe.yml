@@ -7,8 +7,9 @@ permissions:
 jobs:
   probe:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        k: [1, 2]
     steps:
-      - run: nproc; free -g; python3 --version
+      - uses: actions/checkout@v4
+      - run: |
+          mkdir -p out && { nproc; free -g | head -2; python3 --version; } > out/probe.txt
+          git config user.name ci && git config user.email ci@users.noreply.github.com
+          git checkout -b compute-results-probe && git add out && git commit -m probe && git push -f origin compute-results-probe
