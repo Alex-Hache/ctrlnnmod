@@ -32,7 +32,7 @@ app = modal.App(f"ctrlnnmod-{RUN_NAME}")          # un nom par run, visible dans
 vol = modal.Volume.from_name("ctrlnnmod-data", create_if_missing=True)
 
 
-def _run(cmd: str) -> bytes:
+def _run(cmd: str, label: str = "") -> bytes:
     """Exécute cmd ; chaque ligne de sortie part tout de suite dans les logs Modal (et dans un fichier)."""
     import sys
     import time
@@ -42,7 +42,7 @@ def _run(cmd: str) -> bytes:
     env = dict(os.environ, OUT_DIR=out, NTHREADS="8", PYTHONUNBUFFERED="1",
                PYTHONPATH=".:experiments/closed_loop:experiments/world_model:experiments/pixel_wm")
     t0 = time.time()
-    print(f"[{RUN_NAME}] GPU={GPU} $ {cmd}", flush=True)
+    print(f"[{label}] $ {cmd}", flush=True)
     with open(f"{out}/log_modal.txt", "wb") as f:
         f.write(f"$ {cmd}\n".encode())
         # sortie brute : les \r des barres de progression (tqdm) passent tels quels
@@ -56,7 +56,7 @@ def _run(cmd: str) -> bytes:
             f.write(chunk)
         p.wait()
         f.write(f"exit={p.returncode}\n".encode())
-    print(f"[{RUN_NAME}] fini, exit={p.returncode}, {time.time() - t0:.0f}s", flush=True)
+    print(f"[{label}] fini, exit={p.returncode}, {time.time() - t0:.0f}s", flush=True)
     vol.commit()
     buf = io.BytesIO()
     with tarfile.open(fileobj=buf, mode="w:gz") as tar:
@@ -66,13 +66,13 @@ def _run(cmd: str) -> bytes:
 
 @app.function(image=image, gpu=None if GPU == "none" else GPU, cpu=8.0, memory=32768,
               timeout=8 * 3600, volumes={"/data": vol})
-def run(cmd: str) -> bytes:
-    return _run(cmd)
+def run(cmd: str, label: str = "") -> bytes:
+    return _run(cmd, label)
 
 
 @app.local_entrypoint()
 def main(cmd: str):
-    data = run.remote(cmd)
+    data = run.remote(cmd, f"{RUN_NAME} · GPU={GPU}")
     dest = os.environ.get("OUT_DIR", "out/modal")
     os.makedirs(dest, exist_ok=True)
     with tarfile.open(fileobj=io.BytesIO(data)) as tar:
