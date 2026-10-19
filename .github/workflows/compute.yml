@@ -50,6 +50,24 @@ jobs:
         with:
           name: ${{ matrix.job.name }}
           path: out/
+      - name: Push this job's results now (do not wait for the other jobs)
+        if: always()
+        env:
+          TAG: ${{ needs.plan.outputs.tag }}
+          NAME: ${{ matrix.job.name }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/r" && cd "$RUNNER_TEMP/r" && git init -q
+          git config user.name ci && git config user.email ci@users.noreply.github.com
+          git remote add origin "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}"
+          git checkout -q -b compute-results
+          for i in 1 2 3 4 5 6; do
+            if git fetch -q origin compute-results; then git reset -q --hard FETCH_HEAD; fi
+            mkdir -p "runs/$TAG" && cp -r "$GITHUB_WORKSPACE/out/$NAME" "runs/$TAG/" || exit 0
+            git add runs && (git commit -qm "results $TAG/$NAME" || exit 0)
+            if git push -q origin compute-results; then exit 0; fi
+            sleep $(( (RANDOM % 15) + 5 ))
+          done
+          exit 1
   collect:
     needs: [plan, run]
     if: always()
@@ -68,4 +86,4 @@ jobs:
           git remote add origin "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}"
           if git fetch -q origin compute-results; then git checkout -q -b compute-results FETCH_HEAD; else git checkout -q --orphan compute-results; fi
           mkdir -p "runs/$TAG" && cp -r ../collected/* "runs/$TAG/" || true
-          git add runs && git commit -qm "results $TAG (run ${{ github.run_id }})" && git push -q origin compute-results
+          git add runs && (git commit -qm "results $TAG (run ${{ github.run_id }})" || exit 0) && git push -q origin compute-results

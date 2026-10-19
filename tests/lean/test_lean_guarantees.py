@@ -309,3 +309,24 @@ def test_selective_ren_contraction():
             for t in range(T):
                 xa, xb = m.step(fr, xa, u[:, t]), m.step(fr, xb, u[:, t])
                 assert torch.all(V(xa - xb) <= rho ** (t + 1) * V0 * (1 + 1e-9) + 1e-12)
+
+
+@pytest.mark.parametrize("layers", [[8], [3, 3, 2], [1] * 8])
+def test_layered_ren_gain(layers):
+    """layered_ren_gain : gain incrémental ≤ γ, D₁₁ triangulaire par blocs (3 cas : 1 couche,
+    3 couches, une couche par neurone = REN acyclique classique)."""
+    from ctrlnmod.models.discrete.layered_ren import LayeredREN
+    gamma = 0.7
+    for seed in range(8):
+        torch.manual_seed(seed)
+        m = LayeredREN(3, 2, 6, layers, gamma=gamma, init_scale=3.0)
+        with torch.no_grad():
+            for p in m.parameters():
+                p.add_(torch.randn_like(p))
+            u1 = torch.randn(32, 120, 3)
+            u2 = u1 + 0.5 * torch.randn(32, 120, 3)
+            y1, _ = m(u1)
+            y2, _ = m(u2)
+            num = ((y1 - y2) ** 2).sum((1, 2))
+            den = ((u1 - u2) ** 2).sum((1, 2))
+            assert torch.all(num <= gamma ** 2 * den * (1 + 1e-9))
