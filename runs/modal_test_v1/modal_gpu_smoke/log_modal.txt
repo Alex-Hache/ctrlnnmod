@@ -1,0 +1,18 @@
+$ python compute/gpu_smoke.py
+exit=1
+{'device': 'cuda', 'name': 'NVIDIA L4', 'nvidia_smi': 'name, memory.total [MiB]\nNVIDIA L4, 23034 MiB\n'}
+gru 256 0.037 s/it
+
+Traceback (most recent call last):
+  File "/root/repo/compute/gpu_smoke.py", line 40, in <module>
+    it()
+  File "/root/repo/compute/gpu_smoke.py", line 32, in it
+    fr = m.frame(); x = torch.zeros(B, n, device=dev)
+         ^^^^^^^^^
+  File "/root/repo/ctrlnmod/models/discrete/explicit_ren.py", line 76, in frame
+    H = self.H()
+        ^^^^^^^^
+  File "/root/repo/ctrlnmod/models/discrete/explicit_ren.py", line 67, in H
+    H = self.X.T @ self.X + self.eps * torch.eye(N, dtype=self.X.dtype)
+        ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+RuntimeError: Expected all tensors to be on the same device, but found at least two devices, cuda:0 and cpu!
