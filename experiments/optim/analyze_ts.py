@@ -17,10 +17,19 @@ import matplotlib.pyplot as plt  # noqa: E402
 src = sys.argv[1] if len(sys.argv) > 1 else "experiments/optim/results"
 out = sys.argv[2] if len(sys.argv) > 2 else "experiments/optim/analysis"
 os.makedirs(out, exist_ok=True)
+COND = sys.argv[3] if len(sys.argv) > 3 else "base"     # base | w4 | nl4 | b32
 R = defaultdict(list)                                  # (rho, seed, method) -> runs
-for f in glob.glob(f"{src}/**/ts_*.json", recursive=True):
+
+
+def cond_of(z):
+    w, d, b = z.get("width", 1), z.get("d12", 1.0), z.get("batch", 0)
+    return "base" if (w, d, b) == (1, 1.0, 0) else (f"w{w}" if w != 1 else "") + (f"nl{d:g}" if d != 1.0 else "") + (f"b{b}" if b else "")
+
+
+for f in glob.glob(f"{src}/**/ts*.json", recursive=True):
     z = json.load(open(f))
-    R[(z["rho"], z["seed"], z["method"])].append(z)
+    if cond_of(z) == COND:
+        R[(z["rho"], z["seed"], z["method"])].append(z)
 rhos = sorted({k[0] for k in R})
 seeds = sorted({k[1] for k in R})
 METH = ["free_gd", "ren_gd", "riem_gd", "free_adam", "ren_adam", "riem_adam"]
@@ -54,6 +63,8 @@ for rho in rhos:
         it3 = np.median([iters_to(b, 1e-2) for b in B])
         cM = np.exp(np.mean([np.log(b["log"]["cond_M"][-1]) for b in B])) if B[0]["log"]["cond_M"] else np.nan
         cJ = np.exp(np.mean([np.log(b["log"]["cond_JJt"][-1]) for b in B])) if B[0]["log"]["cond_JJt"] else np.nan
+        if not np.isfinite(cM):
+            cM = np.nan
         lrs = sorted({b["lr"] for b in B})
         summ[f"{rho}/{m}"] = dict(train=tr, test=te, iters_1e2=float(it3), cond_M=cM, cond_JJt=cJ, lrs=lrs,
                                   teacher_margin=tm, seeds=len(B))
@@ -70,11 +81,11 @@ for rho in rhos:
     gap.append(f"| {rho} | {g('ren_gd', 'free_gd'):.1f}× | {g('riem_gd', 'free_gd'):.1f}× | "
                f"{g('ren_adam', 'free_adam'):.1f}× | {g('riem_adam', 'free_adam'):.1f}× |")
 txt += "\n".join(gap) + "\n"
-open(f"{out}/table_ts.md", "w").write(txt)
-json.dump(summ, open(f"{out}/summary_ts.json", "w"), indent=1, default=float)
+open(f"{out}/table_ts_{COND}.md", "w").write(txt)
+json.dump(summ, open(f"{out}/summary_ts_{COND}.json", "w"), indent=1, default=float)
 print(txt)
 
-fig, axes = plt.subplots(2, len(rhos), figsize=(4.2 * len(rhos), 7), sharey="row")
+fig, axes = plt.subplots(2, len(rhos), figsize=(4.2 * len(rhos), 7), sharey="row", squeeze=False)
 col = {"free": "tab:gray", "ren": "tab:red", "riem": "tab:blue"}
 for j, rho in enumerate(rhos):
     for i, opt in enumerate(("gd", "adam")):
@@ -92,5 +103,5 @@ for j, rho in enumerate(rhos):
             ax.set_ylabel("perte d'entraînement (NMSE)")
         ax.legend(fontsize=7)
 fig.tight_layout()
-fig.savefig(f"{out}/curves_ts.png", dpi=110)
-print("figure", f"{out}/curves_ts.png")
+fig.savefig(f"{out}/curves_ts_{COND}.png", dpi=110)
+print("figure", f"{out}/curves_ts_{COND}.png")
