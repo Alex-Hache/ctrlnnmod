@@ -78,8 +78,6 @@ def test_hinf_sqrtm_sound():
         assert hinf_norm(A, B, C) < gamma
 
 
-@pytest.mark.xfail(strict=True, reason="init : terme eps*I absent de S et gamma remplacé par le gain "
-                   "du système ; construction exacte dans ms_variant_complete.")
 def test_hinf_sqrtm_right_inverse_exact():
     """ms_variant_complete : l'initialisation doit redonner exactement (A, B, C).
 
@@ -98,10 +96,32 @@ def test_hinf_sqrtm_right_inverse_exact():
     model.init_weights_(torch.tensor(A0), torch.tensor(B0), torch.tensor(C0), gamma, 0.0)
     A, B, C = (M.detach().numpy() for M in model._frame())
     err = max(np.abs(A - A0).max(), np.abs(B - B0).max(), np.abs(C - C0).max())
-    assert err < 1e-6, f"reconstruction inexacte : erreur max = {err:.2e}"
+    assert err < 1e-10, f"reconstruction inexacte : erreur max = {err:.2e}"
 
 
-@pytest.mark.xfail(strict=True, reason="init : self.gamma = gamma_sys (bord de l'ensemble). À décider.")
+@pytest.mark.xfail(strict=True, reason="method='legacy' : gamma remplacé par le gain du système, "
+                   "terme eps*I non compensé. Gardé pour comparaison.")
+def test_hinf_sqrtm_legacy_init_inexact():
+    """L'ancienne initialisation (method='legacy') n'est pas un inverse à droite."""
+    from ctrlnmod.models.ssmodels.continuous.linear.hinf import L2BoundedLinear
+    rng = np.random.default_rng(0)
+    A0 = -np.eye(3) + 0.1 * rng.normal(size=(3, 3))
+    B0, C0 = 0.3 * rng.normal(size=(3, 1)), 0.3 * rng.normal(size=(1, 3))
+    model = L2BoundedLinear(1, 1, 3, gamma=1.5, param='sqrtm')
+    model.init_weights_(torch.tensor(A0), torch.tensor(B0), torch.tensor(C0), 1.5, 0.0,
+                        method='legacy')
+    A, B, C = (M.detach().numpy() for M in model._frame())
+    err = max(np.abs(A - A0).max(), np.abs(B - B0).max(), np.abs(C - C0).max())
+    assert err < 1e-10 and float(model.gamma) == pytest.approx(1.5)
+
+
+def test_softplus_epsilon_right_inverse():
+    """geotorch_custom : inv_softplus_epsilon doit être l'inverse exact de softplus_epsilon."""
+    from geotorch_custom.fixedrank import softplus_epsilon, inv_softplus_epsilon
+    x = torch.linspace(1e-3, 30, 200, dtype=torch.float64)
+    assert torch.allclose(softplus_epsilon(inv_softplus_epsilon(x)), x, atol=1e-12)
+
+
 def test_hinf_sqrtm_keeps_prescribed_gamma():
     """Après initialisation, la borne garantie doit rester le γ demandé, pas le gain du
     système initial (sinon l'entraînement est restreint au bord de l'ensemble)."""

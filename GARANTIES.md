@@ -15,7 +15,7 @@ pytest tests/lean
 | --- | --- | --- | --- | --- |
 | `geotorch_custom.AlphaStable` (`SSLinear(alpha=…)`) | $\Re\lambda(A) < -\alpha$ | `thm_3_3_5_corrected`, `thm_3_3_6` | `test_alpha_stable_sound` | conforme |
 | `L2BoundedLinear(param='sqrtm')` | $A$ Hurwitz, $\|G\|_\infty < \gamma$ | `ms_variant_sound` | `test_hinf_sqrtm_sound` | conforme |
-| `L2BoundedLinear(param='sqrtm')`, initialisation | inverse à droite exact | `ms_variant_complete` | `test_hinf_sqrtm_right_inverse_exact` | **écart** (voir 2) |
+| `L2BoundedLinear(param='sqrtm')`, initialisation | inverse à droite exact, γ gardé | `ms_variant_complete` | `test_hinf_sqrtm_right_inverse_exact`, `test_hinf_sqrtm_keeps_prescribed_gamma` | conforme (`method='exact'`, défaut) |
 | `L2BoundedLinear(param='riccati')` | Riccati avec $P \succ 0$ | `thm_3_3_8_riccati` | `test_hinf_riccati_can_be_unstable` | **écart** (voir 3) |
 | `H2Linear` | $\|G\|_2 = \gamma_2$ | `thm_3_3_12_gramian`, `thm_3_3_12_trace` | `test_h2_sound` | conforme |
 | `ContractingRENODE` | contraction exponentielle | `thm_1_6_10` (Th. 1.6.10, 3.5.1, 3.5.2) | `test_contracting_renode_sound` | conforme |
@@ -31,20 +31,27 @@ pytest tests/lean
 2. `ContractingRENODE.check` utilisait $\operatorname{diag}(D_{11})$, nul car $D_{11}$ est
    strictement triangulaire, à la place de $\Lambda$ dans le bloc $PB_1 + C_1^\top\Lambda$.
    Un modèle valide était rejeté. Corrigé.
+3. **Initialisation H∞ exacte** (`L2BoundedLinear.init_weights_(…, method='exact')`, défaut
+   pour `param='sqrtm'`). Construction de `ms_variant_complete` : LMI du lemme borné réel au γ
+   **prescrit** (marge maximale), puis $T$, $H$, $Q^{1/2}$, $S$, $M_s$ en forme close. Erreur de
+   reconstruction $\approx 10^{-15}$ ; γ gardé. L'ancienne méthode reste (`method='legacy'`).
+4. **ε du frame.** En Lean, ε dépend du système : $\varepsilon \le \lambda_{\min}(-N)/(3\|P\|^2)$.
+   Le code fixait $\varepsilon = 10^{-3}$ : l'image codée était strictement plus petite que l'image
+   prouvée (exemple : `GNSSM` avec $\|P\| \approx 70$, LMI infaisable). L'initialisation exacte
+   réduit ε si nécessaire (avertissement).
+5. **`geotorch_custom` : `inv_softplus_epsilon` n'inversait pas `softplus_epsilon`** (ε = 10⁻⁸
+   au lieu de 10⁻⁶). Chaque matrice définie positive initialisée était décalée de
+   $9{,}9 \cdot 10^{-7} I$. Corrigé (et borné sous l'image au lieu de rendre NaN).
+6. **`GNSSM.init_weights_`** calculait γ sur $A_0$ alors que le frame impose la LMI sur
+   $A_0 + \alpha I$. L'ancienne init ignorait α : reconstruction fausse de $\alpha I$ sans erreur.
+   Corrigé.
 
 ## Écarts ouverts (tests marqués `xfail`, à décider)
 
 1. **`ContractingRENODE.init_weights_` remplace `alpha` par `1e-3`.** La marge demandée par
    l'utilisateur est perdue après l'initialisation.
-2. **Initialisation H∞ (`sqrtm`).**
-   - `self.gamma` devient le gain du système initial ($\gamma_{sys}$), pas le $\gamma$ demandé.
-     Le modèle démarre au bord de l'ensemble admissible : $\lambda_{\min}(M_s) \approx 7 \cdot
-     10^{-3}$ dans le test. C'est un candidat direct pour les problèmes de conditionnement.
-   - L'inverse à droite n'est pas exact : erreur $\approx 1{,}5 \cdot 10^{-4}$ sur $A$. Le terme
-     $\varepsilon I$ du frame n'est pas compensé dans $S$, et `alpha` n'est pas pris en compte.
-   - Construction exacte : `ms_variant_complete` (voir
-     [enonces-corriges.md, fiche 4](https://github.com/Alex-Hache/these-lean/blob/main/docs/enonces-corriges.md)).
-     Elle garde $\gamma$ et une marge $\lambda_{\min}(-N)/3$ sur $M_s$.
+2. **Initialisation H∞ `legacy`** (gardée pour comparaison, test `xfail`) : γ remplacé par le
+   gain initial, modèle au bord ($\lambda_{\min}(M_s) \approx 10^{-3}$), erreur $\approx 10^{-4}$.
 3. **Riccati sans marge.** Avec $B = 0$, $G = 0$, on obtient $A = SP$, de valeurs propres
    imaginaires pures (`thm_3_3_8_image_not_hurwitz`). Il faut `alpha > 0` ou une garde.
 4. **`H2Linear` exige la minimalité** (`thm_3_3_12_needs_minimality`). L'initialisation

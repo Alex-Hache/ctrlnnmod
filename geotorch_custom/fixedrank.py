@@ -7,8 +7,10 @@ def softplus_epsilon(x, epsilon=1e-6):
     return torch.nn.functional.softplus(x) + epsilon
 
 
-def inv_softplus_epsilon(x, epsilon=1e-8):
-    y = x - epsilon
+def inv_softplus_epsilon(x, epsilon=1e-6):
+    # Exact inverse of softplus_epsilon on its image (epsilon, inf).
+    # Below epsilon (outside the image) the value is clamped instead of returning NaN.
+    y = torch.clamp(x - epsilon, min=1e-12)
     return torch.where(y > 20, y, y.expm1().log())
 
 

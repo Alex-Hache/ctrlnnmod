@@ -1,4 +1,6 @@
+import warnings
 import torch
+import numpy as np
 from torch import Tensor
 import torch.nn as nn
 from torch.nn.modules.module import _addindent
@@ -234,8 +236,89 @@ class L2BoundedLinear(SSModel):
 
             return P, S, G
 
-    def init_weights_(self, A0: Tensor, B0: Tensor, C0: Tensor, gamma: float, alpha: float):
-        self._right_inverse(A0, B0, C0, gamma, alpha)
+    def init_weights_(self, A0: Tensor, B0: Tensor, C0: Tensor, gamma: float, alpha: float,
+                      method: str = 'exact'):
+        r"""Initialize the parameters so that the model reproduces (A0, B0, C0).
+
+        Args:
+            method (str): ``'exact'`` (default) uses the right inverse proven in Lean
+                (``These.ms_variant_complete``): the prescribed ``gamma`` is kept and
+                ``M`` gets a margin. ``'legacy'`` is the former behaviour (gamma replaced by
+                the gain of (A0, B0, C0), approximate reconstruction).
+        """
+        if method == 'exact' and self.param == 'sqrtm':
+            self._right_inverse_exact(A0, B0, C0, gamma, alpha)
+        else:
+            self._right_inverse(A0, B0, C0, gamma, alpha)
+
+    def _right_inverse_exact(self, A0: Tensor, B0: Tensor, C0: Tensor, gamma: float,
+                             alpha: float = 0.0):
+        Q, P, S, G, H, M = self.submersion_inv_exact(A0, B0, C0, gamma, alpha)
+        self.Q = Q
+        self.H = H
+        self.M = M
+        self.P = P
+        self.S = S
+        self.G = Parameter(G)
+        self.alpha = alpha
+        self.gamma = gamma
+
+    def submersion_inv_exact(self, A: Tensor, B: Tensor, C: Tensor, gamma: float,
+                             alpha: float = 0.0):
+        r"""Exact right inverse of the ``sqrtm`` frame (Lean: ``These.ms_variant_complete``).
+
+        1. Solve the strict bounded-real LMI at the *prescribed* gamma, maximising its margin.
+        2. G = C P^{-1}, T = (B'^T B')^{1/2}, H = B' T^{-1}, Q^{1/2} = H T H^T + delta (I - H H^T)
+           with B' = B / gamma.
+        3. S = skew(A P^{-1}), M = -N - delta^2 P (I - H H^T) P - eps P^2, with N the Schur
+           complement (Riccati expression) and delta^2 chosen so that M keeps half the margin.
+        Requires: A + alpha I Hurwitz, ||C (sI - A - alpha I)^{-1} B||_inf < gamma, rank(B) = nu.
+        """
+        import cvxpy as cp
+        with torch.no_grad():
+            dtype = A.dtype
+            An = (A + alpha * torch.eye(A.shape[0], dtype=dtype)).detach().numpy()
+            Bn, Cn = B.detach().numpy(), C.detach().numpy()
+            nx, nu = Bn.shape
+            Pv = cp.Variable((nx, nx), symmetric=True)
+            t = cp.Variable()
+            Mlmi = cp.bmat([[An.T @ Pv + Pv @ An + Cn.T @ Cn, Pv @ Bn],
+                            [Bn.T @ Pv, -gamma ** 2 * np.eye(nu)]])
+            cons = [0.5 * (Mlmi + Mlmi.T) << -t * np.eye(nx + nu),
+                    Pv >> 1e-6 * np.eye(nx)]  # t <= gamma^2 via the (2,2) block
+            cp.Problem(cp.Maximize(t), cons).solve()
+            if t.value is None or t.value <= 0:
+                raise ValueError(f"No strict bounded-real certificate for gamma = {gamma}")
+            P = torch.tensor(0.5 * (Pv.value + Pv.value.T), dtype=dtype)
+            A_, B_, C_ = (torch.tensor(x, dtype=dtype) for x in (An, Bn, Cn))
+            Ix = torch.eye(nx, dtype=dtype)
+            P_inv = torch.inverse(P)
+            N = A_.T @ P + P @ A_ + C_.T @ C_ + (P @ B_ @ B_.T @ P) / gamma ** 2
+            N = 0.5 * (N + N.T)
+            lam = torch.linalg.eigvalsh(-N).min()
+            nP2 = torch.linalg.matrix_norm(P, 2) ** 2
+            if lam <= 0:
+                raise ValueError("Numerical margin lost; the LMI solution is not strict enough.")
+            # The frame term eps*I costs eps*P^2 in the Riccati expression. As in Lean
+            # (ms_variant_complete), eps depends on the system: eps <= lam / (3 ||P||^2).
+            eps_max = float(lam / (3 * nP2))
+            if self.eps > eps_max:
+                warnings.warn(f"epsilon reduced from {self.eps:.1e} to {eps_max:.1e} so that "
+                              "the initial system is in the image of the parametrization.")
+                self.eps = eps_max
+            delta2 = (lam - self.eps * nP2) / (2 * nP2)  # M keeps >= lam/6 of the margin
+            Bp = B_ / gamma
+            T = sqrtm(Bp.T @ Bp)
+            H = Bp @ torch.inverse(T)
+            Proj = Ix - H @ H.T
+            R = H @ T @ H.T + torch.sqrt(delta2) * Proj
+            Q = R @ R
+            Q = 0.5 * (Q + Q.T)
+            G = C_ @ P_inv
+            S = 0.5 * (A_ @ P_inv - P_inv @ A_.T)
+            M = -N - delta2 * P @ Proj @ P - self.eps * P @ P
+            M = 0.5 * (M + M.T)
+        return Q, P, S, G, H, M
        
     @classmethod
     def copy(cls, model):
