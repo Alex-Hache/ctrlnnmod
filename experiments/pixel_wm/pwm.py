@@ -169,7 +169,7 @@ if __name__ == "__main__":
         if it % 50 == 0:
             log["loss"].append(loss.item())
             log["grad"].append(g.item())
-        if it % 1000 == 999:
+        if it % 250 == 249:
             with torch.no_grad():
                 vi, va_, vo = data.batch(256, a.H, torch.Generator().manual_seed(7), "va")
                 log["val"].append(((model(vi, va_) - vo) ** 2).mean().item())

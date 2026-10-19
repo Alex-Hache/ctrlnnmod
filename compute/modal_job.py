@@ -14,7 +14,8 @@ import tarfile
 import modal
 
 GPU = os.environ.get("MODAL_GPU", "L4")
-MENAGERIE = os.path.expanduser("~/mujoco_menagerie/franka_emika_panda")
+MENAGERIE = next((p for p in (os.environ.get("MENAGERIE_LOCAL", ""), "/home/claude/mujoco_menagerie/franka_emika_panda",
+                   os.path.expanduser("~/mujoco_menagerie/franka_emika_panda")) if p and os.path.isdir(p)), "")
 
 image = (modal.Image.debian_slim(python_version="3.12")
          .apt_install("git", "libosmesa6", "libgl1", "libglib2.0-0")
@@ -22,23 +23,39 @@ image = (modal.Image.debian_slim(python_version="3.12")
                       "lightning", "tensorboard", "PyOpenGL")
          .env({"MUJOCO_GL": "osmesa", "PYOPENGL_PLATFORM": "osmesa",
                "MENAGERIE": "/root/mujoco_menagerie"}))
-if os.path.isdir(MENAGERIE):
+if MENAGERIE:
     image = image.add_local_dir(MENAGERIE, "/root/mujoco_menagerie/franka_emika_panda")
 image = image.add_local_dir(".", "/root/repo", ignore=[".git", "out", "**/__pycache__", "*.pt",
                                                        "**/results_ci/*.pt"])
-app = modal.App("ctrlnnmod-compute")
+RUN_NAME = os.environ.get("RUN_NAME", "compute")
+app = modal.App(f"ctrlnnmod-{RUN_NAME}")          # un nom par run, visible dans le tableau de bord
 vol = modal.Volume.from_name("ctrlnnmod-data", create_if_missing=True)
 
 
 def _run(cmd: str) -> bytes:
+    """Exécute cmd ; chaque ligne de sortie part tout de suite dans les logs Modal (et dans un fichier)."""
+    import sys
+    import time
     os.chdir("/root/repo")
     out = "/root/repo/out_modal"
     os.makedirs(out, exist_ok=True)
-    env = dict(os.environ, OUT_DIR=out, NTHREADS="8",
+    env = dict(os.environ, OUT_DIR=out, NTHREADS="8", PYTHONUNBUFFERED="1",
                PYTHONPATH=".:experiments/closed_loop:experiments/world_model:experiments/pixel_wm")
-    p = subprocess.run(cmd, shell=True, env=env, capture_output=True, text=True)
+    t0 = time.time()
+    print(f"[{RUN_NAME}] GPU={GPU} $ {cmd}", flush=True)
     with open(f"{out}/log_modal.txt", "w") as f:
-        f.write(f"$ {cmd}\nexit={p.returncode}\n{p.stdout}\n{p.stderr}")
+        f.write(f"$ {cmd}\n")
+        p = subprocess.Popen(cmd, shell=True, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                             text=True, bufsize=1)
+        for line in p.stdout:
+            stamp = f"[{RUN_NAME} {time.time() - t0:7.0f}s] "
+            sys.stdout.write(stamp + line)
+            sys.stdout.flush()
+            f.write(line)
+            f.flush()
+        p.wait()
+        f.write(f"exit={p.returncode}\n")
+    print(f"[{RUN_NAME}] fini, exit={p.returncode}, {time.time() - t0:.0f}s", flush=True)
     vol.commit()
     buf = io.BytesIO()
     with tarfile.open(fileobj=buf, mode="w:gz") as tar:
