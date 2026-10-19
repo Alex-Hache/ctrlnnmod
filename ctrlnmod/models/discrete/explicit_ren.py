@@ -55,9 +55,11 @@ class ExplicitREN(nn.Module):
             self.D22 = nn.Parameter(torch.zeros(ny, nu))
         else:
             self.register_buffer("D22", torch.zeros(ny, nu))
-        z = (lambda *s: nn.Parameter(torch.zeros(*s))) if bias else \
-            (lambda *s: torch.zeros(*s))
-        self.bx, self.bv, self.by = z(nx), z(nq), z(ny)
+        for name, size in (("bx", nx), ("bv", nq), ("by", ny)):
+            if bias:
+                setattr(self, name, nn.Parameter(torch.zeros(size)))
+            else:
+                self.register_buffer(name, torch.zeros(size))      # suit .to(device)
         self.act = {"tanh": torch.tanh, "relu": torch.relu}[act]
 
     # ---------------------------------------------------------------------------------
