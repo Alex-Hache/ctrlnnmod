@@ -20,7 +20,7 @@ import torch
 from tqdm import tqdm
 
 # ordre voulu : torch / triton avant MuJoCo + OSMesa (sinon erreur de segmentation à l'import de triton)
-from pwm import NA, NO, PixWM, dev  # noqa: I001
+from pwm import NA, NO, dev, make_model  # noqa: I001
 from imagine import LOOK, Policy, real_tracking, references
 import pixel_data as pdm
 
@@ -41,17 +41,21 @@ def initial_images(ref):
 
 
 class Latent:
-    """Interface pas à pas du PixWM figé : prepare / init_state / advance → (état, trait décodable)."""
+    """Interface pas à pas du modèle figé : prepare / init_state / advance → (état, ô normalisé).
+    Les références (baselines.py) ont déjà init_state / advance ; ô peut être (K, B, 18)."""
 
-    def __init__(self, m: PixWM):
+    def __init__(self, m):
         self.m = m
+        self.native = hasattr(m, "advance")
 
     @torch.no_grad()
     def prepare(self):
-        return self.m.cell.frame() if self.m.kind in ("ren", "sren") else None
+        return self.m.cell.frame() if getattr(self.m, "kind", None) in ("ren", "sren") else None
 
     def init_state(self, img):
         m = self.m
+        if self.native:
+            return m.init_state(img)
         x0 = m.enc(img)
         if m.kind == "gru":
             return x0[None].contiguous()
@@ -66,20 +70,22 @@ class Latent:
 
     def advance(self, fr, x, an):
         m = self.m
+        if self.native:
+            return m.advance(x, an)
         if m.kind == "gru":
             out, h = m.cell(an[:, None], x)
-            return h, out[:, 0]
+            return h, m.dec(out[:, 0])
         if m.kind == "ren":
             xp, _ = m.cell.step(fr, x, an)
-            return xp, xp
+            return xp, m.dec(xp)
         if m.kind == "sren":
             xn = m.cell.step(fr, x, an)
-            return xn, xn
+            return xn, m.dec(xn)
         tok, new = m.act_emb(an), []
         for b, st in zip(m.blocks, x):
             st, tok = b.step(st, tok)
             new.append(st)
-        return new, tok
+        return new, m.dec(tok)
 
 
 def imagine(lat, norm, policy, img, ref, fr):
@@ -93,11 +99,13 @@ def imagine(lat, norm, policy, img, ref, fr):
     for t in range(T):
         a = policy(q, dq, ref[:, t], ref[:, t + 1:t + 1 + LOOK])
         an = (torch.cat([a, grip], -1) - ma) / sa
-        x, feat = lat.advance(fr, x, an)
-        o = lat.m.dec(feat) * so + mo
-        q, dq = o[:, :7], o[:, 9:16]
-        qs.append(q)
-    return torch.stack(qs, 1)
+        x, on = lat.advance(fr, x, an)
+        o = on * so + mo                       # (B, 18), ou (K, B, 18) pour un ensemble
+        qs.append(o[..., :7])
+        q, dq = o[..., :7], o[..., 9:16]
+        if o.dim() == 3:                       # ensemble : la politique voit la moyenne
+            q, dq = q.mean(0), dq.mean(0)
+    return torch.stack(qs, -2)                 # (B, T, 7) ou (K, B, T, 7) : coût moyen sur les membres
 
 
 if __name__ == "__main__":
@@ -119,7 +127,7 @@ if __name__ == "__main__":
     norm = [torch.tensor(v, dtype=torch.float32, device=dev)
             for v in (O.mean(0), O.std(0) + 1e-3, A.mean(0), A.std(0) + 1e-3)]   # comme pwm.Data
     kind, n = a.wm.split("_")[1], int(a.wm.split("_n")[1].split("_")[0])
-    model = PixWM(kind, n).to(dev)
+    model = make_model(kind, n).to(dev)
     model.load_state_dict(torch.load(f"{a.ckpt}/{a.wm}.pt", map_location=dev))
     for p in model.parameters():
         p.requires_grad_(False)

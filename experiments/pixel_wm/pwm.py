@@ -98,6 +98,14 @@ class PixWM(nn.Module):
         return self.dec(self.states(img, a))
 
 
+def make_model(kind, n):
+    """Modèles de ce travail (PixWM) ou références de l'état de l'art (baselines.py)."""
+    if kind in ("gru", "ren", "sren", "mamba2"):
+        return PixWM(kind, n)
+    from baselines import BASELINES
+    return BASELINES[kind](n)
+
+
 class Data:
     def __init__(self, path):
         z = np.load(path)
@@ -149,7 +157,7 @@ if __name__ == "__main__":
     torch.backends.cuda.matmul.allow_tf32 = True
     torch.backends.cudnn.allow_tf32 = True
     data = Data(a.data)
-    model = PixWM(a.model, a.n).to(dev)
+    model = make_model(a.model, a.n).to(dev)
     nparams = sum(p.numel() for p in model.parameters())
     opt = torch.optim.AdamW(model.parameters(), lr=3e-4, weight_decay=1e-4)
     sched = torch.optim.lr_scheduler.OneCycleLR(opt, 3e-4, total_steps=a.iters, pct_start=0.05)
@@ -158,8 +166,11 @@ if __name__ == "__main__":
     t0 = time.time()
     bar = tqdm(range(a.iters), desc=f"{a.model} n={a.n} H={a.H}", mininterval=10, ncols=110)
     for it in bar:
-        img, act, o = data.batch(a.batch, a.H, gen)
-        loss = ((model(img, act) - o) ** 2).mean()
+        if hasattr(model, "train_loss"):
+            loss = model.train_loss(data, a.batch, a.H, gen)
+        else:
+            img, act, o = data.batch(a.batch, a.H, gen)
+            loss = ((model(img, act) - o) ** 2).mean()
         opt.zero_grad(set_to_none=True)
         if not torch.isfinite(loss):
             log["nonfinite"] += 1
