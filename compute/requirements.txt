@@ -1,0 +1,8 @@
+numpy
+scipy>=1.7
+matplotlib
+cvxpy>=1.5
+typeguard
+lightning
+tensorboard
+mujoco

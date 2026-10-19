@@ -1,0 +1,71 @@
+# Calcul distant gratuit (dépôt public) : chaque ligne de compute/jobs.json devient un job
+# (4 vCPU, 16 Go). Les sorties sont rassemblées sur la branche `compute-results`,
+# dans runs/<tag>/.
+name: compute
+on:
+  push:
+    branches: [compute]
+permissions:
+  contents: write
+concurrency:
+  group: compute
+  cancel-in-progress: false
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.m.outputs.matrix }}
+      tag: ${{ steps.m.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: m
+        run: |
+          python3 -c "import json; d=json.load(open('compute/jobs.json')); print('matrix='+json.dumps({'job': d['jobs']})); print('tag='+d['tag'])" >> "$GITHUB_OUTPUT"
+  run:
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 340
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install
+        run: |
+          pip install -q torch --index-url https://download.pytorch.org/whl/cpu
+          pip install -q -r compute/requirements.txt
+      - name: Run
+        env:
+          OUT_DIR: out/${{ matrix.job.name }}
+          NTHREADS: "4"
+          PYTHONPATH: ".:experiments/closed_loop:experiments/world_model"
+        run: |
+          mkdir -p "$OUT_DIR"
+          ( ${{ matrix.job.cmd }} ) 2>&1 | tee "$OUT_DIR/log.txt"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ${{ matrix.job.name }}
+          path: out/
+  collect:
+    needs: [plan, run]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: collected
+          merge-multiple: true
+      - name: Push results
+        env:
+          TAG: ${{ needs.plan.outputs.tag }}
+        run: |
+          git init -q repo && cd repo
+          git config user.name ci && git config user.email ci@users.noreply.github.com
+          git remote add origin "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}"
+          if git fetch -q origin compute-results; then git checkout -q -b compute-results FETCH_HEAD; else git checkout -q --orphan compute-results; fi
+          mkdir -p "runs/$TAG" && cp -r ../collected/* "runs/$TAG/" || true
+          git add runs && git commit -qm "results $TAG (run ${{ github.run_id }})" && git push -q origin compute-results

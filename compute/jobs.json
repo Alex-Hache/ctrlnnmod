@@ -1,0 +1,93 @@
+{
+ "tag": "exp1_v1",
+ "jobs": [
+  {
+   "name": "exp1_random",
+   "cmd": "python experiments/closed_loop/run_arm.py random --draws 150"
+  },
+  {
+   "name": "exp1_mlp_s0",
+   "cmd": "python experiments/closed_loop/run_arm.py train --kind mlp --seed 0"
+  },
+  {
+   "name": "exp1_mlp_s1",
+   "cmd": "python experiments/closed_loop/run_arm.py train --kind mlp --seed 1"
+  },
+  {
+   "name": "exp1_mlp_s2",
+   "cmd": "python experiments/closed_loop/run_arm.py train --kind mlp --seed 2"
+  },
+  {
+   "name": "exp1_mlp_s3",
+   "cmd": "python experiments/closed_loop/run_arm.py train --kind mlp --seed 3"
+  },
+  {
+   "name": "exp1_mlp_s4",
+   "cmd": "python experiments/closed_loop/run_arm.py train --kind mlp --seed 4"
+  },
+  {
+   "name": "exp1_pb_rnn_s0",
+   "cmd": "python experiments/closed_loop/run_arm.py train --kind pb_rnn --seed 0"
+  },
+  {
+   "name": "exp1_pb_rnn_s1",
+   "cmd": "python experiments/closed_loop/run_arm.py train --kind pb_rnn --seed 1"
+  },
+  {
+   "name": "exp1_pb_rnn_s2",
+   "cmd": "python experiments/closed_loop/run_arm.py train --kind pb_rnn --seed 2"
+  },
+  {
+   "name": "exp1_pb_rnn_s3",
+   "cmd": "python experiments/closed_loop/run_arm.py train --kind pb_rnn --seed 3"
+  },
+  {
+   "name": "exp1_pb_rnn_s4",
+   "cmd": "python experiments/closed_loop/run_arm.py train --kind pb_rnn --seed 4"
+  },
+  {
+   "name": "exp1_pb_ren_s0",
+   "cmd": "python experiments/closed_loop/run_arm.py train --kind pb_ren --seed 0"
+  },
+  {
+   "name": "exp1_pb_ren_s1",
+   "cmd": "python experiments/closed_loop/run_arm.py train --kind pb_ren --seed 1"
+  },
+  {
+   "name": "exp1_pb_ren_s2",
+   "cmd": "python experiments/closed_loop/run_arm.py train --kind pb_ren --seed 2"
+  },
+  {
+   "name": "exp1_pb_ren_s3",
+   "cmd": "python experiments/closed_loop/run_arm.py train --kind pb_ren --seed 3"
+  },
+  {
+   "name": "exp1_pb_ren_s4",
+   "cmd": "python experiments/closed_loop/run_arm.py train --kind pb_ren --seed 4"
+  },
+  {
+   "name": "exp1_gamma10_s0",
+   "cmd": "python experiments/closed_loop/run_arm.py train --kind pb_ren --seed 0 --gamma 10"
+  },
+  {
+   "name": "exp1_gamma10_s1",
+   "cmd": "python experiments/closed_loop/run_arm.py train --kind pb_ren --seed 1 --gamma 10"
+  },
+  {
+   "name": "exp1_gamma50_s0",
+   "cmd": "python experiments/closed_loop/run_arm.py train --kind pb_ren --seed 0 --gamma 50"
+  },
+  {
+   "name": "exp1_gamma50_s1",
+   "cmd": "python experiments/closed_loop/run_arm.py train --kind pb_ren --seed 1 --gamma 50"
+  },
+  {
+   "name": "exp1_gamma1000_s0",
+   "cmd": "python experiments/closed_loop/run_arm.py train --kind pb_ren --seed 0 --gamma 1000"
+  },
+  {
+   "name": "exp1_gamma1000_s1",
+   "cmd": "python experiments/closed_loop/run_arm.py train --kind pb_ren --seed 1 --gamma 1000"
+  }
+ ]
+}
