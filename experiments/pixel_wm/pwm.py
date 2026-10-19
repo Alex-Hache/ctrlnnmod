@@ -183,6 +183,8 @@ if __name__ == "__main__":
     ev = evaluate(model, data)
     name = f"pix_{a.model}_n{a.n}_H{a.H}_s{a.seed}"
     json.dump(dict(args=vars(a), nparams=nparams, log=log, eval=ev), open(f"{OUT}/{name}.json", "w"))
-    torch.save(model.state_dict(), f"{OUT}/{name}.pt")
+    ck = "/data/ckpt" if os.path.isdir("/data") else OUT    # poids sur le volume, pas dans le retour
+    os.makedirs(ck, exist_ok=True)
+    torch.save(model.state_dict(), f"{ck}/{name}.pt")
     print(name, nparams, f"{log['time'] / 60:.1f} min", {k: (round(v, 4) if isinstance(v, float) else v)
                                                        for k, v in ev.items()}, flush=True)

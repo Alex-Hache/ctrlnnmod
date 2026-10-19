@@ -57,10 +57,21 @@ def _run(cmd: str, label: str = "") -> bytes:
         p.wait()
         f.write(f"exit={p.returncode}\n".encode())
     print(f"[{label}] fini, exit={p.returncode}, {time.time() - t0:.0f}s", flush=True)
+    # copie complète sur le volume ; retour au client limité aux petits fichiers (< 1 Mo) :
+    # les gros retours passent par un stockage objet que le proxy du bac à sable refuse
+    import shutil
+    dst = f"/data/runs/{label.split(' ')[0] or 'run'}"
+    shutil.copytree(out, dst, dirs_exist_ok=True)
     vol.commit()
     buf = io.BytesIO()
     with tarfile.open(fileobj=buf, mode="w:gz") as tar:
-        tar.add(out, arcname=".")
+        for root, _, files in os.walk(out):
+            for fn in files:
+                path = os.path.join(root, fn)
+                if os.path.getsize(path) < 1_000_000:
+                    tar.add(path, arcname=os.path.relpath(path, out))
+                else:
+                    print(f"[{label}] non rapatrié (sur le volume, {dst}) : {fn}", flush=True)
     return buf.getvalue()
 
 
