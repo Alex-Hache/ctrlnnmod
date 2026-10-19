@@ -183,7 +183,8 @@ if __name__ == "__main__":
     log["sec_per_iter"] = log["time"] / a.iters
     ev = evaluate(model, data)
     name = f"pix_{a.model}_n{a.n}_H{a.H}_s{a.seed}"
-    json.dump(dict(args=vars(a), nparams=nparams, log=log, eval=ev), open(f"{OUT}/{name}.json", "w"))
+    gpu = torch.cuda.get_device_name(0) if dev == "cuda" else "cpu"
+    json.dump(dict(args=vars(a), gpu=gpu, nparams=nparams, log=log, eval=ev), open(f"{OUT}/{name}.json", "w"))
     ck = "/data/ckpt" if os.path.isdir("/data") else OUT    # poids sur le volume, pas dans le retour
     os.makedirs(ck, exist_ok=True)
     torch.save(model.state_dict(), f"{ck}/{name}.pt")

@@ -14,6 +14,9 @@ import tarfile
 import modal
 
 GPU = os.environ.get("MODAL_GPU", "L4")
+# Repli si le L4 manque (file d'attente Modal) : A10G, même mémoire partagée (100 Ko par SM).
+# MODAL_GPU_FALLBACK="" pour imposer le type (bancs de mesure).
+FALLBACK = [g for g in os.environ.get("MODAL_GPU_FALLBACK", "A10G").split(",") if g and g != GPU]
 MENAGERIE = next((p for p in (os.environ.get("MENAGERIE_LOCAL", ""), "/home/claude/mujoco_menagerie/franka_emika_panda",
                    os.path.expanduser("~/mujoco_menagerie/franka_emika_panda")) if p and os.path.isdir(p)), "")
 
@@ -79,7 +82,8 @@ CPU = float(os.environ.get("MODAL_CPU", "8"))
 MEM = int(os.environ.get("MODAL_MEM", "32768"))
 
 
-@app.function(image=image, gpu=None if GPU == "none" else GPU, cpu=CPU, memory=MEM,
+@app.function(image=image, gpu=None if GPU == "none" else ([GPU] + FALLBACK if FALLBACK else GPU),
+              cpu=CPU, memory=MEM,
               timeout=8 * 3600, volumes={"/data": vol})
 def run(cmd: str, label: str = "") -> bytes:
     return _run(cmd, label)
