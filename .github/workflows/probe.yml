@@ -1,0 +1,14 @@
+name: compute-probe
+on:
+  push:
+    branches: [compute-probe]
+permissions:
+  contents: write
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        k: [1, 2]
+    steps:
+      - run: nproc; free -g; python3 --version
