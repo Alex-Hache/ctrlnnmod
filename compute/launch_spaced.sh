@@ -5,8 +5,10 @@
 # --detach : le run continue sur Modal si ce script est coupé (sinon Modal l arrête après ~3 min).
 # Les résultats restent alors sur le volume : compute/fetch_volume.py.
 JOBS=$1; OUT=$2; mkdir -p "$OUT"
+MAXPAR=${MAXPAR:-8}          # plan Starter de Modal : 10 GPU au plus en même temps
 while read -r name cmd; do
   [ -z "$name" ] && continue
+  while [ "$(jobs -rp | wc -l)" -ge "$MAXPAR" ]; do sleep 20; done
   for try in 1 2 3 4; do
     RUN_NAME=$name OUT_DIR=$OUT/$name MODAL_GPU=${MODAL_GPU:-L4} MODAL_CPU=${MODAL_CPU:-4} \
       MODAL_MEM=${MODAL_MEM:-16384} PYTHONUNBUFFERED=1 timeout 10000 \
