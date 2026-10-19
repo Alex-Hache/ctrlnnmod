@@ -66,6 +66,19 @@ def sim(W, u):
     return torch.stack(ys, 1)
 
 
+def sim_states(W, u):
+    """Pré-activations v (B, T, nq) : pour mesurer la saturation du tanh."""
+    B, T, _ = u.shape
+    x = torch.zeros(B, W["A"].shape[0], dtype=u.dtype)
+    vs = []
+    for t in range(T):
+        v = (x @ W["C1"].T + u[:, t] @ W["D12"].T + W["bv"]) / W["lam"]
+        w = torch.tanh(v)
+        vs.append(v)
+        x = x @ W["A"].T + w @ W["Bw"].T + u[:, t] @ W["Bu"].T + W["bx"]
+    return torch.stack(vs, 1)
+
+
 def flat(d, keys):
     return torch.cat([d[k].reshape(-1) for k in keys])
 
@@ -80,7 +93,7 @@ def unflat(v, like, keys):
 
 
 # ----------------------------------------------------------------------------------- maître
-def teacher(rho, seed, nx=NX, nq=NQ, eps=1e-3):
+def teacher(rho, seed, nx=NX, nq=NQ, eps=1e-3, d12=1.0):
     """Maître dans l'ensemble certifié de l'élève, de marge réglée par ρ.
     P = I, E = c I (c = 1/ρ², optimal pour la partie linéaire), F = c A, A = ρ Q (Q orthogonale),
     H22 = 2Λ diagonal. La partie non linéaire (C1, B_w, échelle s) est réduite jusqu'à ce qu'elle
@@ -112,10 +125,10 @@ def teacher(rho, seed, nx=NX, nq=NQ, eps=1e-3):
             break
     X = torch.linalg.cholesky(H - eps * torch.eye(H.shape[0])).T           # XᵀX = H − εI
     p = dict(X=X, Y=torch.zeros(nx, nx), B2=c * torch.randn(nx, NU, generator=g) / math.sqrt(NU),
-             D12=torch.randn(nq, NU, generator=g) / math.sqrt(NU), C2=torch.randn(NY, nx, generator=g) / math.sqrt(nx),
+             D12=d12 * torch.randn(nq, NU, generator=g) / math.sqrt(NU), C2=torch.randn(NY, nx, generator=g) / math.sqrt(nx),
              D21=0.3 * torch.randn(NY, nq, generator=g) / math.sqrt(nq), D22=torch.zeros(NY, NU),
              bx=torch.zeros(nx), bv=torch.zeros(nq), by=torch.zeros(NY))
-    info = dict(rho=rho, nonlin_scale=float(s), margin=float(ev[0] / ev[-1]), lam_min_H=float(ev[0]),
+    info = dict(rho=rho, d12=d12, nonlin_scale=float(s), margin=float(ev[0] / ev[-1]), lam_min_H=float(ev[0]),
                 lam_min_H_linear=lin)
     return p, info
 
@@ -150,8 +163,15 @@ class Adam:
         return -self.lr * mh / (vh.sqrt() + self.eps)
 
 
-def run(rho, seed, method, lr, iters=1500, log_every=25, damping=1e-6, nx=NX, nq=NQ):
-    tp, tinfo = teacher(rho, seed)
+def run(rho, seed, method, lr, iters=1500, log_every=25, damping=1e-6, width=1, d12=1.0, batch=0):
+    """width : élève width× plus large que le maître ; d12 : entrée du maître ×d12 (tanh saturé,
+    maître très non linéaire, certificat inchangé car D12 n'entre pas dans H en contraction seule) ;
+    batch : taille de mini-lot (0 = lot complet)."""
+    nx, nq = NX * width, NQ * width
+    tp, tinfo = teacher(rho, seed, d12=d12)
+    with torch.no_grad():
+        v = (sim_states(phi(tp, NX, NQ), inputs(64, 100, 99)))
+    tinfo["sat_frac"] = float((v.abs() > 1.0).double().mean())             # part des neurones saturés
     Wt = phi(tp, NX, NQ)
     u_tr, u_te = inputs(256, 100, 10 + seed), inputs(64, 400, 20 + seed)
     with torch.no_grad():
@@ -176,7 +196,12 @@ def run(rho, seed, method, lr, iters=1500, log_every=25, damping=1e-6, nx=NX, nq
 
     log = dict(it=[], train=[], test=[], cond_M=[], lmin_M=[], cond_JJt=[], margin=[], retr_err=[])
     t0, status = time.time(), "ok"
+    gb = torch.Generator().manual_seed(500 + seed)
+    u_full, y_full = u_tr, y_tr
     for it in range(iters + 1):
+        if batch:
+            idx = torch.randint(0, u_full.shape[0], (batch,), generator=gb)
+            u_tr, y_tr = u_full[idx], y_full[idx]
         if kind == "free":
             xv = x.detach().requires_grad_(True)
             L = loss_W(xv, u_tr, y_tr)
@@ -206,8 +231,9 @@ def run(rho, seed, method, lr, iters=1500, log_every=25, damping=1e-6, nx=NX, nq
             with torch.no_grad():
                 W = unflat(x, like, keys) if kind == "free" else phi(unflat(x, th0, TK), nx, nq)
                 te = float(((sim(W, u_te) - y_te) ** 2).mean())
+                tr = float(((sim(W, u_full) - y_full) ** 2).mean()) if batch else float(L.detach())
             log["it"].append(it)
-            log["train"].append(float(L.detach()))
+            log["train"].append(tr)
             log["test"].append(te)
             if kind != "free":
                 p = unflat(x, th0, TK)
@@ -217,7 +243,7 @@ def run(rho, seed, method, lr, iters=1500, log_every=25, damping=1e-6, nx=NX, nq
                 N = 2 * nx + nq
                 evH = torch.linalg.eigvalsh(p["X"].T @ p["X"] + 1e-3 * torch.eye(N))
                 log["margin"].append(float(evH[0] / evH[-1]))
-                if it % (4 * log_every) == 0 or kind == "riem":
+                if kind == "riem" or (it % (4 * log_every) == 0 and x.numel() < 3000):   # J coûteux si large
                     Jd = J if kind == "riem" else jacrev(phiflat)(x)
                     ev = torch.linalg.eigvalsh(Jd @ Jd.T)
                     log["cond_JJt"].append(float(ev[-1] / ev[0].clamp(min=1e-300)))
@@ -227,6 +253,7 @@ def run(rho, seed, method, lr, iters=1500, log_every=25, damping=1e-6, nx=NX, nq
                         log["retr_err"].append(float((dW - sW).norm() / sW.norm().clamp(min=1e-300)))
         x = x_new.detach()
     return dict(rho=rho, seed=seed, method=method, lr=lr, iters=iters, status=status, teacher=tinfo,
+                width=width, d12=d12, batch=batch,
                 time=time.time() - t0, log=log, final_train=log["train"][-1] if log["train"] else None,
                 final_test=log["test"][-1] if log["test"] else None)
 
@@ -238,9 +265,10 @@ GRID = {"ren_gd": [0.01, 0.03, 0.1, 0.3, 1.0], "free_gd": [0.01, 0.03, 0.1, 0.3,
 
 def _job(args):
     torch.set_num_threads(1)
-    rho, seed, method, lr, iters = args
-    r = run(rho, seed, method, lr, iters)
-    name = f"ts_{method}_rho{rho}_s{seed}_lr{lr}"
+    rho, seed, method, lr, iters, width, d12, batch = args
+    r = run(rho, seed, method, lr, iters, width=width, d12=d12, batch=batch)
+    tag = (f"_w{width}" if width != 1 else "") + (f"_nl{d12}" if d12 != 1.0 else "") + (f"_b{batch}" if batch else "")
+    name = f"ts{tag}_{method}_rho{rho}_s{seed}_lr{lr}"
     json.dump(r, open(f"{OUT}/{name}.json", "w"))
     return f"{name}: {r['status']} train={r['final_train']:.2e} test={r['final_test']:.2e} {r['time']:.0f}s" \
         if r["final_train"] is not None else f"{name}: {r['status']}"
@@ -257,13 +285,16 @@ if __name__ == "__main__":
     ap.add_argument("--rhos", default="0.5,0.9,0.97,0.995")
     ap.add_argument("--seeds", default="0,1")
     ap.add_argument("--methods", default=",".join(GRID))
+    ap.add_argument("--width", type=int, default=1)
+    ap.add_argument("--d12", type=float, default=1.0)
+    ap.add_argument("--batch", type=int, default=0)
     a = ap.parse_args()
     os.makedirs(OUT, exist_ok=True)
     if not a.sweep:
-        print(_job((a.rho, a.seed, a.method, a.lr, a.iters)))
+        print(_job((a.rho, a.seed, a.method, a.lr, a.iters, a.width, a.d12, a.batch)))
     else:
         from tqdm import tqdm
-        jobs = [(r, s, m, lr, a.iters) for r, s, m in itertools.product(
+        jobs = [(r, s, m, lr, a.iters, a.width, a.d12, a.batch) for r, s, m in itertools.product(
             [float(v) for v in a.rhos.split(",")], [int(v) for v in a.seeds.split(",")], a.methods.split(","))
             for lr in GRID[m]]
         jobs.sort(key=lambda j: j[2].startswith("riem"), reverse=True)        # les plus longs d'abord
