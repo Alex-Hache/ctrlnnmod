@@ -1,0 +1,6 @@
+✓ Initialized. View run at 
+https://modal.com/apps/alex-hache/main/ap-z2ZdayDsAe1t7PKt22Y4cI
+✓ Created objects.
+├── ✓ Uploaded /home/runner/work/ctrlnnmod/ctrlnnmod/compute/modal_job.py
+├── ✓ Uploaded /home/runner/work/ctrlnnmod/ctrlnnmod
+└── ✓ Created Function run.
