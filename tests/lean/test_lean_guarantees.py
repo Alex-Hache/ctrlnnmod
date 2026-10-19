@@ -242,3 +242,45 @@ def test_lbdn_lipschitz():
             lhs = (net(x) - net(xp)).norm(dim=1)
             rhs = ((x - xp) * scale).norm(dim=1)
         assert torch.all(lhs <= rhs + 1e-9)
+
+
+# ----------------------------------------------------------------------------------------
+# REN explicite en temps discret (extension, Lean : explicit_ren_param, explicit_ren_gain)
+# ----------------------------------------------------------------------------------------
+
+@pytest.mark.parametrize("gamma", [0.3, 1.0, 5.0])
+def test_explicit_ren_gain(gamma):
+    """explicit_ren_gain : gain incrémental ≤ γ pour des paramètres quelconques (grands)."""
+    from ctrlnmod.models.discrete.explicit_ren import ExplicitREN
+    for seed in range(N_DRAWS // 2):
+        torch.manual_seed(seed)
+        m = ExplicitREN(3, 2, 6, 8, gamma=gamma, init_scale=3.0)
+        with torch.no_grad():
+            for p in m.parameters():
+                p.add_(torch.randn_like(p))
+            assert m.certificate_margin() > 0
+            u1 = torch.randn(32, 150, 3)
+            u2 = u1 + 0.5 * torch.randn(32, 150, 3)
+            y1, _ = m(u1)
+            y2, _ = m(u2)
+            num = ((y1 - y2) ** 2).sum((1, 2))
+            den = ((u1 - u2) ** 2).sum((1, 2))
+            assert torch.all(num <= gamma ** 2 * den * (1 + 1e-9))
+
+
+def test_explicit_ren_contraction():
+    """contraction_pow : V(Δx_t) ≤ ᾱ^(2t) V(Δx_0) à entrée identique."""
+    from ctrlnmod.models.discrete.explicit_ren import ExplicitREN
+    torch.manual_seed(0)
+    abar = 0.9
+    m = ExplicitREN(2, 2, 5, 7, gamma=None, alpha_bar=abar, init_scale=3.0)
+    with torch.no_grad():
+        u = torch.randn(16, 60, 2)
+        _, xa = m(u, 3 * torch.randn(16, 5))
+        _, xb = m(u, torch.zeros(16, 5))
+        fr = m.frame()
+        Pinv = torch.linalg.inv(fr["P"])
+        d = (xa - xb) @ fr["E"].T
+        V = torch.einsum("bti,ij,btj->bt", d, Pinv, d)
+        bound = V[:, :1] * abar ** (2 * torch.arange(V.shape[1]))
+        assert torch.all(V <= bound * (1 + 1e-9) + 1e-12)
