@@ -75,7 +75,11 @@ def _run(cmd: str, label: str = "") -> bytes:
     return buf.getvalue()
 
 
-@app.function(image=image, gpu=None if GPU == "none" else GPU, cpu=8.0, memory=32768,
+CPU = float(os.environ.get("MODAL_CPU", "8"))
+MEM = int(os.environ.get("MODAL_MEM", "32768"))
+
+
+@app.function(image=image, gpu=None if GPU == "none" else GPU, cpu=CPU, memory=MEM,
               timeout=8 * 3600, volumes={"/data": vol})
 def run(cmd: str, label: str = "") -> bytes:
     return _run(cmd, label)
