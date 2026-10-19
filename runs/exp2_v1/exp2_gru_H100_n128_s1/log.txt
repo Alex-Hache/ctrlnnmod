@@ -1,0 +1,2 @@
+saved franka.npz (1000, 251, 18) (50, 1501, 18) finite: True True
+gru_H100_n128_s1 128402 212s {'nmse@10': 0.0949, 'diverged@10': 0.0, 'nmse@50': 0.2215, 'diverged@50': 0.0, 'nmse@100': 0.2315, 'diverged@100': 0.0, 'nmse@250': 0.2271, 'diverged@250': 0.0, 'nmse@500': 0.2528, 'diverged@500': 0.0, 'nmse@1000': 0.3319, 'diverged@1000': 0.0, 'nmse@1500': 0.3874, 'diverged@1500': 0.0, 'max_abs_pred': 7.8862, 'nmse_last_half': 0.4786, 'val_nmse_250': 0.2044}

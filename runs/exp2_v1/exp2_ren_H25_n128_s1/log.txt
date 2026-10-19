@@ -1,0 +1,2 @@
+saved franka.npz (1000, 251, 18) (50, 1501, 18) finite: True True
+ren_H25_n128_s1 241819 114s {'nmse@10': 0.1036, 'diverged@10': 0.0, 'nmse@50': 0.2534, 'diverged@50': 0.0, 'nmse@100': 0.2685, 'diverged@100': 0.0, 'nmse@250': 0.2897, 'diverged@250': 0.0, 'nmse@500': 0.4045, 'diverged@500': 0.0, 'nmse@1000': 0.7784, 'diverged@1000': 0.0, 'nmse@1500': 1.098, 'diverged@1500': 0.0, 'max_abs_pred': 9.0058, 'nmse_last_half': 1.6041, 'val_nmse_250': 0.256}
