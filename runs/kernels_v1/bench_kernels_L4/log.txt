@@ -1,6 +1,51 @@
 ✓ Initialized. View run at 
-https://modal.com/apps/alex-hache/main/ap-z2ZdayDsAe1t7PKt22Y4cI
+https://modal.com/apps/alex-hache/main/ap-e34HUXRXPr8KG0HpJG3Pgd
 ✓ Created objects.
 ├── ✓ Uploaded /home/runner/work/ctrlnnmod/ctrlnnmod/compute/modal_job.py
 ├── ✓ Uploaded /home/runner/work/ctrlnnmod/ctrlnnmod
 └── ✓ Created Function run.
+Stopping app - user stopped from CLI.
+Runner terminated.
+╭───────────────────── Traceback (most recent call last) ──────────────────────╮
+│ /home/runner/work/ctrlnnmod/ctrlnnmod/compute/modal_job.py:40 in main        │
+│                                                                              │
+│   39 def main(cmd: str):                                                     │
+│ ❱ 40 │   data = run.remote(cmd)                                              │
+│   41 │   dest = os.environ.get("OUT_DIR", "out/modal")                       │
+│                                                                              │
+│ /opt/hostedtoolcache/Python/3.12.15/x64/lib/python3.12/site-packages/modal/_ │
+│ object.py:49 in wrapped                                                      │
+│                                                                              │
+│    48 │   │   await self.hydrate()                                           │
+│ ❱  49 │   │   return await method(self, *args, **kwargs)                     │
+│    50                                                                        │
+│                                                                              │
+│ /opt/hostedtoolcache/Python/3.12.15/x64/lib/python3.12/site-packages/modal/_ │
+│ functions.py:2081 in remote                                                  │
+│                                                                              │
+│   2080 │   │                                                                 │
+│ ❱ 2081 │   │   return await self._call_function(args, kwargs)                │
+│   2082                                                                       │
+│                                                                              │
+│ /opt/hostedtoolcache/Python/3.12.15/x64/lib/python3.12/site-packages/modal/_ │
+│ functions.py:2018 in _call_function                                          │
+│                                                                              │
+│   2017 │   │                                                                 │
+│ ❱ 2018 │   │   return await invocation.run_function()                        │
+│   2019                                                                       │
+│                                                                              │
+│ /opt/hostedtoolcache/Python/3.12.15/x64/lib/python3.12/site-packages/modal/_ │
+│ functions.py:498 in run_function                                             │
+│                                                                              │
+│    497 │   │   │   if await_response.output.result.status in TERMINAL_STATUS │
+│ ❱  498 │   │   │   │   return await _process_result(                         │
+│    499 │   │   │   │   │   await_response.output.result, await_response.outp │
+│                                                                              │
+│ /opt/hostedtoolcache/Python/3.12.15/x64/lib/python3.12/site-packages/modal/_ │
+│ utils/function_utils.py:574 in _process_result                               │
+│                                                                              │
+│   573 │   │                                                                  │
+│ ❱ 574 │   │   raise RemoteError(result.exception)                            │
+│   575                                                                        │
+╰──────────────────────────────────────────────────────────────────────────────╯
+RemoteError
