@@ -21,12 +21,23 @@ une contraction de taux ᾱ, **pour tout paramètre**.
   Ici $D_{11} = 0$ et $2\Lambda_{ii} = \sum_j |H_{22,ij}|$. Alors $2\Lambda - H_{22}$ est à
   diagonale dominante, donc ⪰ 0 (**Lemme 3.1.1 de la thèse**). Un pas coûte des produits
   matriciels, comme un GRU.
+- **Antériorité.** $D_{11} = 0$ n'est pas nouveau : R2DN (Barbara, Wang, Manchester) l'utilise
+  déjà, avec un réseau 1-Lipschitz en rétroaction. L'apport ici est le choix de Λ par dominance
+  diagonale (sans résolution) et la preuve Lean, pas la structure $D_{11} = 0$.
 - **Lean** (`these-lean/TheseLean/Ext/ExplicitREN.lean`, 0 `sorry`, axiomes standard) :
   - `explicit_ren_param` : $H = X^\top X + \varepsilon I + (K^\top K + VV^\top)/\gamma$ ⟹ $P \succ 0$ et l'inégalité quadratique.
   - `explicit_ren_step` : $V(\Delta x^+) + \|\Delta y\|^2/\gamma \le \bar\alpha^2 V(\Delta x) + \gamma\|\Delta u\|^2$.
   - `explicit_ren_gain` : $\sum_t \|\Delta y_t\|^2 \le \gamma^2 \sum_t \|\Delta u_t\|^2 + \gamma V(\Delta x_0)$.
   - `contraction_pow` : $V(\Delta x_t) \le \bar\alpha^{2t} V(\Delta x_0)$.
 - Tests liés : `tests/lean/test_lean_guarantees.py::test_explicit_ren_*`.
+
+Deux variantes, aussi prouvées en Lean (`Ext/LayeredREN.lean`, `Ext/SelectiveREN.lean`) :
+
+- **`LayeredREN`** : $D_{11}$ strictement triangulaire par blocs (couches), dominance diagonale
+  par bloc. Calcul couche par couche ; même borne de gain.
+- **`SelectiveREN`** : $x^+ = (1-g)\,x + g\,f(x,u)$, une porte scalaire $g \in [g_{min}, 1]$
+  par tête, choisie par l'entrée (comme Mamba-2). La contraction tient **pour toute suite de
+  portes**, par convexité de la forme quadratique. Noyau Triton : `ctrlnmod/kernels/sren_scan.py`.
 
 ## Expérience 1 — boucle fermée : bras 2 axes
 
@@ -137,9 +148,34 @@ H pas imaginés), puis déployée sur MuJoCo (20 références inédites de 15 s)
 - Le MLP multi-pas est le plus « exploité » : erreur imaginée 0,040, erreur réelle 2,6× plus grande.
 - Nuance : avec un GRU entraîné sur H = 250, l'écart avec le REN est faible (0,082 contre 0,078).
 
+## Expérience 4 — REN sélectif contre Mamba-2 (Franka, proprioceptif)
+
+Même protocole que les expériences 2 et 3. Nouveaux modèles : `SelectiveREN` (8 têtes) et un
+bloc Mamba-2 (PyTorch, égal au bloc HF à 1e-14, `tests/test_mamba2_reference.py`). 2 graines.
+
+| Modèle (H = 250, n = 128) | NMSE@10 | NMSE@250 | NMSE@1500 | contrôleur appris : RMSE réelle (rad) |
+| --- | --- | --- | --- | --- |
+| REN contractant | **0,078** | **0,223** | **0,390** | **0,078** |
+| GRU | 0,097 | 0,241 | 0,467 | 0,082 |
+| REN sélectif | 0,087 | 0,252 | 0,418 | 0,102 |
+| REN sélectif, n = 256 | 0,087 | 0,244 | 0,413 | 0,093 |
+| Mamba-2 | 0,119 | 0,264 | 0,491 | 0,091 |
+
+Sans politique : 0,188 rad.
+
+- **Résultat négatif.** La sélectivité n'aide pas ici. Le REN sélectif prédit mieux que Mamba-2,
+  mais le contrôleur appris dans Mamba-2 est meilleur (0,091 contre 0,102). Le REN plein reste
+  le meilleur sur les deux critères.
+- Explication probable : le Franka sous asservissement de position est presque invariant dans
+  le temps. Une porte choisie par l'entrée n'a rien à sélectionner.
+- Coût CPU par itération (batch 64, H = 100, 4 vCPU), `results_ci/scaling_exp4.json` :
+  à n = 1024, REN sélectif 0,26 s, GRU 0,66 s, REN explicite 1,13 s, Mamba-2 1,97 s.
+  Les têtes indépendantes rendent le REN sélectif le moins cher en grande largeur.
+
 ## Ce que ces expériences ne prouvent pas
 
-- Pas d'images : world models proprioceptifs seulement (pas de Dreamer sur pixels).
+- Pas encore d'images : world models proprioceptifs seulement. L'étape M3a (images 64×64 du
+  Franka, encodeur CNN, 4 dynamiques latentes, GPU L4) est en cours : `experiments/pixel_wm/`.
 - Pas de robot réel ; MuJoCo et un bras 2D simulé.
 - Peu de graines (2 à 5) ; les conclusions s'appuient sur des écarts nets et cohérents, pas sur des tests statistiques.
 - Le passage à l'échelle est mesuré sur CPU ; sur GPU les constantes changent, pas les ordres.
