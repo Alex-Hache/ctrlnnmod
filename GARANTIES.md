@@ -2,7 +2,7 @@
 
 Chaque paramétrisation de `ctrlnmod` repose sur un théorème. Ces théorèmes sont prouvés en
 Lean 4 dans le dépôt [these-lean](https://github.com/Alex-Hache/these-lean)
-(62 énoncés, aucun `sorry`). Les tests `tests/lean/test_lean_guarantees.py` vérifient
+(62 énoncés de la thèse + 6 énoncés d'extension, aucun `sorry`). Les tests `tests/lean/test_lean_guarantees.py` vérifient
 numériquement, sur des paramètres aléatoires, que le code respecte chaque énoncé.
 
 ```bash
@@ -22,6 +22,7 @@ pytest tests/lean
 | `ContractingRENODE` | réseau explicite bien posé | `explicit_wellPosed` | `test_contracting_renode_sound` | conforme |
 | `SandwichLayer`, `LBDN` | $\|f(x) - f(x')\| \le \|\operatorname{diag}(s)(x - x')\|$ | `sandwich_nonexpansive`, `thm_3_4_2`, `prop_3_4_3` | `test_lbdn_lipschitz` | conforme |
 | `DDLayer` | pénalité nulle ⟹ $M \succeq 0$ | `IsDiagDominant.posSemidef` | — | conforme (semi-définie seulement) |
+| `models.discrete.ExplicitREN` (extension, hors thèse) | gain incrémental $\le \gamma$, contraction de taux $\bar\alpha$, pour tout paramètre ; $D_{11} = 0$ (coût d'un GRU) | `explicit_ren_param`, `explicit_ren_step`, `explicit_ren_gain`, `contraction_pow` (fichier `Ext/ExplicitREN.lean`) | `test_explicit_ren_gain`, `test_explicit_ren_contraction` | conforme |
 | `BetaLayer` (linéarisation) | $\beta(x)$ inversible | `prop_4_1_5` (hypothèse) | — | conforme si `func='softplus'` et $n_{in} = n_{out}$ |
 
 ## Corrections faites sur cette branche
