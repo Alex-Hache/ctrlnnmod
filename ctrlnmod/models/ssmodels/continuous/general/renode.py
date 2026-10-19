@@ -238,7 +238,7 @@ class ContractingRENODE(RENODE):
 
         P = torch.inverse(P_inv)
         H11 = -(A.T @ P + P @ A + 2 * self.alpha * P)
-        H12 = -(C1.T @ torch.diag(torch.diag(D11)) + P @ B1)
+        H12 = -(C1.T @ self.Lambda + P @ B1)
         H22 = 2* self.Lambda -self.Lambda @ D11 - D11.T @ self.Lambda
 
         H_upper = torch.cat([H11, H12], dim=1)
