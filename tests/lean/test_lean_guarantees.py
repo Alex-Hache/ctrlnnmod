@@ -284,3 +284,28 @@ def test_explicit_ren_contraction():
         V = torch.einsum("bti,ij,btj->bt", d, Pinv, d)
         bound = V[:, :1] * abar ** (2 * torch.arange(V.shape[1]))
         assert torch.all(V <= bound * (1 + 1e-9) + 1e-12)
+
+
+def test_selective_ren_contraction():
+    """selective_ren_contraction : V(Δx_t) ≤ (1 − g_min(1 − ᾱ²))^t V(Δx_0) pour toute suite
+    d'entrées (donc de portes), paramètres quelconques."""
+    from ctrlnmod.models.discrete.selective_ren import SelectiveREN
+    for seed in range(5):
+        torch.manual_seed(seed)
+        m = SelectiveREN(3, n_heads=4, nx=5, nq=7, alpha_bar=0.9, g_min=0.05)
+        with torch.no_grad():
+            for p in m.parameters():
+                p.add_(2 * torch.randn_like(p))
+            fr = m.frame()
+            B, T = 16, 80
+            u = 3 * torch.randn(B, T, 3)
+            xa, xb = 3 * torch.randn(B, m.n_state), torch.zeros(B, m.n_state)
+            Pinv = torch.linalg.inv(fr["P"])
+            def V(d):
+                z = torch.einsum("hij,bhj->bhi", fr["E"], d.view(B, m.H, m.nx))
+                return torch.einsum("bhi,hij,bhj->bh", z, Pinv, z)
+            rho = 1 - m.g_min * (1 - m.alpha_bar ** 2)
+            V0 = V(xa - xb)
+            for t in range(T):
+                xa, xb = m.step(fr, xa, u[:, t]), m.step(fr, xb, u[:, t])
+                assert torch.all(V(xa - xb) <= rho ** (t + 1) * V0 * (1 + 1e-9) + 1e-12)
