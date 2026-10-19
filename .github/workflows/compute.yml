@@ -41,6 +41,8 @@ jobs:
         env:
           OUT_DIR: out/${{ matrix.job.name }}
           NTHREADS: "4"
+          MODAL_TOKEN_ID: ${{ secrets.MODAL_TOKEN_ID }}
+          MODAL_TOKEN_SECRET: ${{ secrets.MODAL_TOKEN_SECRET }}
           PYTHONPATH: ".:experiments/closed_loop:experiments/world_model"
         run: |
           mkdir -p "$OUT_DIR"
