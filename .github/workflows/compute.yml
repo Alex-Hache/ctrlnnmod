@@ -7,12 +7,9 @@ on:
     branches: [compute]
 permissions:
   contents: write
-concurrency:
-  group: compute
-  cancel-in-progress: false
 jobs:
   plan:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       matrix: ${{ steps.m.outputs.matrix }}
       tag: ${{ steps.m.outputs.tag }}
@@ -23,7 +20,7 @@ jobs:
           python3 -c "import json; d=json.load(open('compute/jobs.json')); print('matrix='+json.dumps({'job': d['jobs']})); print('tag='+d['tag'])" >> "$GITHUB_OUTPUT"
   run:
     needs: plan
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 340
     strategy:
       fail-fast: false
@@ -70,22 +67,3 @@ jobs:
             sleep $(( (RANDOM % 15) + 5 ))
           done
           exit 1
-  collect:
-    needs: [plan, run]
-    if: always()
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/download-artifact@v4
-        with:
-          path: collected
-          merge-multiple: true
-      - name: Push results
-        env:
-          TAG: ${{ needs.plan.outputs.tag }}
-        run: |
-          git init -q repo && cd repo
-          git config user.name ci && git config user.email ci@users.noreply.github.com
-          git remote add origin "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}"
-          if git fetch -q origin compute-results; then git checkout -q -b compute-results FETCH_HEAD; else git checkout -q --orphan compute-results; fi
-          mkdir -p "runs/$TAG" && cp -r ../collected/* "runs/$TAG/" || true
-          git add runs && (git commit -qm "results $TAG (run ${{ github.run_id }})" || exit 0) && git push -q origin compute-results
