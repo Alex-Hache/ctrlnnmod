@@ -144,4 +144,11 @@ class SRENScan(torch.autograd.Function):
 
 
 def sren_scan(x0, P, Q, G, AT, C1T, BwT, lam, prec="ieee"):
+    # Les poids d'une tête restent sur la puce pendant tout le balayage : A, C1, Bw en fp32.
+    # Mémoire partagée ≈ 100 Ko par SM (L4, A10) : on garde nx·nx + 2·nx·nq ≤ 8192 flottants
+    # (nx = 32, nq = 64 : 5120). Plus large : plus de têtes, pas des têtes plus grandes.
+    NX, NQ = AT.shape[-1], C1T.shape[-1]
+    if NX * NX + 2 * NX * NQ > 8192:
+        raise ValueError(f"tête trop large pour le noyau (nx={NX}, nq={NQ}) : "
+                         "garder nx ≤ 32 et nq ≤ 64, et augmenter n_heads")
     return SRENScan.apply(x0, P, Q, G, AT, C1T, BwT, lam, prec)

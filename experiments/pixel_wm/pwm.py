@@ -62,7 +62,8 @@ class PixWM(nn.Module):
             elif kind == "ren":
                 self.cell = ExplicitREN(NA, 1, n, n, gamma=None, alpha_bar=1.0)
             elif kind == "sren":
-                self.cell = SelectiveREN(NA, n_heads=8, nx=n // 8, nq=2 * (n // 8), alpha_bar=0.9, g_min=0.02)
+                # têtes de taille fixe (32), comme Mamba-2 : le noyau garde les poids d'une tête sur la puce
+                self.cell = SelectiveREN(NA, n_heads=n // 32, nx=32, nq=64, alpha_bar=0.9, g_min=0.02)
         self.dec = mlp(n, 256, NO)
 
     def states(self, img, a):
