@@ -79,3 +79,36 @@ class SelectiveREN(nn.Module):
         g = self.gate(u) if g is None else g
         xn = (1 - g[..., None]) * xs + g[..., None] * self.core(fr, xs, u)
         return xn.reshape(B, -1)
+
+
+def _seq_terms(m: SelectiveREN, fr: dict, u: Tensor):
+    """Termes indépendants de l'état, pour toute la séquence u [B, T, nu]."""
+    P = torch.einsum("hqm,btm->bthq", m.D12, u) + m.bv
+    Q = torch.einsum("him,btm->bthi", fr["Bu"], u) + fr["bx"]
+    G = m.g_min + (1 - m.g_min) * torch.sigmoid(m.gate_proj(u))                 # [B, T, H]
+    return P, Q, G
+
+
+def rollout(m: SelectiveREN, u: Tensor, x0: Tensor = None, backend: str = "torch", prec: str = "ieee") -> Tensor:
+    """États x_1..x_T [B, T, H·nx] pour la séquence d'entrées u [B, T, nu].
+
+    backend = "torch" : boucle PyTorch (référence, compilable) ;
+    backend = "triton" : noyau persistant ``ctrlnmod.kernels.sren_scan`` (avant et arrière).
+    """
+    B, T, _ = u.shape
+    fr = m.frame()
+    P, Q, G = _seq_terms(m, fr, u)
+    AT, C1T, BwT, lam = fr["A"].transpose(1, 2), fr["C1"].transpose(1, 2), fr["Bw"].transpose(1, 2), fr["lam"]
+    x = torch.zeros(B, m.H, m.nx, dtype=u.dtype, device=u.device) if x0 is None else x0.view(B, m.H, m.nx)
+    if backend == "triton":
+        from ctrlnmod.kernels.sren_scan import sren_scan
+        X = sren_scan(x, P, Q, G, AT, C1T, BwT, lam, prec)
+        return X[:, 1:].reshape(B, T, -1)
+    xs = []
+    for t in range(T):
+        v = (torch.einsum("bhi,hiq->bhq", x, C1T) + P[:, t]) / lam
+        f = torch.einsum("bhi,hij->bhj", x, AT) + torch.einsum("bhq,hqj->bhj", torch.tanh(v), BwT) + Q[:, t]
+        g = G[:, t, :, None]
+        x = (1 - g) * x + g * f
+        xs.append(x)
+    return torch.stack(xs, 1).reshape(B, T, -1)
