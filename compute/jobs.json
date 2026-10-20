@@ -1,0 +1,9 @@
+{
+ "tag": "kernels_v1",
+ "jobs": [
+  {
+   "name": "bench_kernels_L4",
+   "cmd": "pip install -q modal && MODAL_GPU=L4 modal run compute/modal_job.py --cmd 'python compute/bench_kernels.py'"
+  }
+ ]
+}

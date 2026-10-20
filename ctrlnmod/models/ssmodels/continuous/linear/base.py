@@ -142,7 +142,7 @@ class SSLinear(SSModel):
         else:
             alpha = self.alpha
         eig_vals = torch.real(torch.linalg.eigvals(self.A.weight))
-        return bool(torch.all(eig_vals <= alpha)), torch.max(eig_vals)
+        return bool(torch.all(eig_vals <= -alpha)), torch.max(eig_vals)
 
     def clone(self):
         """

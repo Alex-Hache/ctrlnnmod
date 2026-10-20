@@ -4,6 +4,12 @@ Its main features include several models based on Linear Matrix Inequalities (LM
 Documentation : [![Documentation Status](https://img.shields.io/badge/docs-online-blue.svg)](https://alex-hache.github.io/ctrlnnmod/)
 
 
+## Proven guarantees
+Every parameterization is backed by a theorem proven in Lean 4 ([these-lean](https://github.com/Alex-Hache/these-lean)). See [GARANTIES.md](GARANTIES.md) for the code → theorem map and `pytest tests/lean` for the numerical checks.
+
+**Expériences** : [experiments/PREUVE_UTILITE.md](experiments/PREUVE_UTILITE.md) — boucle fermée (bras 2 axes), world model du Franka (MuJoCo), contrôleur appris dans le world model.
+
+
 ## Requirements
 * PyTorch v1.9 >=
 * [MOSEK solver](https://www.mosek.com/) can be installed using

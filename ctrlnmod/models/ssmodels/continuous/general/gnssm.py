@@ -189,7 +189,9 @@ class GNSSM(SSModel):
         if isinstance(self.linmod, SSLinear):
             self.linmod.init_weights_(A0, B0, C0, requires_grad)
         elif isinstance(self.linmod, L2BoundedLinear):
-            _, gamma, _ = HInfCont.solve(A0, B0, C0, torch.zeros(self.ny, self.nu), alpha)
+            # The frame imposes the bounded-real LMI on A + alpha I (HInfCont.solve ignores alpha).
+            Ia = torch.eye(A0.shape[0], dtype=A0.dtype)
+            _, gamma, _ = HInfCont.solve(A0 + alpha * Ia, B0, C0, torch.zeros(self.ny, self.nu))
             self.linmod.init_weights_(A0, B0, C0, gamma + margin, alpha)  # Slightly higher L2 gain for sability
             self.gamma = self.linmod.gamma
         elif isinstance(self.linmod, H2Linear):
@@ -221,6 +223,8 @@ class GNSSM(SSModel):
             gamma=self.gamma,
             gamma2=self.gamma2
         )
+        if hasattr(self.linmod, 'eps'):
+            clone.linmod.eps = self.linmod.eps  # may be reduced by the exact H-inf init
         state_dict = self.state_dict()
         clone.load_state_dict(state_dict=state_dict)
         return clone

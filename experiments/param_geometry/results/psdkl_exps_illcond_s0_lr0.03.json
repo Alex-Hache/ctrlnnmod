@@ -1,0 +1,1 @@
+{"task": "psdkl", "kind": "exps", "target": "illcond", "lr": 0.03, "seed": 0, "status": "error: _LinAlgError('linalg.eigh: The algorithm failed to converge because the input ma", "it_tol": null, "final": null, "log": []}

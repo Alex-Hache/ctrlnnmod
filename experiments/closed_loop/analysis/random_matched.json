@@ -1,0 +1,23 @@
+{
+ "pb_ren_g2000_x3": {
+  "reached": 1.0,
+  "all_reached": 1.0,
+  "diverged": 0.0,
+  "dev_median": 0.17870309948921204,
+  "tau_median": 119.47720718383789
+ },
+ "pb_ren_g2000_x10": {
+  "reached": 1.0,
+  "all_reached": 1.0,
+  "diverged": 0.0,
+  "dev_median": 0.72752845287323,
+  "tau_median": 446.8682861328125
+ },
+ "mlp_x3": {
+  "reached": 0.0,
+  "all_reached": 0.0,
+  "diverged": 0.0,
+  "dev_median": 0.518866628408432,
+  "tau_median": 25.92505645751953
+ }
+}

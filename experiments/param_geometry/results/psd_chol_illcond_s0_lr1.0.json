@@ -1,0 +1,1 @@
+{"task": "psd", "kind": "chol", "target": "illcond", "lr": 1.0, "seed": 0, "status": "diverged@9", "it_tol": null, "final": Infinity, "log": [4.119677072603481], "fp_init": {"rank": 21, "dim": 21, "ev_min": 1.9999980000000006, "ev_max": 3.9999960000000003, "kappa": 1.9999999999999996}, "fp_final": null, "time": 0.0032258033752441406}
