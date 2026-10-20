@@ -24,12 +24,21 @@ Conséquence de `riem_step_exact` : au premier ordre, `ren_eucl` **est** le mod�
 
 Affirmation reformulée (cible) : l'écart contraint/libre = terme de métrique (éliminable par préconditionnement, borné par κ(JJᵀ) à la solution) + terme de bord (nul si la trajectoire libre reste dans l'intérieur de S).
 
-### 1. Lean : T2 puis T1 (these-lean, `TheseLean/Ext/InducedRate.lean`) — FAIT
+### 1. Lean : T2, T1, T3 — FAIT
 
-- **T2 (écart du pas)** : pour Φ de classe C² avec ‖D²Φ‖ ≤ M, le pas Δθ = Jᵀ(JJᵀ)⁻¹s vérifie ‖Φ(θ+Δθ) − (Φ(θ)+s)‖ ≤ (M/2)·‖s‖²/σ_min(J)².
-- **T1 (vitesse locale)** : en un minimum W* (∇L = 0), Hess_θ(L∘Φ) = JᵀHJ ; sur l'image de Jᵀ, λ_min(H)σ_min(J)² ≤ JᵀHJ ≤ λ_max(H)σ_max(J)², donc κ_eff ≤ κ(H)·κ(JJᵀ). Contraction de la GD linéarisée en 1 − 1/κ_eff.
+- **T2** (`Ext/InducedRate`, `riem_step_misfit`, `pinv_norm_sq_le`) : si DΦ est M-lipschitzienne, ‖Φ(θ+J⁺s) − (W+s)‖ ≤ (M/2)·‖s‖²/σ_min(J)².
+- **T1** (`Ext/InducedRate`, `induced_linear_rate[_kappa]`, `induced_rate_iter`) : L ℓ-lisse et PL (μ), p₁I ⪯ JJᵀ, ‖Jv‖² ≤ p₂‖v‖², ηℓp₂ ≤ 1 ⇒ L⁺ − L* ≤ (1 − ημp₁)(L − L*). Avec η = 1/(ℓp₂) : facteur 1 − 1/(κ_L·κ(JJᵀ)). κ pris le long de la trajectoire.
+- **T3** (`Ext/FlowDecomposition`) : flot riemannien sur θ = flot libre sur W tant qu'il existe ; le flot libre reste dans S ; sortie de S ⇒ pas de flot riemannien. Exige un inverse à droite (exclut H2-sphère et les pertes de rang).
 
-Critère : `lake build` vert, 0 `sorry`, axiomes standard.
+### 1d. Expérience de validation T1/T2 (jouet PSD) — PROCHAIN
+
+Montage : perte de Frobenius ½‖W − W*‖² (μ = ℓ = 1). Paramétrisations : euclidienne, XᵀX, exp(S). 5 graines × κ(W*) ∈ {10, 1e2, 1e3}. CPU local.
+Journal par pas : p₁, p₂ de JJᵀ, f − f*, ‖s‖, écart du pas.
+Validité : ηℓp₂ ≤ 1 sur ≥ 95 % des pas.
+- T2 (XᵀX, exact) : confirme si écart ≤ ‖s‖²/p₁ sur 100 % des pas et écart·p₁/‖s‖² ∈ [0,1 ; 1]. Une violation réfute.
+- T1 : confirme si f_k − f* ≤ (f₀ − f*)Π(1 − ηp₁(j)) sur 100 % des pas (à l'écart T2 près) et K_ε ∝ κ_traj^a, a ∈ [0,8 ; 1,2], r > 0,9. Réfute si violation > 10 % là où T2 est négligeable, ou r < 0,5.
+- Discriminant : r(K_ε, κ_traj) > r(K_ε, κ_départ).
+Étape 2 (Modal) : set_vs_metric REN avec σ_min(J) journalisé ; T2 explique l'invalidité si écart·σ_min²/‖s‖² reste dans un facteur 10.
 
 ### 1b. Données existantes : la trajectoire libre sort-elle de S ?
 
@@ -38,7 +47,7 @@ Critère : sortie de S sur ≥ 1 graine → le terme de bord existe sur cette t�
 
 ### 1c. set_vs_metric (suspendu)
 
-Ne pas relancer avant T2 et T3. Prédiction de T2 à vérifier : écart du pas ∝ 1/σ_min(J)². Journaliser σ_min(J) et κ(JJᵀ).
+Ne pas relancer avant 1d. Avec T3, reformuler : comparer le flot préconditionné (R = J⁺) au flot libre, et mesurer l'instant de sortie de S. Prédiction de T2 à vérifier : écart du pas ∝ 1/σ_min(J)². Journaliser σ_min(J) et κ(JJᵀ).
 
 ### 2. Préconditionnement par (JJᵀ)⁻¹ sur les oscillateurs ℓ∞/blocs
 
@@ -67,7 +76,7 @@ Critère : tests existants verts ; κ initial des modèles H∞ < 1e2 ; rang de 
 
 ### 5. Lean (these-lean)
 
-- **T3 (décomposition)** : en temps continu, le flot riemannien sur θ égale le flot libre sur W tant que celui-ci reste dans l'intérieur de S. Ne s'applique pas à H2 (sphère, intérieur vide) avant la correction par la boule.
+- Version discrète de T3 (T3 + T2 : écart cumulé sur K pas).
 - Daleckii–Krein pour exp(S) (dérivée de Fréchet de l'exponentielle, absente de Mathlib).
 - Loi en κ pour une perte générale.
 
@@ -90,3 +99,4 @@ Ne pas commencer avant que les items 1 et 2 aient un résultat valide.
 - 2026-10-20 : roadmap créée. Test set_vs_metric déclaré invalide.
 - 2026-10-20 : bilan Lean ↔ résultats. Items réordonnés : théorie (T2, T1) avant calcul.
 - 2026-10-20 : T2 et T1 démontrés (`Ext/InducedRate`, 128 énoncés, 0 `sorry`). Prochain : 1b.
+- 2026-10-20 : T3 démontré (`Ext/FlowDecomposition`, 132 énoncés). Expérience 1d définie avec critères. Prochain : 1d, puis 1b.
