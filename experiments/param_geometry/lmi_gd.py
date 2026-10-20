@@ -6,8 +6,8 @@ import numpy as np
 import torch
 sys.argv = ["x"]
 exec(open("experiments/param_geometry/lmi_fingerprint.py").read().split("res = []")[0])
-NX, ITERS, TOL = 4, 4000, 1e-6
-LRS = (1e-3, 3e-3, 1e-2, 3e-2, 1e-1)
+NX, ITERS, TOL = 4, 4000, 1e-3
+LRS = (1e-4, 3e-4, 1e-3, 3e-3, 1e-2, 3e-2, 1e-1)
 
 
 def model(kind, pd, init, seed):
@@ -33,7 +33,12 @@ def run(a):
 def _run(a):
     kind, pd, init, seed, lr = a
     torch.set_num_threads(1)
-    tgt = torch.cat([t.reshape(-1) for t in model(kind, "geotorch", "aléatoire", 100 + seed)._frame()]).detach()
+    teach = model(kind, "geotorch", "aléatoire", 100 + seed)
+    g = torch.Generator().manual_seed(200 + seed)
+    Qr, _ = torch.linalg.qr(torch.randn(NX, NX, generator=g))
+    with torch.no_grad():                                    # maître : P* bien conditionné, λ ∈ [0,5 ; 2]
+        teach.P = Qr @ torch.diag(torch.linspace(0.5, 2.0, NX)) @ Qr.T
+    tgt = torch.cat([t.reshape(-1) for t in teach._frame()]).detach()
     m = model(kind, pd, init, seed)
     kap = fingerprint(m)["kappa_range"]
     opt = torch.optim.SGD(m.parameters(), lr=lr)
@@ -49,7 +54,7 @@ def _run(a):
         opt.zero_grad()
         loss.backward()
         opt.step()
-    return (kind, pd, init, seed, lr, None, rel, kap)
+    return (kind, pd, init, seed, lr, None, rel, kap)  # erreur relative finale
 
 
 if __name__ == "__main__":
@@ -57,7 +62,7 @@ if __name__ == "__main__":
             for i in ("aléatoire", "I") for s in range(3) for lr in LRS]
     with Pool(8) as pool:
         R = pool.map(run, jobs)
-    rows = ["| Paramétrisation | PD | P au départ | κ médian au départ | itérations (médiane, meilleur pas) | erreur finale sinon |",
+    rows = ["| Paramétrisation | PD | P au départ | κ médian au départ | itérations jusqu'à 1e-3 (médiane, meilleur pas) | erreur relative finale (médiane, meilleur pas) |",
             "|---|---|---|---|---|---|"]
     for k in ("hinf_sqrtm", "hinf_riccati"):
         for p in ("geotorch", "bm"):
@@ -65,13 +70,13 @@ if __name__ == "__main__":
                 its, fins, kaps = [], [], []
                 for s in range(3):
                     rs = [r for r in R if r[:4] == (k, p, i, s)]
-                    kaps.append(rs[0][7])
+                    kaps += [r[7] for r in rs if np.isfinite(r[7])][:1]
                     conv = [r[5] for r in rs if r[5] is not None]
                     its.append(min(conv) if conv else None)
                     fins.append(min(r[6] for r in rs))
                 ok = [x for x in its if x is not None]
                 itc = f"{int(np.median(ok))} ({len(ok)}/3 convergent)" if ok else "> 4000"
-                rows.append(f"| {k} | {p} | {i} | {np.median(kaps):.1e} | {itc} | {max(fins):.1e} |")
+                rows.append(f"| {k} | {p} | {i} | {np.median(kaps) if kaps else float('nan'):.1e} | {itc} | {np.median(fins):.1e} |")
     txt = "\n".join(rows)
     print(txt)
     open("experiments/param_geometry/analysis/lmi_gd.md", "w").write(txt + "\n")
