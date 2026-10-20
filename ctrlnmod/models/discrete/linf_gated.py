@@ -96,9 +96,11 @@ class BlockGatedRNN(nn.Module):
     """
 
     def __init__(self, nu: int, n_heads: int, k: int = 2, nq: Optional[int] = None, rho: float = 0.99,
-                 z_min: float = 1e-3, gate_bias: float = -3.0, norm: str = "sat") -> None:
+                 z_min: float = 1e-3, gate_bias: float = -3.0, norm: str = "sat",
+                 ungated_heads: int = 0) -> None:
         super().__init__()
         nx = n_heads * k
+        self.ungated = ungated_heads              # têtes sans porte (z ≡ 1) : dynamique rapide libre
         nq = nq or 2 * nx
         self.nu, self.H, self.k, self.nx, self.nq, self.rho, self.z_min = nu, n_heads, k, nx, nq, rho, z_min
         self.norm = norm
@@ -129,6 +131,8 @@ class BlockGatedRNN(nn.Module):
 
     def gate(self, u: Tensor) -> Tensor:
         z = self.z_min + (1 - self.z_min) * torch.sigmoid(self.gate_proj(u))
+        if self.ungated:
+            z = torch.cat([torch.ones_like(z[..., :self.ungated]), z[..., self.ungated:]], -1)
         return z.repeat_interleave(self.k, dim=-1)
 
     def step(self, W: dict, x: Tensor, u: Tensor, z: Optional[Tensor] = None) -> Tensor:
