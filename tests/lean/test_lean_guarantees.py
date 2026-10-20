@@ -330,3 +330,47 @@ def test_layered_ren_gain(layers):
             num = ((y1 - y2) ** 2).sum((1, 2))
             den = ((u1 - u2) ** 2).sum((1, 2))
             assert torch.all(num <= gamma ** 2 * den * (1 + 1e-9))
+
+
+def test_linf_gated_contraction():
+    """gated_linf_contraction : ‖Δx_t‖∞ ≤ (1 − z_min(1 − ρ))ᵗ ‖Δx₀‖∞ pour toute suite de portes
+    par unité (ici : portes de l'entrée, mais aussi portes aléatoires imposées), tout paramètre.
+    rowsum_ABC : la paramétrisation garantit Σⱼ|Aᵢⱼ| + Σₖ|Bᵢₖ|Σⱼ|Cₖⱼ| < ρ."""
+    from ctrlnmod.models.discrete.linf_gated import LinfGatedRNN
+    for seed in range(5):
+        torch.manual_seed(seed)
+        m = LinfGatedRNN(3, 12, 20, rho=0.95, z_min=0.05).double()
+        with torch.no_grad():
+            for p in m.parameters():
+                p.add_(3 * torch.randn_like(p))
+            W = m.weights()
+            assert m.certificate()["row_sum"] < m.rho
+            B, T = 16, 60
+            u = 3 * torch.randn(B, T, 3, dtype=torch.float64)
+            xa, xb = 3 * torch.randn(B, 12, dtype=torch.float64), torch.zeros(B, 12, dtype=torch.float64)
+            rate = 1 - m.z_min * (1 - m.rho)
+            d0 = (xa - xb).abs().max(1).values
+            for t in range(T):
+                z = None if seed % 2 else m.z_min + (1 - m.z_min) * torch.rand(B, 12, dtype=torch.float64)
+                xa, xb = m.step(W, xa, u[:, t], z), m.step(W, xb, u[:, t], z)
+                assert torch.all((xa - xb).abs().max(1).values <= rate ** (t + 1) * d0 * (1 + 1e-9) + 1e-12)
+
+
+def test_ren_pulse_forgetting():
+    """explicit_ren_forgetting : après une impulsion d'entrée au temps 0, ‖Δy_k‖ ≤ γ ᾱᵏ ‖Δu₀‖."""
+    from ctrlnmod.models.discrete.explicit_ren import ExplicitREN
+    gamma, ab = 2.0, 0.85
+    for seed in range(5):
+        torch.manual_seed(seed)
+        m = ExplicitREN(2, 2, 6, 10, gamma=gamma, alpha_bar=ab).double()
+        with torch.no_grad():
+            for p in m.parameters():
+                p.add_(torch.randn_like(p))
+            u = torch.zeros(1, 30, 2, dtype=torch.float64)
+            u2 = u.clone()
+            u2[0, 0] = torch.randn(2, dtype=torch.float64)
+            y1, _ = m(u)
+            y2, _ = m(u2)
+            du0 = (u2[0, 0] - u[0, 0]).norm()
+            for k in range(1, 30):
+                assert (y2[0, k] - y1[0, k]).norm() <= gamma * ab ** k * du0 * (1 + 1e-9) + 1e-12

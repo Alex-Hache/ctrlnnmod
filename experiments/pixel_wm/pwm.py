@@ -20,6 +20,7 @@ from tqdm import tqdm
 from torch import nn
 
 from ctrlnmod.models.discrete.explicit_ren import ExplicitREN
+from ctrlnmod.models.discrete.linf_gated import LinfGatedRNN
 from ctrlnmod.models.discrete.selective_ren import SelectiveREN, rollout
 
 OUT = os.environ.get("OUT_DIR", "experiments/pixel_wm/results")
@@ -64,6 +65,9 @@ class PixWM(nn.Module):
             elif kind == "sren":
                 # têtes de taille fixe (32), comme Mamba-2 : le noyau garde les poids d'une tête sur la puce
                 self.cell = SelectiveREN(NA, n_heads=n // 32, nx=32, nq=64, alpha_bar=0.9, g_min=0.02)
+            elif kind == "linf":
+                # portes par unité pilotées par l'action ; certificat ℓ∞ (These.gated_linf_contraction)
+                self.cell = LinfGatedRNN(NA, n, 2 * n, rho=0.99, z_min=1e-3)
         self.dec = mlp(n, 256, NO)
 
     def states(self, img, a):
@@ -74,6 +78,8 @@ class PixWM(nn.Module):
         if self.kind == "ren":
             _, xs = self.cell(a, x0)
             return xs[:, 1:]
+        if self.kind == "linf":
+            return self.cell(a, x0)
         if self.kind == "sren":
             return rollout(self.cell, a, x0, "triton" if dev == "cuda" else "torch", prec="tf32")
         # mamba2 : jeton 0 = encodage, puis un jeton par action
@@ -100,7 +106,7 @@ class PixWM(nn.Module):
 
 def make_model(kind, n):
     """Modèles de ce travail (PixWM) ou références de l'état de l'art (baselines.py)."""
-    if kind in ("gru", "ren", "sren", "mamba2"):
+    if kind in ("gru", "ren", "sren", "linf", "mamba2"):
         return PixWM(kind, n)
     from baselines import BASELINES
     return BASELINES[kind](n)
