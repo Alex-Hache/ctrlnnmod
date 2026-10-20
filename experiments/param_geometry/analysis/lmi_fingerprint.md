@@ -18,3 +18,13 @@
 | h2 | bm | 2 | 10 / 12 | 1.4e+303 | 3.5e+03 |
 | h2 | bm | 4 | 30 / 32 | 1.2e+303 | 9.9e+05 |
 | h2 | bm | 8 | 94 / 96 | 3.4e+303 | 5.7e+07 |
+
+## Cause du défaut de rang de H2 (vérifié)
+
+`H2Linear._frame` pose σ = √(softmax_η(L)) avec η = γ². Donc Σσᵢ² = γ² pour tout paramètre, et
+‖G‖_H2 = γ exactement (4 graines : 2,0000 ± 2e-5). La classe est la sphère {‖G‖_H2 = γ}, pas la
+boule {‖G‖_H2 ≤ γ}. C'est une hypersurface : une valeur propre de JJᵀ est exactement nulle.
+Conséquence : le modèle ne peut pas apprendre un système de norme H2 < γ.
+Correction proposée : σ = s · √(softmax_η(L)), avec s = sigmoid(c) ∈ (0, 1).
+Autre constat : à l'initialisation, max Re λ(A) ∈ [−0,006 ; −0,001], donc les pôles sont presque
+sur l'axe imaginaire (départ près du bord de stabilité).
