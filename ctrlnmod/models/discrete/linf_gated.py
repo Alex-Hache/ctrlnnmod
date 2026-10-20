@@ -24,12 +24,16 @@ import torch
 from torch import Tensor, nn
 
 
-def _row_scale(r: Tensor, rho: float, norm: str) -> Tensor:
-    """Facteur par ligne qui garantit (facteur × r) ≤ ρ.
+def _row_scale(r: Tensor, rho: float, norm: str, c: Optional[Tensor] = None) -> Tensor:
+    """Facteur par ligne qui garantit (facteur × r) < 1.
     "sat"  : ρ/(ρ + r), lisse, mais ρ n'est atteint que si r → ∞ (le bord est inatteignable) ;
-    "proj" : ρ / max(r, ρ), projection radiale : identité à l'intérieur, bord atteint à r fini."""
+    "proj" : ρ / max(r, ρ), projection radiale : identité à l'intérieur, bord atteint à r fini ;
+    "homo" : 1 / (r + softplus(c)), forme homogène (comme E⁻¹F dans le REN) : la somme de lignes
+             vaut r/(r + softplus(c)) < 1 ; la marge se règle par c en échelle log, à r fini."""
     if norm == "proj":
         return rho / torch.clamp(r, min=rho)
+    if norm == "homo":
+        return 1.0 / (r + nn.functional.softplus(c) + 1e-6)
     return rho / (rho + r)
 
 
@@ -47,6 +51,7 @@ class LinfGatedRNN(nn.Module):
         self.b, self.bx = nn.Parameter(torch.zeros(nq)), nn.Parameter(torch.zeros(nx))
         self.gate_proj = nn.Linear(nu, nx)
         nn.init.constant_(self.gate_proj.bias, gate_bias)        # portes plutôt fermées au départ
+        self.c = nn.Parameter(torch.zeros(nx))                   # marge par ligne (norm="homo")
 
     @property
     def n_state(self) -> int:
@@ -54,7 +59,7 @@ class LinfGatedRNN(nn.Module):
 
     def weights(self) -> dict:
         r = self.A_.abs().sum(1) + self.B_.abs() @ self.C.abs().sum(1)
-        s = _row_scale(r, self.rho, self.norm)[:, None]
+        s = _row_scale(r, self.rho, self.norm, self.c)[:, None]
         return dict(A=self.A_ * s, B=self.B_ * s)
 
     def gate(self, u: Tensor) -> Tensor:
@@ -112,6 +117,7 @@ class BlockGatedRNN(nn.Module):
         self.b, self.bx = nn.Parameter(torch.zeros(nq)), nn.Parameter(torch.zeros(nx))
         self.gate_proj = nn.Linear(nu, n_heads)
         nn.init.constant_(self.gate_proj.bias, gate_bias)
+        self.c = nn.Parameter(torch.zeros(n_heads))              # marge par tête (norm="homo")
 
     @property
     def n_state(self) -> int:
@@ -126,7 +132,7 @@ class BlockGatedRNN(nn.Module):
         return nA.sum(1) + nB @ c                                             # (H,)
 
     def weights(self) -> dict:
-        s = _row_scale(self._block_rows(), self.rho, self.norm).repeat_interleave(self.k)[:, None]
+        s = _row_scale(self._block_rows(), self.rho, self.norm, self.c).repeat_interleave(self.k)[:, None]
         return dict(A=self.A_ * s, B=self.B_ * s)
 
     def gate(self, u: Tensor) -> Tensor:
@@ -154,5 +160,5 @@ class BlockGatedRNN(nn.Module):
     @torch.no_grad()
     def certificate(self) -> dict:
         r = self._block_rows()
-        rs = (_row_scale(r, self.rho, self.norm) * r).max().item()
+        rs = (_row_scale(r, self.rho, self.norm, self.c) * r).max().item()
         return dict(row_sum=rs, rate_bound=1 - self.z_min * (1 - rs))

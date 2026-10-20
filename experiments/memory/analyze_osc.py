@@ -15,6 +15,9 @@ LAB = {"linf": "ℓ∞, porte par unité (certifié)", "block": "blocs de 2, por
        "linfp": "ℓ∞, projection radiale, ρ = 0,999", "blockp": "blocs de 2, projection radiale, ρ = 0,999",
        "blockp_nogate": "blocs de 2, projection, sans porte (z ≡ 1)",
        "blockp_half": "blocs de 2, projection, moitié des têtes sans porte",
+       "linfh": "ℓ∞, forme homogène 1/(r + softplus(c))",
+       "blockh": "blocs de 2, forme homogène",
+       "blockh_half": "blocs de 2, forme homogène, moitié sans porte",
        "ren": "REN (certifié)", "free": "mêmes équations, libres", "gru": "GRU"}
 rows = ["| Élève (16 états) | erreur de test (moyenne) | pire graine |", "|---|---|---|"]
 for k in LAB:

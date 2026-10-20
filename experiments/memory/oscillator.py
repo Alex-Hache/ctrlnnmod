@@ -55,16 +55,18 @@ def make(kind, n=16):
     return {"linf": lambda: LinfGated2(n), "block": lambda: BlockOut(2, n, k=2, ny=2), "ren": lambda: RENy(n),
             "free": lambda: FreeY(n), "gru": lambda: GRUy(n),
             "linfp": lambda: LinfP(n), "blockp": lambda: BlockP(n),
-            "blockp_nogate": lambda: BlockP(n, ungated=n // 2), "blockp_half": lambda: BlockP(n, ungated=n // 4)}[kind]()
+            "blockp_nogate": lambda: BlockP(n, ungated=n // 2), "blockp_half": lambda: BlockP(n, ungated=n // 4),
+            "blockh": lambda: BlockP(n, norm="homo"), "blockh_half": lambda: BlockP(n, ungated=n // 4, norm="homo"),
+            "linfh": lambda: LinfP(n, norm="homo")}[kind]()
 
 
 class LinfP(torch.nn.Module):
     """Classe ℓ∞ avec projection radiale (bord atteignable) et ρ = 0,999."""
 
-    def __init__(self, n):
+    def __init__(self, n, norm="proj"):
         super().__init__()
         from ctrlnmod.models.discrete.linf_gated import LinfGatedRNN
-        self.m, self.C = LinfGatedRNN(2, n, rho=0.999, norm="proj"), torch.nn.Linear(n, 2)
+        self.m, self.C = LinfGatedRNN(2, n, rho=0.999, norm=norm), torch.nn.Linear(n, 2)
 
     def forward(self, u):
         return self.C(self.m(u))
@@ -73,10 +75,10 @@ class LinfP(torch.nn.Module):
 class BlockP(torch.nn.Module):
     """Blocs de 2 avec projection radiale et ρ = 0,999."""
 
-    def __init__(self, n, ungated=0):
+    def __init__(self, n, ungated=0, norm="proj"):
         super().__init__()
         from ctrlnmod.models.discrete.linf_gated import BlockGatedRNN
-        self.m = BlockGatedRNN(2, n // 2, k=2, rho=0.999, norm="proj", ungated_heads=ungated)
+        self.m = BlockGatedRNN(2, n // 2, k=2, rho=0.999, norm=norm, ungated_heads=ungated)
         self.C = torch.nn.Linear(n, 2)
 
     def forward(self, u):
