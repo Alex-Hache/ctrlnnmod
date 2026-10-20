@@ -16,13 +16,13 @@ Itérations jusqu'à ‖H − H*‖²/‖H*‖² < 1e-10 (médiane sur 2 graines
 
 | Paramétrisation | bien conditionnée | mal conditionnée | valeurs propres groupées | près du bord |
 |---|---|---|---|---|
-| H libre + projection | 1010 | > 20 000 (3e+00) | 36 | > 20 000 (6e+03) |
+| H libre + projection | 1010 | > 20 000 (2e+00) | 36 | > 20 000 (6e+03) |
 | XᵀX + εI (ctrlnnmod, REN) | 86 | 2561 | 12 | 11131 |
 | LLᵀ + εI (Cholesky) | 127 | 10143 | 25 | 11069 |
 | Cholesky, diag. exp | 230 | 4359 | 25 | > 20 000 (4e-07) |
-| exp(S) | 6 | 1416 | 112 | 12070 |
-| geotorch PD, Q par expm | > 20 000 (2e-03) | > 20 000 (1e-01) | 59 | > 20 000 (2e-05) |
-| geotorch PD, Q par Cayley | 10269 | > 20 000 (2e-08) | 207 | > 20 000 (7e-02) |
+| exp(S) | 6 | 1416 | 4 | 12070 |
+| geotorch PD, Q par expm | 10258 | > 20 000 (2e-08) | 59 | > 20 000 (2e-05) |
+| geotorch PD, Q par Cayley | 10269 | > 20 000 (2e-08) | 59 | > 20 000 (2e-05) |
 
 ## Matrices orthogonales (SO(4), deux plans tournés de φ*, départ Q = I)
 
