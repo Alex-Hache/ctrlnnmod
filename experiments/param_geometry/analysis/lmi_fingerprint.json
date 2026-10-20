@@ -1,0 +1,902 @@
+[
+ {
+  "kind": "hinf_sqrtm",
+  "pd": "geotorch",
+  "nx": 2,
+  "seed": 0,
+  "rank": 12,
+  "dim": 12,
+  "kappa": 4032.2988905145844,
+  "kappa_range": 4032.2988905145844
+ },
+ {
+  "kind": "hinf_sqrtm",
+  "pd": "geotorch",
+  "nx": 2,
+  "seed": 1,
+  "rank": 12,
+  "dim": 12,
+  "kappa": 11614.645002629757,
+  "kappa_range": 11614.645002629757
+ },
+ {
+  "kind": "hinf_sqrtm",
+  "pd": "geotorch",
+  "nx": 2,
+  "seed": 2,
+  "rank": 12,
+  "dim": 12,
+  "kappa": 7581.350537038912,
+  "kappa_range": 7581.350537038912
+ },
+ {
+  "kind": "hinf_sqrtm",
+  "pd": "geotorch",
+  "nx": 2,
+  "seed": 3,
+  "rank": 12,
+  "dim": 12,
+  "kappa": 12876.214104379598,
+  "kappa_range": 12876.214104379598
+ },
+ {
+  "kind": "hinf_sqrtm",
+  "pd": "geotorch",
+  "nx": 2,
+  "seed": 4,
+  "rank": 12,
+  "dim": 12,
+  "kappa": 32881908.282401517,
+  "kappa_range": 32881908.282401517
+ },
+ {
+  "kind": "hinf_sqrtm",
+  "pd": "geotorch",
+  "nx": 4,
+  "seed": 0,
+  "rank": 32,
+  "dim": 32,
+  "kappa": 8356894.8549057245,
+  "kappa_range": 8356894.8549057245
+ },
+ {
+  "kind": "hinf_sqrtm",
+  "pd": "geotorch",
+  "nx": 4,
+  "seed": 1,
+  "rank": 32,
+  "dim": 32,
+  "kappa": 37088.18645216,
+  "kappa_range": 37088.18645216
+ },
+ {
+  "kind": "hinf_sqrtm",
+  "pd": "geotorch",
+  "nx": 4,
+  "seed": 2,
+  "rank": 32,
+  "dim": 32,
+  "kappa": 624.7107821648532,
+  "kappa_range": 624.7107821648532
+ },
+ {
+  "kind": "hinf_sqrtm",
+  "pd": "geotorch",
+  "nx": 4,
+  "seed": 3,
+  "rank": 9,
+  "dim": 32,
+  "kappa": 3.660997740250301e+21,
+  "kappa_range": 8917880505.553461
+ },
+ {
+  "kind": "hinf_sqrtm",
+  "pd": "geotorch",
+  "nx": 4,
+  "seed": 4,
+  "rank": 32,
+  "dim": 32,
+  "kappa": 339876171.0894826,
+  "kappa_range": 339876171.0894826
+ },
+ {
+  "kind": "hinf_sqrtm",
+  "pd": "geotorch",
+  "nx": 8,
+  "seed": 0,
+  "rank": 96,
+  "dim": 96,
+  "kappa": 46628174.80137022,
+  "kappa_range": 46628174.80137022
+ },
+ {
+  "kind": "hinf_sqrtm",
+  "pd": "geotorch",
+  "nx": 8,
+  "seed": 1,
+  "rank": 94,
+  "dim": 96,
+  "kappa": 564041538352.3901,
+  "kappa_range": 738145305.1960489
+ },
+ {
+  "kind": "hinf_sqrtm",
+  "pd": "geotorch",
+  "nx": 8,
+  "seed": 2,
+  "rank": 96,
+  "dim": 96,
+  "kappa": 648468143.9117577,
+  "kappa_range": 648468143.9117577
+ },
+ {
+  "kind": "hinf_sqrtm",
+  "pd": "geotorch",
+  "nx": 8,
+  "seed": 3,
+  "rank": 81,
+  "dim": 96,
+  "kappa": 3.657486544142783e+18,
+  "kappa_range": 9979681760.708658
+ },
+ {
+  "kind": "hinf_sqrtm",
+  "pd": "geotorch",
+  "nx": 8,
+  "seed": 4,
+  "rank": 96,
+  "dim": 96,
+  "kappa": 6796016.9851547275,
+  "kappa_range": 6796016.9851547275
+ },
+ {
+  "kind": "hinf_sqrtm",
+  "pd": "bm",
+  "nx": 2,
+  "seed": 0,
+  "rank": 12,
+  "dim": 12,
+  "kappa": 235.95033869841185,
+  "kappa_range": 235.95033869841185
+ },
+ {
+  "kind": "hinf_sqrtm",
+  "pd": "bm",
+  "nx": 2,
+  "seed": 1,
+  "rank": 12,
+  "dim": 12,
+  "kappa": 788.0328801487378,
+  "kappa_range": 788.0328801487378
+ },
+ {
+  "kind": "hinf_sqrtm",
+  "pd": "bm",
+  "nx": 2,
+  "seed": 2,
+  "rank": 10,
+  "dim": 12,
+  "kappa": 14940900916371.996,
+  "kappa_range": 1641136917.7985878
+ },
+ {
+  "kind": "hinf_sqrtm",
+  "pd": "bm",
+  "nx": 2,
+  "seed": 3,
+  "rank": 12,
+  "dim": 12,
+  "kappa": 1356013.6439113994,
+  "kappa_range": 1356013.6439113994
+ },
+ {
+  "kind": "hinf_sqrtm",
+  "pd": "bm",
+  "nx": 2,
+  "seed": 4,
+  "rank": 12,
+  "dim": 12,
+  "kappa": 484.5806704891338,
+  "kappa_range": 484.5806704891338
+ },
+ {
+  "kind": "hinf_sqrtm",
+  "pd": "bm",
+  "nx": 4,
+  "seed": 0,
+  "rank": 32,
+  "dim": 32,
+  "kappa": 21195.993111698885,
+  "kappa_range": 21195.993111698885
+ },
+ {
+  "kind": "hinf_sqrtm",
+  "pd": "bm",
+  "nx": 4,
+  "seed": 1,
+  "rank": 32,
+  "dim": 32,
+  "kappa": 515.6564750081427,
+  "kappa_range": 515.6564750081427
+ },
+ {
+  "kind": "hinf_sqrtm",
+  "pd": "bm",
+  "nx": 4,
+  "seed": 2,
+  "rank": 32,
+  "dim": 32,
+  "kappa": 1711959622.0408676,
+  "kappa_range": 1711959622.0408676
+ },
+ {
+  "kind": "hinf_sqrtm",
+  "pd": "bm",
+  "nx": 4,
+  "seed": 3,
+  "rank": 32,
+  "dim": 32,
+  "kappa": 274353542.19162875,
+  "kappa_range": 274353542.19162875
+ },
+ {
+  "kind": "hinf_sqrtm",
+  "pd": "bm",
+  "nx": 4,
+  "seed": 4,
+  "rank": 32,
+  "dim": 32,
+  "kappa": 4413977.143226601,
+  "kappa_range": 4413977.143226601
+ },
+ {
+  "kind": "hinf_sqrtm",
+  "pd": "bm",
+  "nx": 8,
+  "seed": 0,
+  "rank": 96,
+  "dim": 96,
+  "kappa": 1334192313.0207884,
+  "kappa_range": 1334192313.0207884
+ },
+ {
+  "kind": "hinf_sqrtm",
+  "pd": "bm",
+  "nx": 8,
+  "seed": 1,
+  "rank": 96,
+  "dim": 96,
+  "kappa": 2272432070.996049,
+  "kappa_range": 2272432070.996049
+ },
+ {
+  "kind": "hinf_sqrtm",
+  "pd": "bm",
+  "nx": 8,
+  "seed": 2,
+  "rank": 96,
+  "dim": 96,
+  "kappa": 4064456.9809597484,
+  "kappa_range": 4064456.9809597484
+ },
+ {
+  "kind": "hinf_sqrtm",
+  "pd": "bm",
+  "nx": 8,
+  "seed": 3,
+  "rank": 75,
+  "dim": 96,
+  "kappa": 7.522018764221309e+16,
+  "kappa_range": 9236222594.903788
+ },
+ {
+  "kind": "hinf_sqrtm",
+  "pd": "bm",
+  "nx": 8,
+  "seed": 4,
+  "rank": 94,
+  "dim": 96,
+  "kappa": 490580523719.6961,
+  "kappa_range": 163310409.7109572
+ },
+ {
+  "kind": "hinf_riccati",
+  "pd": "geotorch",
+  "nx": 2,
+  "seed": 0,
+  "rank": 12,
+  "dim": 12,
+  "kappa": 37173.488981502785,
+  "kappa_range": 37173.488981502785
+ },
+ {
+  "kind": "hinf_riccati",
+  "pd": "geotorch",
+  "nx": 2,
+  "seed": 1,
+  "rank": 12,
+  "dim": 12,
+  "kappa": 4062.1218785671927,
+  "kappa_range": 4062.1218785671927
+ },
+ {
+  "kind": "hinf_riccati",
+  "pd": "geotorch",
+  "nx": 2,
+  "seed": 2,
+  "rank": 12,
+  "dim": 12,
+  "kappa": 4323.435805324958,
+  "kappa_range": 4323.435805324958
+ },
+ {
+  "kind": "hinf_riccati",
+  "pd": "geotorch",
+  "nx": 2,
+  "seed": 3,
+  "rank": 12,
+  "dim": 12,
+  "kappa": 2752.3989716926444,
+  "kappa_range": 2752.3989716926444
+ },
+ {
+  "kind": "hinf_riccati",
+  "pd": "geotorch",
+  "nx": 2,
+  "seed": 4,
+  "rank": 12,
+  "dim": 12,
+  "kappa": 828520.543101636,
+  "kappa_range": 828520.543101636
+ },
+ {
+  "kind": "hinf_riccati",
+  "pd": "geotorch",
+  "nx": 4,
+  "seed": 0,
+  "rank": 32,
+  "dim": 32,
+  "kappa": 3892636.956379191,
+  "kappa_range": 3892636.956379191
+ },
+ {
+  "kind": "hinf_riccati",
+  "pd": "geotorch",
+  "nx": 4,
+  "seed": 1,
+  "rank": 32,
+  "dim": 32,
+  "kappa": 2963762.7860799283,
+  "kappa_range": 2963762.7860799283
+ },
+ {
+  "kind": "hinf_riccati",
+  "pd": "geotorch",
+  "nx": 4,
+  "seed": 2,
+  "rank": 32,
+  "dim": 32,
+  "kappa": 13295.002140589853,
+  "kappa_range": 13295.002140589853
+ },
+ {
+  "kind": "hinf_riccati",
+  "pd": "geotorch",
+  "nx": 4,
+  "seed": 3,
+  "rank": 29,
+  "dim": 32,
+  "kappa": 16047119234267.955,
+  "kappa_range": 700467.7638103231
+ },
+ {
+  "kind": "hinf_riccati",
+  "pd": "geotorch",
+  "nx": 4,
+  "seed": 4,
+  "rank": 32,
+  "dim": 32,
+  "kappa": 8926988.072315225,
+  "kappa_range": 8926988.072315225
+ },
+ {
+  "kind": "hinf_riccati",
+  "pd": "geotorch",
+  "nx": 8,
+  "seed": 0,
+  "rank": 96,
+  "dim": 96,
+  "kappa": 6647589.33656388,
+  "kappa_range": 6647589.33656388
+ },
+ {
+  "kind": "hinf_riccati",
+  "pd": "geotorch",
+  "nx": 8,
+  "seed": 1,
+  "rank": 96,
+  "dim": 96,
+  "kappa": 6479079217.647387,
+  "kappa_range": 6479079217.647387
+ },
+ {
+  "kind": "hinf_riccati",
+  "pd": "geotorch",
+  "nx": 8,
+  "seed": 2,
+  "rank": 96,
+  "dim": 96,
+  "kappa": 3400639883.274564,
+  "kappa_range": 3400639883.274564
+ },
+ {
+  "kind": "hinf_riccati",
+  "pd": "geotorch",
+  "nx": 8,
+  "seed": 3,
+  "rank": 93,
+  "dim": 96,
+  "kappa": 4121194277958.1147,
+  "kappa_range": 9350748.42834538
+ },
+ {
+  "kind": "hinf_riccati",
+  "pd": "geotorch",
+  "nx": 8,
+  "seed": 4,
+  "rank": 96,
+  "dim": 96,
+  "kappa": 3612196.4369708584,
+  "kappa_range": 3612196.4369708584
+ },
+ {
+  "kind": "hinf_riccati",
+  "pd": "bm",
+  "nx": 2,
+  "seed": 0,
+  "rank": 12,
+  "dim": 12,
+  "kappa": 5642.877941099384,
+  "kappa_range": 5642.877941099384
+ },
+ {
+  "kind": "hinf_riccati",
+  "pd": "bm",
+  "nx": 2,
+  "seed": 1,
+  "rank": 12,
+  "dim": 12,
+  "kappa": 5857.61618790155,
+  "kappa_range": 5857.61618790155
+ },
+ {
+  "kind": "hinf_riccati",
+  "pd": "bm",
+  "nx": 2,
+  "seed": 2,
+  "rank": 12,
+  "dim": 12,
+  "kappa": 15916728.7487137,
+  "kappa_range": 15916728.7487137
+ },
+ {
+  "kind": "hinf_riccati",
+  "pd": "bm",
+  "nx": 2,
+  "seed": 3,
+  "rank": 12,
+  "dim": 12,
+  "kappa": 8266.461620353575,
+  "kappa_range": 8266.461620353575
+ },
+ {
+  "kind": "hinf_riccati",
+  "pd": "bm",
+  "nx": 2,
+  "seed": 4,
+  "rank": 12,
+  "dim": 12,
+  "kappa": 2188.405791679069,
+  "kappa_range": 2188.405791679069
+ },
+ {
+  "kind": "hinf_riccati",
+  "pd": "bm",
+  "nx": 4,
+  "seed": 0,
+  "rank": 32,
+  "dim": 32,
+  "kappa": 195382.74965422507,
+  "kappa_range": 195382.74965422507
+ },
+ {
+  "kind": "hinf_riccati",
+  "pd": "bm",
+  "nx": 4,
+  "seed": 1,
+  "rank": 32,
+  "dim": 32,
+  "kappa": 41590.77372847593,
+  "kappa_range": 41590.77372847593
+ },
+ {
+  "kind": "hinf_riccati",
+  "pd": "bm",
+  "nx": 4,
+  "seed": 2,
+  "rank": 32,
+  "dim": 32,
+  "kappa": 10440752.025407294,
+  "kappa_range": 10440752.025407294
+ },
+ {
+  "kind": "hinf_riccati",
+  "pd": "bm",
+  "nx": 4,
+  "seed": 3,
+  "rank": 32,
+  "dim": 32,
+  "kappa": 1599232.7878212167,
+  "kappa_range": 1599232.7878212167
+ },
+ {
+  "kind": "hinf_riccati",
+  "pd": "bm",
+  "nx": 4,
+  "seed": 4,
+  "rank": 32,
+  "dim": 32,
+  "kappa": 344055.0210336368,
+  "kappa_range": 344055.0210336368
+ },
+ {
+  "kind": "hinf_riccati",
+  "pd": "bm",
+  "nx": 8,
+  "seed": 0,
+  "rank": 96,
+  "dim": 96,
+  "kappa": 59450622.27037829,
+  "kappa_range": 59450622.27037829
+ },
+ {
+  "kind": "hinf_riccati",
+  "pd": "bm",
+  "nx": 8,
+  "seed": 1,
+  "rank": 96,
+  "dim": 96,
+  "kappa": 24388360.784993395,
+  "kappa_range": 24388360.784993395
+ },
+ {
+  "kind": "hinf_riccati",
+  "pd": "bm",
+  "nx": 8,
+  "seed": 2,
+  "rank": 96,
+  "dim": 96,
+  "kappa": 374759.9667432399,
+  "kappa_range": 374759.9667432399
+ },
+ {
+  "kind": "hinf_riccati",
+  "pd": "bm",
+  "nx": 8,
+  "seed": 3,
+  "rank": 95,
+  "dim": 96,
+  "kappa": 36172676520.09606,
+  "kappa_range": 3591207381.2834163
+ },
+ {
+  "kind": "hinf_riccati",
+  "pd": "bm",
+  "nx": 8,
+  "seed": 4,
+  "rank": 96,
+  "dim": 96,
+  "kappa": 19943098.834566604,
+  "kappa_range": 19943098.834566604
+ },
+ {
+  "kind": "h2",
+  "pd": "geotorch",
+  "nx": 2,
+  "seed": 0,
+  "rank": 10,
+  "dim": 12,
+  "kappa": 2.672950210239457e+300,
+  "kappa_range": 93.27522252148214
+ },
+ {
+  "kind": "h2",
+  "pd": "geotorch",
+  "nx": 2,
+  "seed": 1,
+  "rank": 9,
+  "dim": 12,
+  "kappa": 4.063706816596956e+300,
+  "kappa_range": 19186.415066353762
+ },
+ {
+  "kind": "h2",
+  "pd": "geotorch",
+  "nx": 2,
+  "seed": 2,
+  "rank": 10,
+  "dim": 12,
+  "kappa": 5.295967213661983e+301,
+  "kappa_range": 8217607.652675739
+ },
+ {
+  "kind": "h2",
+  "pd": "geotorch",
+  "nx": 2,
+  "seed": 3,
+  "rank": 10,
+  "dim": 12,
+  "kappa": 5.649780188031628e+301,
+  "kappa_range": 366.88671344650555
+ },
+ {
+  "kind": "h2",
+  "pd": "geotorch",
+  "nx": 2,
+  "seed": 4,
+  "rank": 10,
+  "dim": 12,
+  "kappa": 2.373757572820338e+301,
+  "kappa_range": 230.6470548576355
+ },
+ {
+  "kind": "h2",
+  "pd": "geotorch",
+  "nx": 4,
+  "seed": 0,
+  "rank": 27,
+  "dim": 32,
+  "kappa": 4.1807384764756533e+303,
+  "kappa_range": 309223076.4131867
+ },
+ {
+  "kind": "h2",
+  "pd": "geotorch",
+  "nx": 4,
+  "seed": 1,
+  "rank": 30,
+  "dim": 32,
+  "kappa": 5.7848300647266295e+302,
+  "kappa_range": 567518.1155909017
+ },
+ {
+  "kind": "h2",
+  "pd": "geotorch",
+  "nx": 4,
+  "seed": 2,
+  "rank": 30,
+  "dim": 32,
+  "kappa": 3.4670222589792913e+301,
+  "kappa_range": 761686.4140089569
+ },
+ {
+  "kind": "h2",
+  "pd": "geotorch",
+  "nx": 4,
+  "seed": 3,
+  "rank": 30,
+  "dim": 32,
+  "kappa": 8.030310942925692e+301,
+  "kappa_range": 19027274.723103415
+ },
+ {
+  "kind": "h2",
+  "pd": "geotorch",
+  "nx": 4,
+  "seed": 4,
+  "rank": 30,
+  "dim": 32,
+  "kappa": 3.144630958669777e+300,
+  "kappa_range": 11134161.989031916
+ },
+ {
+  "kind": "h2",
+  "pd": "geotorch",
+  "nx": 8,
+  "seed": 0,
+  "rank": 93,
+  "dim": 96,
+  "kappa": 3.477011691436524e+302,
+  "kappa_range": 517886667.99167013
+ },
+ {
+  "kind": "h2",
+  "pd": "geotorch",
+  "nx": 8,
+  "seed": 1,
+  "rank": 94,
+  "dim": 96,
+  "kappa": 3.449348820787835e+18,
+  "kappa_range": 3011676607.0145197
+ },
+ {
+  "kind": "h2",
+  "pd": "geotorch",
+  "nx": 8,
+  "seed": 2,
+  "rank": 93,
+  "dim": 96,
+  "kappa": 2.688427801367411e+302,
+  "kappa_range": 276657064.9223282
+ },
+ {
+  "kind": "h2",
+  "pd": "geotorch",
+  "nx": 8,
+  "seed": 3,
+  "rank": 93,
+  "dim": 96,
+  "kappa": 1.4910408507505027e+17,
+  "kappa_range": 5028405194.094429
+ },
+ {
+  "kind": "h2",
+  "pd": "geotorch",
+  "nx": 8,
+  "seed": 4,
+  "rank": 92,
+  "dim": 96,
+  "kappa": 3.861915381641385e+302,
+  "kappa_range": 4522634095.905154
+ },
+ {
+  "kind": "h2",
+  "pd": "bm",
+  "nx": 2,
+  "seed": 0,
+  "rank": 10,
+  "dim": 12,
+  "kappa": 1.595222636917052e+303,
+  "kappa_range": 2942.7322399994705
+ },
+ {
+  "kind": "h2",
+  "pd": "bm",
+  "nx": 2,
+  "seed": 1,
+  "rank": 10,
+  "dim": 12,
+  "kappa": 1.4026729234861405e+303,
+  "kappa_range": 8608.991947054936
+ },
+ {
+  "kind": "h2",
+  "pd": "bm",
+  "nx": 2,
+  "seed": 2,
+  "rank": 10,
+  "dim": 12,
+  "kappa": 2.3461770688006476e+300,
+  "kappa_range": 59290.261012474264
+ },
+ {
+  "kind": "h2",
+  "pd": "bm",
+  "nx": 2,
+  "seed": 3,
+  "rank": 10,
+  "dim": 12,
+  "kappa": 1.598726991333978e+303,
+  "kappa_range": 2744.4451575633548
+ },
+ {
+  "kind": "h2",
+  "pd": "bm",
+  "nx": 2,
+  "seed": 4,
+  "rank": 10,
+  "dim": 12,
+  "kappa": 8.788576754422513e+301,
+  "kappa_range": 3484.734537331172
+ },
+ {
+  "kind": "h2",
+  "pd": "bm",
+  "nx": 4,
+  "seed": 0,
+  "rank": 30,
+  "dim": 32,
+  "kappa": 1.1960585920567614e+303,
+  "kappa_range": 336048.0979729206
+ },
+ {
+  "kind": "h2",
+  "pd": "bm",
+  "nx": 4,
+  "seed": 1,
+  "rank": 30,
+  "dim": 32,
+  "kappa": 4.3349508128365033e+303,
+  "kappa_range": 994054.2915228347
+ },
+ {
+  "kind": "h2",
+  "pd": "bm",
+  "nx": 4,
+  "seed": 2,
+  "rank": 30,
+  "dim": 32,
+  "kappa": 4.544819469389135e+16,
+  "kappa_range": 554986.700761769
+ },
+ {
+  "kind": "h2",
+  "pd": "bm",
+  "nx": 4,
+  "seed": 3,
+  "rank": 30,
+  "dim": 32,
+  "kappa": 4.475984869088513e+17,
+  "kappa_range": 270458066.0469908
+ },
+ {
+  "kind": "h2",
+  "pd": "bm",
+  "nx": 4,
+  "seed": 4,
+  "rank": 30,
+  "dim": 32,
+  "kappa": 6.930093138589978e+303,
+  "kappa_range": 5283976.314807802
+ },
+ {
+  "kind": "h2",
+  "pd": "bm",
+  "nx": 8,
+  "seed": 0,
+  "rank": 94,
+  "dim": 96,
+  "kappa": 6.89192798320155e+16,
+  "kappa_range": 6023155662.008496
+ },
+ {
+  "kind": "h2",
+  "pd": "bm",
+  "nx": 8,
+  "seed": 1,
+  "rank": 94,
+  "dim": 96,
+  "kappa": 7.054583686599966e+303,
+  "kappa_range": 57295271.39095698
+ },
+ {
+  "kind": "h2",
+  "pd": "bm",
+  "nx": 8,
+  "seed": 2,
+  "rank": 94,
+  "dim": 96,
+  "kappa": 3.364440547794582e+303,
+  "kappa_range": 97973849.29613476
+ },
+ {
+  "kind": "h2",
+  "pd": "bm",
+  "nx": 8,
+  "seed": 3,
+  "rank": 94,
+  "dim": 96,
+  "kappa": 1.8057035874510637e+17,
+  "kappa_range": 3373477.1740409755
+ },
+ {
+  "kind": "h2",
+  "pd": "bm",
+  "nx": 8,
+  "seed": 4,
+  "rank": 94,
+  "dim": 96,
+  "kappa": 3.966658920226406e+303,
+  "kappa_range": 28863646.496316854
+ }
+]
