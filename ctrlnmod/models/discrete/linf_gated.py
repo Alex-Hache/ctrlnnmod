@@ -24,12 +24,21 @@ import torch
 from torch import Tensor, nn
 
 
+def _row_scale(r: Tensor, rho: float, norm: str) -> Tensor:
+    """Facteur par ligne qui garantit (facteur × r) ≤ ρ.
+    "sat"  : ρ/(ρ + r), lisse, mais ρ n'est atteint que si r → ∞ (le bord est inatteignable) ;
+    "proj" : ρ / max(r, ρ), projection radiale : identité à l'intérieur, bord atteint à r fini."""
+    if norm == "proj":
+        return rho / torch.clamp(r, min=rho)
+    return rho / (rho + r)
+
+
 class LinfGatedRNN(nn.Module):
     def __init__(self, nu: int, nx: int, nq: Optional[int] = None, rho: float = 0.99,
-                 z_min: float = 1e-3, gate_bias: float = -3.0) -> None:
+                 z_min: float = 1e-3, gate_bias: float = -3.0, norm: str = "sat") -> None:
         super().__init__()
         nq = nq or 2 * nx
-        self.nu, self.nx, self.nq, self.rho, self.z_min = nu, nx, nq, rho, z_min
+        self.nu, self.nx, self.nq, self.rho, self.z_min, self.norm = nu, nx, nq, rho, z_min, norm
         self.A_ = nn.Parameter(torch.randn(nx, nx) / nx)
         self.B_ = nn.Parameter(torch.randn(nx, nq) / nq)
         self.C = nn.Parameter(torch.randn(nq, nx) / math.sqrt(nx))
@@ -45,7 +54,7 @@ class LinfGatedRNN(nn.Module):
 
     def weights(self) -> dict:
         r = self.A_.abs().sum(1) + self.B_.abs() @ self.C.abs().sum(1)
-        s = (self.rho / (self.rho + r))[:, None]
+        s = _row_scale(r, self.rho, self.norm)[:, None]
         return dict(A=self.A_ * s, B=self.B_ * s)
 
     def gate(self, u: Tensor) -> Tensor:
@@ -87,11 +96,12 @@ class BlockGatedRNN(nn.Module):
     """
 
     def __init__(self, nu: int, n_heads: int, k: int = 2, nq: Optional[int] = None, rho: float = 0.99,
-                 z_min: float = 1e-3, gate_bias: float = -3.0) -> None:
+                 z_min: float = 1e-3, gate_bias: float = -3.0, norm: str = "sat") -> None:
         super().__init__()
         nx = n_heads * k
         nq = nq or 2 * nx
         self.nu, self.H, self.k, self.nx, self.nq, self.rho, self.z_min = nu, n_heads, k, nx, nq, rho, z_min
+        self.norm = norm
         self.A_ = nn.Parameter(torch.randn(nx, nx) / nx)
         self.B_ = nn.Parameter(torch.randn(nx, nq) / nq)
         self.C = nn.Parameter(torch.randn(nq, nx) / math.sqrt(nx))
@@ -114,7 +124,7 @@ class BlockGatedRNN(nn.Module):
         return nA.sum(1) + nB @ c                                             # (H,)
 
     def weights(self) -> dict:
-        s = (self.rho / (self.rho + self._block_rows())).repeat_interleave(self.k)[:, None]
+        s = _row_scale(self._block_rows(), self.rho, self.norm).repeat_interleave(self.k)[:, None]
         return dict(A=self.A_ * s, B=self.B_ * s)
 
     def gate(self, u: Tensor) -> Tensor:
@@ -139,6 +149,6 @@ class BlockGatedRNN(nn.Module):
 
     @torch.no_grad()
     def certificate(self) -> dict:
-        s = self.rho / (self.rho + self._block_rows())
-        rs = (s * self._block_rows()).max().item()
+        r = self._block_rows()
+        rs = (_row_scale(r, self.rho, self.norm) * r).max().item()
         return dict(row_sum=rs, rate_bound=1 - self.z_min * (1 - rs))

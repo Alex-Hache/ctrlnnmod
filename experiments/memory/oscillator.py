@@ -53,7 +53,32 @@ def sim(A, B, C, u):
 
 def make(kind, n=16):
     return {"linf": lambda: LinfGated2(n), "block": lambda: BlockOut(2, n, k=2, ny=2), "ren": lambda: RENy(n),
-            "free": lambda: FreeY(n), "gru": lambda: GRUy(n)}[kind]()
+            "free": lambda: FreeY(n), "gru": lambda: GRUy(n),
+            "linfp": lambda: LinfP(n), "blockp": lambda: BlockP(n)}[kind]()
+
+
+class LinfP(torch.nn.Module):
+    """Classe ℓ∞ avec projection radiale (bord atteignable) et ρ = 0,999."""
+
+    def __init__(self, n):
+        super().__init__()
+        from ctrlnmod.models.discrete.linf_gated import LinfGatedRNN
+        self.m, self.C = LinfGatedRNN(2, n, rho=0.999, norm="proj"), torch.nn.Linear(n, 2)
+
+    def forward(self, u):
+        return self.C(self.m(u))
+
+
+class BlockP(torch.nn.Module):
+    """Blocs de 2 avec projection radiale et ρ = 0,999."""
+
+    def __init__(self, n):
+        super().__init__()
+        from ctrlnmod.models.discrete.linf_gated import BlockGatedRNN
+        self.m, self.C = BlockGatedRNN(2, n // 2, k=2, rho=0.999, norm="proj"), torch.nn.Linear(n, 2)
+
+    def forward(self, u):
+        return self.C(self.m(u))
 
 
 class LinfGated2(LinfGated):
@@ -130,7 +155,8 @@ if __name__ == "__main__":
     ap.add_argument("--sweep", action="store_true")
     a = ap.parse_args()
     os.makedirs(OUT, exist_ok=True)
-    jobs = list(itertools.product(("linf", "block", "ren", "free", "gru"), (1e-3, 3e-3, 1e-2), (0, 1, 2)))
+    ap2 = os.environ.get("OSC_KINDS", "linf,block,ren,free,gru").split(",")
+    jobs = list(itertools.product(ap2, (1e-3, 3e-3, 1e-2), (0, 1, 2)))
     from tqdm import tqdm
     with mp.get_context("fork").Pool(int(os.environ.get("NPROC", os.cpu_count() or 1))) as pool:
         for line in tqdm(pool.imap_unordered(_job, jobs), total=len(jobs), desc="oscillateurs", mininterval=10):
