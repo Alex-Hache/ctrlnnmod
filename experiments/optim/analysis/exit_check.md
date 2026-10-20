@@ -36,3 +36,7 @@ Commande : `OUT_DIR=experiments/optim/results_exit python experiments/optim/exit
 - Adam : le libre sort de S tôt. T3 prédit alors que le flot riemannien ne peut pas suivre le libre (θ diverge). Observé : cond(XᵀX) ≈ 1e301 et riemannien/libre = 2,7× à 13,7× (`analysis/table_ts_base.md`). Cohérent.
 - GD à ρ = 0,9 et 0,97 : aucune sortie détectée, mais REN bat le libre (0,1× à 0,2×). Si l'appartenance est confirmée par le test LMI exact, cet écart est un terme de **métrique**.
 - Limite : seuls les runs maître–élève sont couverts. Les runs oscillateurs n'ont pas de journal de trajectoire.
+
+## Correction (2026-10-20, après relecture)
+
+L'optimum (le maître) est dans S par construction. Les sorties mesurées sont des détours : à ρ = 0,9, le libre Adam sort de S puis finit au niveau du REN (2,3e-4 contre 2,7e-4). Ce test montre que le flot riemannien ne peut pas suivre le libre. Il ne montre pas que le bord explique un déficit du modèle contraint. Pour isoler la métrique, voir l'item 1e de `ROADMAP.md`.

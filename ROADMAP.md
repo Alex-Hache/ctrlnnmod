@@ -30,7 +30,16 @@ Affirmation reformulée (cible) : l'écart contraint/libre = terme de métrique 
 - **T1** (`Ext/InducedRate`, `induced_linear_rate[_kappa]`, `induced_rate_iter`) : L ℓ-lisse et PL (μ), p₁I ⪯ JJᵀ, ‖Jv‖² ≤ p₂‖v‖², ηℓp₂ ≤ 1 ⇒ L⁺ − L* ≤ (1 − ημp₁)(L − L*). Avec η = 1/(ℓp₂) : facteur 1 − 1/(κ_L·κ(JJᵀ)). κ pris le long de la trajectoire.
 - **T3** (`Ext/FlowDecomposition`) : flot riemannien sur θ = flot libre sur W tant qu'il existe ; le flot libre reste dans S ; sortie de S ⇒ pas de flot riemannien. Exige un inverse à droite (exclut H2-sphère et les pertes de rang).
 
-### 1d. Expérience de validation T1/T2 (jouet PSD) — PROCHAIN
+### 1e. Métrique seule, ensemble fixé (maître–élève, ρ = 0,5) — PROCHAIN
+
+But : isoler le terme de métrique. Le bord est exclu par construction et vérifié par LMI.
+Montage : maître à ρ = 0,5 (loin du bord). Reparamétrisation linéaire θ = D·θ', D diagonale de dispersion κ_D ∈ {1, 1e1, 1e2, 1e3}. L'image de Φ (donc S) est identique ; seule JJᵀ change. Méthodes : GD sur θ', GD riemannien, libre. 3 graines. Local.
+Validité : test LMI exact (cvxpy) à chaque point journalisé : le libre reste dans S sur 100 % de la trajectoire. Sinon, ne pas conclure.
+Prédictions : GD sur θ' : itérations jusqu'à ε ∝ κ_D (T1) ; riemannien invariant à D, ≈ libre (T3) ; libre inchangé.
+- Confirme : écart GD/libre croît avec κ_D, pente log-log ∈ [0,8 ; 1,2], et riemannien/libre < 1,5× pour tout κ_D.
+- Réfute : écart GD/libre < 1,5× à κ_D = 1e3.
+
+### 1d. Expérience de validation T1/T2 (jouet PSD)
 
 Montage : perte de Frobenius ½‖W − W*‖² (μ = ℓ = 1). Paramétrisations : euclidienne, XᵀX, exp(S). 5 graines × κ(W*) ∈ {10, 1e2, 1e3}. CPU local.
 Journal par pas : p₁, p₂ de JJᵀ, f − f*, ‖s‖, écart du pas.
@@ -40,11 +49,11 @@ Validité : ηℓp₂ ≤ 1 sur ≥ 95 % des pas.
 - Discriminant : r(K_ε, κ_traj) > r(K_ε, κ_départ).
 Étape 2 (Modal) : set_vs_metric REN avec σ_min(J) journalisé ; T2 explique l'invalidité si écart·σ_min²/‖s‖² reste dans un facteur 10.
 
-### 1b. La trajectoire libre sort-elle de S ? — FAIT (maître–élève)
+### 1b. La trajectoire libre sort-elle de S ? — FAIT, portée limitée
 
-Résultat (`experiments/optim/analysis/exit_check.md`) : terme de bord **confirmé**. À ρ ≥ 0,9, 7/12 runs libres sortent de S (Adam 6/6, GD 1/6). À ρ = 0,5, aucune sortie (prédiction de T3). Contrôle REN valide (r ≤ 0,996).
-Non concluant : GD à ρ = 0,9 et 0,97 (condition nécessaire seulement). REN y bat le libre (0,1–0,2×) : candidat pour un terme de métrique.
-Suite possible (petit) : test LMI exact (cvxpy) sur ces runs GD pour trancher appartenance ou sortie. Oscillateurs non couverts (pas de journal).
+Résultat (`experiments/optim/analysis/exit_check.md`) : à ρ ≥ 0,9, 7/12 runs libres sortent de S en cours de route (Adam 6/6, GD 1/6) ; à ρ = 0,5, aucune sortie. Contrôle REN valide.
+Correction : l'optimum (le maître) est dans S par construction. Les sorties sont des **détours** : à ρ = 0,9, Adam libre sort de S et finit au niveau du REN. 1b montre seulement que le flot riemannien ne peut pas suivre le libre. Il ne montre **pas** que le bord explique un déficit du modèle contraint (ici le contraint bat le libre).
+À faire (petit) : test LMI au point final de chaque run → classer « détour puis retour » ou « fin hors de S ».
 
 ### 1c. set_vs_metric (suspendu)
 
@@ -102,3 +111,4 @@ Ne pas commencer avant que les items 1 et 2 aient un résultat valide.
 - 2026-10-20 : T2 et T1 démontrés (`Ext/InducedRate`, 128 énoncés, 0 `sorry`). Prochain : 1b.
 - 2026-10-20 : T3 démontré (`Ext/FlowDecomposition`, 132 énoncés). Expérience 1d définie avec critères. Prochain : 1d, puis 1b.
 - 2026-10-20 : 1b fait. Terme de bord confirmé en maître–élève (Adam sort de S dès l'itér. 50–250). Prochain : 1d.
+- 2026-10-20 : conclusion de 1b corrigée (sorties = détours, pas un déficit). Ajout de 1e (métrique seule, ensemble fixé). Prochain : 1e.
