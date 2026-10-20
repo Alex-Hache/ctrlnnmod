@@ -40,10 +40,11 @@ Validité : ηℓp₂ ≤ 1 sur ≥ 95 % des pas.
 - Discriminant : r(K_ε, κ_traj) > r(K_ε, κ_départ).
 Étape 2 (Modal) : set_vs_metric REN avec σ_min(J) journalisé ; T2 explique l'invalidité si écart·σ_min²/‖s‖² reste dans un facteur 10.
 
-### 1b. Données existantes : la trajectoire libre sort-elle de S ?
+### 1b. La trajectoire libre sort-elle de S ? — FAIT (maître–élève)
 
-Lire ρ_A (et la norme ℓ∞ pour les classes ℓ∞) dans les JSON des runs libres existants. Coût nul.
-Critère : sortie de S sur ≥ 1 graine → le terme de bord existe sur cette tâche. Aucune sortie → l'écart observé est un terme de métrique.
+Résultat (`experiments/optim/analysis/exit_check.md`) : terme de bord **confirmé**. À ρ ≥ 0,9, 7/12 runs libres sortent de S (Adam 6/6, GD 1/6). À ρ = 0,5, aucune sortie (prédiction de T3). Contrôle REN valide (r ≤ 0,996).
+Non concluant : GD à ρ = 0,9 et 0,97 (condition nécessaire seulement). REN y bat le libre (0,1–0,2×) : candidat pour un terme de métrique.
+Suite possible (petit) : test LMI exact (cvxpy) sur ces runs GD pour trancher appartenance ou sortie. Oscillateurs non couverts (pas de journal).
 
 ### 1c. set_vs_metric (suspendu)
 
@@ -100,3 +101,4 @@ Ne pas commencer avant que les items 1 et 2 aient un résultat valide.
 - 2026-10-20 : bilan Lean ↔ résultats. Items réordonnés : théorie (T2, T1) avant calcul.
 - 2026-10-20 : T2 et T1 démontrés (`Ext/InducedRate`, 128 énoncés, 0 `sorry`). Prochain : 1b.
 - 2026-10-20 : T3 démontré (`Ext/FlowDecomposition`, 132 énoncés). Expérience 1d définie avec critères. Prochain : 1d, puis 1b.
+- 2026-10-20 : 1b fait. Terme de bord confirmé en maître–élève (Adam sort de S dès l'itér. 50–250). Prochain : 1d.
