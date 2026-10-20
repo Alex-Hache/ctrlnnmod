@@ -194,7 +194,7 @@ def run(rho, seed, method, lr, iters=1500, log_every=25, damping=1e-6, width=1, 
     Wlike = phi(th0, nx, nq)
     loss_W = lambda Wv, u, y: ((sim(unflat(Wv, Wlike, WKEYS), u) - y) ** 2).mean()  # noqa: E731
 
-    log = dict(it=[], train=[], test=[], cond_M=[], lmin_M=[], cond_JJt=[], margin=[], retr_err=[])
+    log = dict(it=[], train=[], test=[], cond_M=[], lmin_M=[], cond_JJt=[], margin=[], retr_err=[], rho_A=[], rho_A1=[])
     t0, status = time.time(), "ok"
     gb = torch.Generator().manual_seed(500 + seed)
     u_full, y_full = u_tr, y_tr
@@ -235,6 +235,11 @@ def run(rho, seed, method, lr, iters=1500, log_every=25, damping=1e-6, width=1, 
             log["it"].append(it)
             log["train"].append(tr)
             log["test"].append(te)
+            with torch.no_grad():                                               # conditions nécessaires W ∈ S
+                lamc = W["lam"].clamp(min=1e-6)                                 # (pentes du tanh 0 et 1/λ)
+                log["rho_A"].append(float(torch.linalg.eigvals(W["A"]).abs().max()))
+                A1 = W["A"] + W["Bw"] @ torch.diag(1 / lamc) @ W["C1"]
+                log["rho_A1"].append(float(torch.linalg.eigvals(A1).abs().max()))
             if kind != "free":
                 p = unflat(x, th0, TK)
                 evM = torch.linalg.eigvalsh(p["X"].T @ p["X"])
