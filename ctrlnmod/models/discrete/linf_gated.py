@@ -73,3 +73,72 @@ class LinfGatedRNN(nn.Module):
         W = self.weights()
         rs = (W["A"].abs().sum(1) + W["B"].abs() @ self.C.abs().sum(1)).max().item()
         return dict(row_sum=rs, rate_bound=1 - self.z_min * (1 - rs))
+
+
+class BlockGatedRNN(nn.Module):
+    r"""Généralisation par blocs : têtes de taille k, une porte par tête, norme mixte
+    ``‖x‖ = maxₕ ‖xₕ‖₂``.
+
+    Certificat : pour chaque tête h, ``Σₖ‖A_{hk}‖₂ + Σ_q ‖B_{h,q}‖₂ Σₖ‖C_{q,k}‖₂ ≤ ρ < 1`` (normes
+    spectrales des blocs). Alors ``‖Δxₕ⁺‖₂ ≤ (1 − zₕ(1 − ρ)) maxₖ‖Δxₖ‖₂`` pour toutes portes
+    ``zₕ ∈ [0, 1]``. Avec k = 1, on retrouve ``LinfGatedRNN`` (portes par unité). Avec k = 2, un
+    bloc peut être une rotation amortie ``r R(θ)`` (oscillateur), ce que la classe ℓ∞ exclut : une
+    rotation de 45° a une somme de lignes √2 r.
+    """
+
+    def __init__(self, nu: int, n_heads: int, k: int = 2, nq: Optional[int] = None, rho: float = 0.99,
+                 z_min: float = 1e-3, gate_bias: float = -3.0) -> None:
+        super().__init__()
+        nx = n_heads * k
+        nq = nq or 2 * nx
+        self.nu, self.H, self.k, self.nx, self.nq, self.rho, self.z_min = nu, n_heads, k, nx, nq, rho, z_min
+        self.A_ = nn.Parameter(torch.randn(nx, nx) / nx)
+        self.B_ = nn.Parameter(torch.randn(nx, nq) / nq)
+        self.C = nn.Parameter(torch.randn(nq, nx) / math.sqrt(nx))
+        self.D = nn.Parameter(torch.randn(nq, nu) / math.sqrt(nu))
+        self.E = nn.Parameter(torch.randn(nx, nu) / math.sqrt(nu))
+        self.b, self.bx = nn.Parameter(torch.zeros(nq)), nn.Parameter(torch.zeros(nx))
+        self.gate_proj = nn.Linear(nu, n_heads)
+        nn.init.constant_(self.gate_proj.bias, gate_bias)
+
+    @property
+    def n_state(self) -> int:
+        return self.nx
+
+    def _block_rows(self) -> Tensor:
+        H, k = self.H, self.k
+        Ab = self.A_.view(H, k, H, k).permute(0, 2, 1, 3)                     # (H, H, k, k)
+        nA = torch.linalg.matrix_norm(Ab, ord=2) if k > 1 else Ab.abs()[..., 0, 0]
+        nB = self.B_.view(H, k, self.nq).norm(dim=1)                          # (H, nq)
+        c = self.C.view(self.nq, H, k).norm(dim=2).sum(1)                     # (nq,)
+        return nA.sum(1) + nB @ c                                             # (H,)
+
+    def weights(self) -> dict:
+        s = (self.rho / (self.rho + self._block_rows())).repeat_interleave(self.k)[:, None]
+        return dict(A=self.A_ * s, B=self.B_ * s)
+
+    def gate(self, u: Tensor) -> Tensor:
+        z = self.z_min + (1 - self.z_min) * torch.sigmoid(self.gate_proj(u))
+        return z.repeat_interleave(self.k, dim=-1)
+
+    def step(self, W: dict, x: Tensor, u: Tensor, z: Optional[Tensor] = None) -> Tensor:
+        z = self.gate(u) if z is None else z
+        f = x @ W["A"].T + torch.tanh(x @ self.C.T + u @ self.D.T + self.b) @ W["B"].T + u @ self.E.T + self.bx
+        return (1 - z) * x + z * f
+
+    def forward(self, u: Tensor, x0: Optional[Tensor] = None) -> Tensor:
+        W = self.weights()
+        B, T, _ = u.shape
+        x = u.new_zeros(B, self.nx) if x0 is None else x0
+        z = self.gate(u)
+        xs = []
+        for t in range(T):
+            x = self.step(W, x, u[:, t], z[:, t])
+            xs.append(x)
+        return torch.stack(xs, 1)
+
+    @torch.no_grad()
+    def certificate(self) -> dict:
+        s = self.rho / (self.rho + self._block_rows())
+        rs = (s * self._block_rows()).max().item()
+        return dict(row_sum=rs, rate_bound=1 - self.z_min * (1 - rs))

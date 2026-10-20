@@ -51,7 +51,7 @@ class Latent:
     @torch.no_grad()
     def prepare(self):
         kind = getattr(self.m, "kind", None)
-        if kind == "linf":
+        if kind in ("linf", "block"):
             return self.m.cell.weights()
         return self.m.cell.frame() if kind in ("ren", "sren") else None
 
@@ -62,7 +62,7 @@ class Latent:
         x0 = m.enc(img)
         if m.kind == "gru":
             return x0[None].contiguous()
-        if m.kind in ("ren", "sren", "linf"):
+        if m.kind in ("ren", "sren", "linf", "block"):
             return x0
         sts, tok = [], x0
         for b in m.blocks:
@@ -81,7 +81,7 @@ class Latent:
         if m.kind == "ren":
             xp, _ = m.cell.step(fr, x, an)
             return xp, m.dec(xp)
-        if m.kind == "linf":
+        if m.kind in ("linf", "block"):
             xn = m.cell.step(fr, x, an)
             return xn, m.dec(xn)
         if m.kind == "sren":

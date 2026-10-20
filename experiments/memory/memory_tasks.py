@@ -126,6 +126,19 @@ class LinfGated(nn.Module):
         return float((A.abs().sum(1) + B.abs() @ C.abs().sum(1)).max())
 
 
+class BlockOut(nn.Module):
+    """BlockGatedRNN (têtes de 2, une porte par tête, norme mixte max ℓ²) + lecture linéaire."""
+
+    def __init__(self, nu, n, k=2, ny=1):
+        super().__init__()
+        from ctrlnmod.models.discrete.linf_gated import BlockGatedRNN
+        self.m = BlockGatedRNN(nu, n // k, k=k)
+        self.C = nn.Linear(n, ny)
+
+    def forward(self, u):
+        return self.C(self.m(u))
+
+
 class GRUm(nn.Module):
     def __init__(self, nu, n):
         super().__init__()
@@ -182,7 +195,8 @@ class Mamba2m(nn.Module):
 
 def make(kind, nu, n, gamma=None, ab=1.0):
     return {"ren": lambda: RENm(nu, n, gamma, ab), "free": lambda: FreeREN(nu, n), "sren": lambda: SRENm(nu, n),
-            "linf": lambda: LinfGated(nu, n), "gru": lambda: GRUm(nu, n), "lru": lambda: LRUm(nu, n),
+            "linf": lambda: LinfGated(nu, n), "block": lambda: BlockOut(nu, n), "gru": lambda: GRUm(nu, n),
+            "lru": lambda: LRUm(nu, n),
             "mamba2": lambda: Mamba2m(nu, n)}[kind]()
 
 

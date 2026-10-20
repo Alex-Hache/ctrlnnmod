@@ -13,7 +13,7 @@ import numpy as np
 src = sys.argv[1] if len(sys.argv) > 1 else "experiments/pixel_wm/results_modal"
 out = sys.argv[2] if len(sys.argv) > 2 else "experiments/pixel_wm/analysis"
 os.makedirs(out, exist_ok=True)
-LAB = {"linf": "RNN à portes par unité, certifié ℓ∞ (nouveau)", "gru": "GRU (cuDNN)", "ren": "REN contractant (garanti)", "sren": "REN sélectif (garanti, Triton)",
+LAB = {"linf": "RNN à portes par unité, certifié ℓ∞ (nouveau)", "block": "RNN à portes par paire, certifié max-ℓ² (nouveau)", "gru": "GRU (cuDNN)", "ren": "REN contractant (garanti)", "sren": "REN sélectif (garanti, Triton)",
        "mamba2": "Mamba-2"}
 HOR = (10, 50, 250, 1000, 1499)
 
@@ -31,7 +31,7 @@ rows = ["| Modèle | n | graines | params | " + " | ".join(f"NMSE@{h}" for h in 
         " | min / run | contrôleur : RMSE réelle (rad) | pire run | RMSE imaginée | gradient max |",
         "|---" * (9 + len(HOR)) + "|"]
 summary = {}
-for kind in ("gru", "ren", "sren", "linf", "mamba2"):
+for kind in ("gru", "ren", "sren", "linf", "block", "mamba2"):
     for n in (256, 1024):
         P, I = pred.get((kind, n), []), imag.get((kind, n), [])
         if not P:
