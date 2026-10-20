@@ -262,6 +262,7 @@ def run_orth(kind, phi_frac, lr, seed, n=4, iters=20000, tol=1e-10):
 
 
 LRS = (1e-3, 3e-3, 1e-2, 3e-2, 0.1, 0.3, 1.0)
+LRS_KL = (1e-6, 3e-6, 1e-5, 3e-5, 1e-4, 3e-4, 1e-3, 3e-3, 1e-2, 3e-2, 0.1, 0.3, 1.0)
 
 
 def _job(a):
@@ -286,7 +287,7 @@ if __name__ == "__main__":
     if a.task in ("psd", "psdkl"):
         jobs = [(a.task, k, t, lr, s) for k, t, lr, s in itertools.product(
             ("euclid", "bm", "chol", "cholexp", "exps", "geo_expm", "geo_cayley"),
-            ("wellcond", "illcond", "clustered", "nearbdry"), LRS, (0, 1))]
+            ("wellcond", "illcond", "clustered", "nearbdry"), LRS if a.task == "psd" else LRS_KL, (0, 1))]
     else:
         jobs = [("orth", k, p, lr, s) for k, p, lr, s in itertools.product(
             ("geo_expm", "geo_cayley", "polar"), (0.1, 0.5, 0.8, 0.95), LRS, (0, 1))]
