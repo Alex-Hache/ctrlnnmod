@@ -17,22 +17,28 @@ Refuser tout travail qui ne sert pas cette affirmation.
 
 ## Items (ordre de priorité)
 
-### 1. Corriger et relancer `experiments/memory/set_vs_metric.py` — PROCHAIN
+### Constat (2026-10-20)
 
-État : test actuel invalide. Le pas ramené dans θ ne suit pas le pas euclidien (écart 13 à 63×). λ = 1e-6 sans contrôle du pas.
+Lean ne contient que des énoncés du premier ordre (`gd_induced`, `riem_step_exact`) et une vitesse en 1/K sous hypothèse de régularité. Aucun théorème ne relie κ(JJᵀ) à une vitesse.
+Conséquence de `riem_step_exact` : au premier ordre, `ren_eucl` **est** le modèle libre tant que la trajectoire libre reste dans S. Le test set_vs_metric mesure donc la courbure de Φ et les sorties du bord, pas « ensemble ou métrique ».
 
-Actions :
-- Régularisation relative : λ = 1e-3 · ‖JJᵀ‖.
-- Accepter le pas si l'écart au pas euclidien < 10 %. Sinon diviser le pas par 2.
-- Journaliser κ(JJᵀ), l'écart du pas et le rang le long de la trajectoire.
-- Test rapide local, puis Modal CPU (~10 min, < 1 $).
+Affirmation reformulée (cible) : l'écart contraint/libre = terme de métrique (éliminable par préconditionnement, borné par κ(JJᵀ) à la solution) + terme de bord (nul si la trajectoire libre reste dans l'intérieur de S).
 
-Critère de validité (à vérifier d'abord) : écart du pas < 10 % sur ≥ 95 % des itérations, sur un test rapide **et** sur un test 10× plus long. Sinon : test invalide, ne pas interpréter.
+### 1. Lean : T2 puis T1 (these-lean, `TheseLean/Ext/InducedRate.lean`) — FAIT
 
-Critère de réussite :
-- `ren_eucl` ≈ REN (perte finale à ±20 %) → l'ensemble compte. Réfute l'affirmation.
-- `ren_eucl` ≈ libre (à ±20 %) → la métrique compte. Confirme l'affirmation.
-- Entre les deux → résultat mixte. Noter la fraction de l'écart fermée.
+- **T2 (écart du pas)** : pour Φ de classe C² avec ‖D²Φ‖ ≤ M, le pas Δθ = Jᵀ(JJᵀ)⁻¹s vérifie ‖Φ(θ+Δθ) − (Φ(θ)+s)‖ ≤ (M/2)·‖s‖²/σ_min(J)².
+- **T1 (vitesse locale)** : en un minimum W* (∇L = 0), Hess_θ(L∘Φ) = JᵀHJ ; sur l'image de Jᵀ, λ_min(H)σ_min(J)² ≤ JᵀHJ ≤ λ_max(H)σ_max(J)², donc κ_eff ≤ κ(H)·κ(JJᵀ). Contraction de la GD linéarisée en 1 − 1/κ_eff.
+
+Critère : `lake build` vert, 0 `sorry`, axiomes standard.
+
+### 1b. Données existantes : la trajectoire libre sort-elle de S ?
+
+Lire ρ_A (et la norme ℓ∞ pour les classes ℓ∞) dans les JSON des runs libres existants. Coût nul.
+Critère : sortie de S sur ≥ 1 graine → le terme de bord existe sur cette tâche. Aucune sortie → l'écart observé est un terme de métrique.
+
+### 1c. set_vs_metric (suspendu)
+
+Ne pas relancer avant T2 et T3. Prédiction de T2 à vérifier : écart du pas ∝ 1/σ_min(J)². Journaliser σ_min(J) et κ(JJᵀ).
 
 ### 2. Préconditionnement par (JJᵀ)⁻¹ sur les oscillateurs ℓ∞/blocs
 
@@ -61,6 +67,7 @@ Critère : tests existants verts ; κ initial des modèles H∞ < 1e2 ; rang de 
 
 ### 5. Lean (these-lean)
 
+- **T3 (décomposition)** : en temps continu, le flot riemannien sur θ égale le flot libre sur W tant que celui-ci reste dans l'intérieur de S. Ne s'applique pas à H2 (sphère, intérieur vide) avant la correction par la boule.
 - Daleckii–Krein pour exp(S) (dérivée de Fréchet de l'exponentielle, absente de Mathlib).
 - Loi en κ pour une perte générale.
 
@@ -81,3 +88,5 @@ Ne pas commencer avant que les items 1 et 2 aient un résultat valide.
 ## Journal
 
 - 2026-10-20 : roadmap créée. Test set_vs_metric déclaré invalide.
+- 2026-10-20 : bilan Lean ↔ résultats. Items réordonnés : théorie (T2, T1) avant calcul.
+- 2026-10-20 : T2 et T1 démontrés (`Ext/InducedRate`, 128 énoncés, 0 `sorry`). Prochain : 1b.
