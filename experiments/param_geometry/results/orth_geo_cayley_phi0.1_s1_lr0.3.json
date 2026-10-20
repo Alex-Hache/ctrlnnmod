@@ -1,0 +1,1 @@
+{"task": "orth", "kind": "geo_cayley", "phi_frac": 0.1, "lr": 0.3, "seed": 1, "status": "ok", "it_tol": 12, "final": 6.004918449853709e-11, "log": [0.04894348370484642], "time": 0.0065577030181884766}

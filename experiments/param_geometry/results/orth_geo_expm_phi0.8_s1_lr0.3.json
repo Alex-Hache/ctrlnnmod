@@ -1,0 +1,1 @@
+{"task": "orth", "kind": "geo_expm", "phi_frac": 0.8, "lr": 0.3, "seed": 1, "status": "ok", "it_tol": 16, "final": 4.861767505263352e-11, "log": [1.8090169943749475], "time": 0.015509843826293945}

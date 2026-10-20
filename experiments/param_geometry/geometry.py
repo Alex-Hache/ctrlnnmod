@@ -158,16 +158,29 @@ def psd_target(name, n, seed):
     return (Q * lam) @ Q.T
 
 
-def run_psd(kind, target, lr, seed, n=6, iters=20000, tol=1e-10):
+def run_psd(kind, target, lr, seed, n=6, iters=20000, tol=1e-10, loss="frob"):
+    """loss = "frob" : ½‖H − H*‖² (courbure euclidienne : la métrique euclidienne est idéale) ;
+    loss = "kl" : tr(H H*⁻¹) − log det(H H*⁻¹) − n (= 2 KL entre gaussiennes ; courbure
+    H⁻¹ ⊗ H⁻¹ : la métrique invariante affine est idéale, exp(S) en est proche)."""
     Hs = psd_target(target, n, seed)
+    Hsi = torch.linalg.inv(Hs)
     m = PSDParam(kind, torch.eye(n))
     fp0 = fingerprint(m)
     opt = torch.optim.SGD(m.parameters(), lr=lr)
     nrm = float((Hs ** 2).sum())
     log, it_tol, status, t0 = [], None, "ok", time.time()
     for it in range(iters):
-        L = 0.5 * ((m.H() - Hs) ** 2).sum()
-        rel = float(L.detach()) * 2 / nrm
+        H = m.H()
+        if loss == "kl":
+            ev = torch.linalg.eigvalsh(sym(H))
+            if ev[0] <= 0:
+                status = f"left_cone@{it}"
+                break
+            L = torch.trace(H @ Hsi) - torch.logdet(H @ Hsi) - n
+            rel = float(L.detach())
+        else:
+            L = 0.5 * ((H - Hs) ** 2).sum()
+            rel = float(L.detach()) * 2 / nrm
         if not math.isfinite(rel):
             status = f"diverged@{it}"
             break
@@ -187,7 +200,8 @@ def run_psd(kind, target, lr, seed, n=6, iters=20000, tol=1e-10):
             fpS = fingerprint(m)
         except Exception as e:  # noqa: BLE001
             fpS = dict(error=repr(e)[:100])
-    return dict(task="psd", kind=kind, target=target, lr=lr, seed=seed, status=status, it_tol=it_tol,
+    return dict(task="psd" if loss == "frob" else "psdkl", kind=kind, target=target, lr=lr, seed=seed,
+                status=status, it_tol=it_tol,
                 final=final, log=log, fp_init=fp0, fp_final=fpS, time=time.time() - t0)
 
 
@@ -252,9 +266,9 @@ LRS = (1e-3, 3e-3, 1e-2, 3e-2, 0.1, 0.3, 1.0)
 
 def _job(a):
     torch.set_num_threads(1)
-    if a[0] == "psd":
-        r = run_psd(*a[1:])
-        name = f"psd_{a[1]}_{a[2]}_s{a[4]}_lr{a[3]}"
+    if a[0] in ("psd", "psdkl"):
+        r = run_psd(*a[1:], loss="kl" if a[0] == "psdkl" else "frob")
+        name = f"{a[0]}_{a[1]}_{a[2]}_s{a[4]}_lr{a[3]}"
     else:
         r = run_orth(*a[1:])
         name = f"orth_{a[1]}_phi{a[2]}_s{a[4]}_lr{a[3]}"
@@ -264,13 +278,13 @@ def _job(a):
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
-    ap.add_argument("task", choices=["psd", "orth"])
+    ap.add_argument("task", choices=["psd", "psdkl", "orth"])
     ap.add_argument("--sweep", action="store_true")
     ap.add_argument("--part", default="all")
     a = ap.parse_args()
     os.makedirs(OUT, exist_ok=True)
-    if a.task == "psd":
-        jobs = [("psd", k, t, lr, s) for k, t, lr, s in itertools.product(
+    if a.task in ("psd", "psdkl"):
+        jobs = [(a.task, k, t, lr, s) for k, t, lr, s in itertools.product(
             ("euclid", "bm", "chol", "cholexp", "exps", "geo_expm", "geo_cayley"),
             ("wellcond", "illcond", "clustered", "nearbdry"), LRS, (0, 1))]
     else:
