@@ -1,0 +1,1 @@
+{"task": "psdkl", "kind": "bm", "target": "illcond", "lr": 0.1, "seed": 1, "status": "left_cone@4", "it_tol": null, "final": 6.198255669024354e+16, "log": [1308.391115392176], "fp_init": {"rank": 21, "dim": 21, "ev_min": 3.9999960000000003, "ev_max": 3.999996000000001, "kappa": 1.0000000000000002}, "fp_final": null, "time": 0.0022454261779785156}

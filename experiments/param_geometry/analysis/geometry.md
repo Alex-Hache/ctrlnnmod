@@ -12,6 +12,18 @@ Itérations jusqu'à ‖H − H*‖²/‖H*‖² < 1e-10 (médiane sur 2 graines
 | geotorch PD, Q par expm | 6 / 21 | ∞ | 333 | 2266 | > 20 000 (4e-05) | 86 | > 20 000 (7e-03) |
 | geotorch PD, Q par Cayley | 6 / 21 | ∞ | 303 | 2652 | > 20 000 (6e-05) | 78 | > 20 000 (7e-03) |
 
+## Même chose, perte KL : tr(H H*⁻¹) − log det(H H*⁻¹) − n
+
+| Paramétrisation | bien conditionnée | mal conditionnée | valeurs propres groupées | près du bord |
+|---|---|---|---|---|
+| H libre + projection | 1010 | > 20 000 (3e+00) | 36 | > 20 000 (6e+03) |
+| XᵀX + εI (ctrlnnmod, REN) | 86 | 2561 | 12 | 11131 |
+| LLᵀ + εI (Cholesky) | 127 | 10143 | 25 | 11069 |
+| Cholesky, diag. exp | 230 | 4359 | 25 | > 20 000 (4e-07) |
+| exp(S) | 6 | 1416 | 112 | 12070 |
+| geotorch PD, Q par expm | > 20 000 (2e-03) | > 20 000 (1e-01) | 59 | > 20 000 (2e-05) |
+| geotorch PD, Q par Cayley | 10269 | > 20 000 (2e-08) | 207 | > 20 000 (7e-02) |
+
 ## Matrices orthogonales (SO(4), deux plans tournés de φ*, départ Q = I)
 
 | Paramétrisation | φ* = 0,1π | 0,5π | 0,8π | 0,95π |

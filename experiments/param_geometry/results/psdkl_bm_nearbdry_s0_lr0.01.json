@@ -1,0 +1,1 @@
+{"task": "psdkl", "kind": "bm", "target": "nearbdry", "lr": 0.01, "seed": 0, "status": "diverged@3", "it_tol": null, "final": NaN, "log": [13310.605035896182], "fp_init": {"rank": 21, "dim": 21, "ev_min": 3.9999960000000003, "ev_max": 3.999996000000001, "kappa": 1.0000000000000002}, "fp_final": null, "time": 0.0015826225280761719}

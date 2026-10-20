@@ -268,8 +268,12 @@ LRS_KL = (1e-6, 3e-6, 1e-5, 3e-5, 1e-4, 3e-4, 1e-3, 3e-3, 1e-2, 3e-2, 0.1, 0.3, 
 def _job(a):
     torch.set_num_threads(1)
     if a[0] in ("psd", "psdkl"):
-        r = run_psd(*a[1:], loss="kl" if a[0] == "psdkl" else "frob")
         name = f"{a[0]}_{a[1]}_{a[2]}_s{a[4]}_lr{a[3]}"
+        try:
+            r = run_psd(*a[1:], loss="kl" if a[0] == "psdkl" else "frob")
+        except Exception as e:  # noqa: BLE001  (pas trop grand : NaN puis eigh qui échoue)
+            r = dict(task=a[0], kind=a[1], target=a[2], lr=a[3], seed=a[4], status=f"error: {repr(e)[:80]}",
+                     it_tol=None, final=None, log=[])
     else:
         r = run_orth(*a[1:])
         name = f"orth_{a[1]}_phi{a[2]}_s{a[4]}_lr{a[3]}"

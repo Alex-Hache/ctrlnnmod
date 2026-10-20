@@ -1,0 +1,1 @@
+{"task": "psdkl", "kind": "cholexp", "target": "illcond", "lr": 0.003, "seed": 0, "status": "diverged@21", "it_tol": null, "final": NaN, "log": [1308.3911153921918, 2.556764091530265e+16], "fp_init": {"rank": 21, "dim": 21, "ev_min": 1.9999980000000006, "ev_max": 3.9999920000040006, "kappa": 1.9999979999999997}, "fp_final": null, "time": 0.012881040573120117}
