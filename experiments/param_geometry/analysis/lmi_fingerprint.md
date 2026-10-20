@@ -44,3 +44,26 @@ sqrtm : κ suit cond(P) (terme −½P⁻¹M : ∂A/∂M = P⁻¹ et ∂A/∂P �
 valeurs singulières 10 à 1000 fois plus grandes que G, S, Q, H : déséquilibre d'échelle entre blocs.
 Riccati : pas de P⁻¹, blocs équilibrés, κ peu lié à cond(P) ; les pôles sont presque sur l'axe
 imaginaire. Hypothèse (non prouvée) : κ vient du départ près du bord de stabilité.
+
+## Cause commune de κ en H∞ : le spectre de P au départ (`p_init.py`, `riccati_rank.py`)
+
+- La marge α n'y est pour rien : A dépend de α par −αI seulement, donc J ne dépend pas de α.
+- Le rang de la dissipation BBᵀ/γ² + GᵀG (≤ nu + ny) n'y est pour rien non plus : avec un rang
+  plein (nu + ny ≥ nx), κ reste ≈ 1e8 (`riccati_rank.md`).
+- La cause est λ_min(P). L'initialisation geotorch donne λ(P) ∈ [1,8e-4 ; 2,6].
+  Riccati : A = N P, donc A est presque singulier et un pôle est presque en 0 ; la pire direction de J
+  est dans A (84–88 % de l'énergie). sqrtm : la pire direction est dans C = G P (99 %), et les plus
+  grandes valeurs singulières explosent par P⁻¹M (‖A‖ = 4072 à λ_min(P) = 1,8e-4).
+
+| Paramétrisation | PD | P aléatoire : κ / rang | P = I : κ / rang |
+|---|---|---|---|
+| sqrtm | geotorch | 5,6e6 / 56 sur 60 | 7,0e2 / 60 |
+| sqrtm | XᵀX | 4,7e5 / 58 | **9,5e1 / 60** |
+| Riccati | geotorch | 1,6e7 / 59 | 2,8e2 / **45** |
+| Riccati | XᵀX | 2,0e7 / 60 | 3,2e5 / 60 |
+
+P = I divise κ par 1e4 à 1e5. Riccati + geotorch en P = I perd exactement 21 − 6 = 15 directions :
+c'est la prédiction de `eig_frozen_at_scalar` (vecteurs propres figés en cI). Riccati n'a pas de
+redondance (60 paramètres pour 60 sorties), sqrtm en a (Q, M, H) et compense.
+Question ouverte : pourquoi Riccati + XᵀX reste à 3e5 en P = I.
+Recommandations : initialiser P bien conditionné ; ne pas initialiser geotorch PD en cI pour Riccati.
