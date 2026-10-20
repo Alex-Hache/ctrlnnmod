@@ -28,3 +28,19 @@ Conséquence : le modèle ne peut pas apprendre un système de norme H2 < γ.
 Correction proposée : σ = s · √(softmax_η(L)), avec s = sigmoid(c) ∈ (0, 1).
 Autre constat : à l'initialisation, max Re λ(A) ∈ [−0,006 ; −0,001], donc les pôles sont presque
 sur l'axe imaginaire (départ près du bord de stabilité).
+
+Note : l'égalité ‖G‖_H2 = γ est le théorème 3.3.12 de la thèse (Lean : `thm_3_3_12_trace`). L'apport ici est sa conséquence géométrique (rang de JJᵀ = dim − 1).
+
+## H∞ : d'où vient κ (nx = 6, 8 graines, `hinf_probe.py`)
+
+| Paramétrisation | PD | κ médian | cond(P) médian | corr(log κ, log cond P) | max Re λ(A) médian |
+|---|---|---|---|---|---|
+| sqrtm | geotorch | 5,6e6 | 100 | 0,91 | −0,64 |
+| sqrtm | XᵀX | 4,7e5 | 42 | 0,86 | −1,56 |
+| Riccati | geotorch | 1,6e7 | 100 | 0,69 | −0,020 |
+| Riccati | XᵀX | 2,0e7 | 42 | 0,13 | −0,045 |
+
+sqrtm : κ suit cond(P) (terme −½P⁻¹M : ∂A/∂M = P⁻¹ et ∂A/∂P ∝ P⁻¹MP⁻¹). Les blocs P et M ont des
+valeurs singulières 10 à 1000 fois plus grandes que G, S, Q, H : déséquilibre d'échelle entre blocs.
+Riccati : pas de P⁻¹, blocs équilibrés, κ peu lié à cond(P) ; les pôles sont presque sur l'axe
+imaginaire. Hypothèse (non prouvée) : κ vient du départ près du bord de stabilité.
