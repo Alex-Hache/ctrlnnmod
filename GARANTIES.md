@@ -2,7 +2,7 @@
 
 Chaque paramétrisation de `ctrlnmod` repose sur un théorème. Ces théorèmes sont prouvés en
 Lean 4 dans le dépôt [these-lean](https://github.com/Alex-Hache/these-lean)
-(62 énoncés de la thèse + 37 énoncés d'extension, aucun `sorry`). Les tests `tests/lean/test_lean_guarantees.py` vérifient
+(62 énoncés de la thèse + 42 énoncés d'extension, aucun `sorry`). Les tests `tests/lean/test_lean_guarantees.py` vérifient
 numériquement, sur des paramètres aléatoires, que le code respecte chaque énoncé.
 
 ```bash
@@ -25,6 +25,7 @@ pytest tests/lean
 | `models.discrete.ExplicitREN` (extension, hors thèse) | gain incrémental $\le \gamma$, contraction de taux $\bar\alpha$, pour tout paramètre ; $D_{11} = 0$ (coût d'un GRU) | `explicit_ren_param`, `explicit_ren_step`, `explicit_ren_gain`, `contraction_pow` (fichier `Ext/ExplicitREN.lean`) | `test_explicit_ren_gain`, `test_explicit_ren_contraction` | conforme |
 | `ExplicitREN` (γ, ᾱ) | oubli certifié : $\|\Delta y_k\| \le \gamma\bar\alpha^k\|\Delta u_0\|$, mémoire bornée quelle que soit la largeur | `explicit_ren_forgetting`, `certified_forgetting` | `test_ren_pulse_forgetting` | conforme |
 | `LinfGatedRNN` (portes par unité) | contraction $\ell_\infty$ pour toute suite de portes, somme de lignes $< \rho$ | `gated_linf_contraction`, `rowsum_ABC` | `test_linf_gated_contraction` | conforme |
+| PB-REN (`ExplicitREN` de gain γ) + world model appris | boucle fermée de gain incrémental fini si $\gamma\,\gamma_P < 1$ ($\gamma_P$ : gain du canal d'erreur du modèle) | `pb_ren_small_gain`, `pb_ren_model_error` | `test_pb_ren_small_gain` | conforme |
 | `BetaLayer` (linéarisation) | $\beta(x)$ inversible | `prop_4_1_5` (hypothèse) | — | conforme si `func='softplus'` et $n_{in} = n_{out}$ |
 
 ## Corrections faites sur cette branche

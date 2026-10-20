@@ -374,3 +374,31 @@ def test_ren_pulse_forgetting():
             du0 = (u2[0, 0] - u[0, 0]).norm()
             for k in range(1, 30):
                 assert (y2[0, k] - y1[0, k]).norm() <= gamma * ab ** k * du0 * (1 + 1e-9) + 1e-12
+
+
+def test_pb_ren_small_gain():
+    """pb_ren_small_gain : REN de gain γ dans une boucle où l'erreur de modèle e_t = L v_{t−1}
+    (canal de gain γ_P = L, β_P = 0). Si γ L < 1 : ‖Δv‖_T ≤ γ ‖Δd‖_T / (1 − γ L) pour tout T."""
+    from ctrlnmod.models.discrete.explicit_ren import ExplicitREN
+    gamma, L = 0.8, 1.0
+    for seed in range(5):
+        torch.manual_seed(seed)
+        m = ExplicitREN(2, 2, 6, 10, gamma=gamma, alpha_bar=1.0).double()
+        with torch.no_grad():
+            for p in m.parameters():
+                p.add_(torch.randn_like(p))
+            fr = m.frame()
+            T = 60
+            d1 = torch.randn(1, T, 2, dtype=torch.float64)
+            d2 = d1 + 0.5 * torch.randn(1, T, 2, dtype=torch.float64)
+            def loop(d):
+                x, v, vs = torch.zeros(1, 6, dtype=torch.float64), torch.zeros(1, 2, dtype=torch.float64), []
+                for t in range(T):
+                    x, v = m.step(fr, x, d[:, t] + L * v)          # ŵ = d + e, e_t = L v_{t−1}
+                    vs.append(v)
+                return torch.cat(vs)
+            dv, dd = loop(d1) - loop(d2), (d1 - d2)[0]
+            for k in range(1, T + 1):
+                lhs = dv[:k].pow(2).sum().sqrt()
+                rhs = gamma * dd[:k].pow(2).sum().sqrt() / (1 - gamma * L)
+                assert lhs <= rhs * (1 + 1e-9) + 1e-12
