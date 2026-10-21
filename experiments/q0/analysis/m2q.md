@@ -83,3 +83,10 @@ Même mesure, descriptive, pour fix2 et PGD.
 ### Ordre et coût
 
 T1 (< 1 min) ; T3 (runs courts, arrêt au contact) ; T4 (30 runs × 3000 itér., ≈ 35–45 min sur 2 cœurs) ; T5 (< 2 min). Analyse : `analyze_m2q.py`, écrit avant les résultats.
+
+## Incident : contrôle c1 en échec pour A-lent et A-rapide (premier passage)
+
+- c1 exige que A-lent et A-rapide soient identiques à F' tant que r brut < ρ_t. Écart observé : 4,3e-3 (A-lent) et 8,9e-6 (A-rapide). Règle : pas de conclusion sur ces bras.
+- Cause trouvée : pour certaines valeurs de ρ_t (non représentables en float32, par ex. t = 504), s = ρ_t / max(r, ρ_t) vaut 1 + 6e-8 au lieu de 1. Première différence de perte : t = 504–505 (A-lent), 1501–1502 (A-rapide), soit juste après le début de la décroissance, avec un écart de 1e-8 ; l'écart grandit ensuite (dynamique sensible).
+- Correction : ρ_t arrondi en float32 avant usage (s = 1 exactement dans S_t). Seuls A-lent et A-rapide sont relancés (5 graines). Règles inchangées. Les résultats du premier passage sont gardés dans `results_m2q/invalide_c1/` (avec l'analyse d'avant correction) ; ils ne servent à aucune lecture.
+- T5 est relancé ensuite pour tous les bras (F', P, PGD, fix2 inchangés : runs déterministes).

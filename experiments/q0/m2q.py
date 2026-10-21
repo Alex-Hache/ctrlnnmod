@@ -114,8 +114,8 @@ def t4(arm, seed, iters=3000, lr=1e-2):
     losses, rraw, log, status, t0 = [], [], [], "ok", time.time()
     for it in range(iters + 1):
         rt = rho_t(arm, it)
-        if proj:
-            m.rho = rt
+        if proj:                       # ρ_t représentable en float32 : s = ρ_t / max(r, ρ_t) = 1 exactement dans S_t
+            m.rho = float(torch.tensor(rt, dtype=torch.float32))
         loss = ((model(u_tr) - y_tr) ** 2).mean()
         if not torch.isfinite(loss):
             status = f"diverged@{it}"

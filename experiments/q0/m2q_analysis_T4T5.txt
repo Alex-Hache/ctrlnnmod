@@ -1,0 +1,32 @@
+== T4 / T2 — Adam lr 1e-2, 3000 itér., init W₀'
+c0 (perte initiale identique pour les 6 bras) : passé
+c1 fix2 : écart max à F' tant que r brut < ρ_t = 0.0e+00 (pas vérifiés par graine : [2, 2, 2, 2, 2]) → passé
+c1 alent : écart max à F' tant que r brut < ρ_t = 4.3e-03 (pas vérifiés par graine : [808, 852, 786, 880, 906]) → ÉCHEC
+c1 arapide : écart max à F' tant que r brut < ρ_t = 8.9e-06 (pas vérifiés par graine : [1563, 1582, 1549, 1557, 1597]) → ÉCHEC
+c-fin (r max de W ≤ ρ + 1e-5 à la fin) : {'p': 'passé', 'pgd': 'passé', 'alent': 'passé', 'arapide': 'passé'}
+  free     test : 0.0012 0.0009 0.0019 0.0023 0.0018 | médiane 0.0018 | r max de W en fin : 56 60.5 64 59.5 64 | statuts : ['ok', 'ok', 'ok', 'ok', 'ok']
+  p        test : 0.1243 0.3404 0.2917 0.2878 0.2476 | médiane 0.2878 | r max de W en fin : 0.999 0.999 0.999 0.999 0.999 | statuts : ['ok', 'ok', 'ok', 'ok', 'ok']
+  pgd      test : 1.0423 0.9729 0.6576 0.7311 0.7693 | médiane 0.7693 | r max de W en fin : 0.999 0.999 0.999 0.999 0.999 | statuts : ['ok', 'ok', 'ok', 'ok', 'ok']
+  fix2     test : 0.0000 0.0318 0.1701 0.2262 0.0250 | médiane 0.0318 | r max de W en fin : 2 2 2 2 2 | statuts : ['ok', 'ok', 'ok', 'ok', 'ok']
+  alent    test : 0.1106 0.2009 0.1332 0.1621 0.1284 | médiane 0.1332 | r max de W en fin : 0.999 0.999 0.999 0.999 0.999 | statuts : ['ok', 'ok', 'ok', 'ok', 'ok']
+  arapide  test : 0.4012 0.2622 0.1246 0.3694 0.1259 | médiane 0.2622 | r max de W en fin : 0.999 0.999 0.999 0.999 0.999 | statuts : ['ok', 'ok', 'ok', 'ok', 'ok']
+  alent : perte train médiane en t = 500 (début) 0.0617, en t = 2500 (fin de la décroissance) 0.1114, en t = 3000 0.0547 ; F' en t = 3000 0.0004
+  arapide : perte train médiane en t = 1500 (début) 0.0005, en t = 2000 (fin de la décroissance) 0.1916, en t = 3000 0.0859 ; F' en t = 3000 0.0004
+  P : têtes saturées en fin : [8, 8, 8, 8, 8] | r brut max en fin : [4.561, 5.917, 4.973, 4.09, 5.642]
+Validité T4 : F' médiane = 0.0018 → valide ; c0 ok
+Meilleur bras A (sélection sur 2 plannings) : alent, médiane 0.1332 (partiel) ; P 0.2878 (échoue)
+Ligne T4 : partiel ; part d'écart fermée g = 0.54 — ATTENTION : contrôle c1 ou c-fin en échec pour ce bras
+  (autre bras A : arapide médiane 0.2622, g = 0.09)
+Ligne T2 (PGD médiane 0.7693, échoue) : compatible avec « S est l'obstacle » (pour cette projection)
+Secondaire fix2 (ρ = 2 fixe) : médiane 0.0318 → réussit
+Prédictions écrites : F' réussit, P échoue, PGD échoue, A partiel, fix2 partiel → observé : {'free': 'réussit', 'p': 'échoue', 'pgd': 'échoue', 'alent': 'partiel', 'arapide': 'échoue', 'fix2': 'réussit'}
+
+== T5 — contraction empirique (norme max-ℓ² par tête, 2000 pas, float64)
+  p        E : 0.9935 0.9685 0.96 0.9776 0.9779 | d_T/d0 méd. (grande) : 3.1e-12 0 0 0 0 | (petite) : 3.4e-12 0 0 0 0
+  alent    E : 0.9882 0.9785 0.987 0.9854 0.9691 | d_T/d0 méd. (grande) : 1.4e-14 0 3.1e-15 1.1e-15 0 | (petite) : 0 0 0 0 0
+  arapide  E : 0.9761 0.9764 0.9878 0.9801 0.9818 | d_T/d0 méd. (grande) : 0 0 6.5e-14 0 0 | (petite) : 0 0 2e-13 0 0
+  pgd      E : 0.9937 0.9507 0.9797 0.948 0.9136 | d_T/d0 méd. (grande) : 1.2e-06 0 0 0 0 | (petite) : 1.2e-06 0 0 0 0
+  fix2     E : 1.858 1.337 1.174 1.116 1.439 | d_T/d0 méd. (grande) : 1.9e-09 1.3e-09 4.1e-10 1.5e-11 4.7e-09 | (petite) : 1.9e-09 1.3e-09 4e-10 1.5e-11 4e-09
+  free     E : 2.31 1.555 2.536 1.788 1.987 | d_T/d0 méd. (grande) : 1.6e-09 1e-09 1.1e-09 1.1e-09 7.6e-10 | (petite) : 1.7e-09 1.1e-09 1.1e-09 1.1e-09 7.7e-10
+Contrôle T5 (P : E ≤ 1 + 1e-4 sur les 5 graines) : passé
+Ligne T5 : ambigu

@@ -1,0 +1,63 @@
+== T1 — par quel bloc passe la descente (GD η = 0,03, W₀', pas avant contact)
+  s0 t_c = 5 (5 pas) | parts de ‖∇L‖² : lecture 0.783, B̃ 0.114, Ã 0.052, E 0.025, portes 0.019, biais 0.007, C 0.000, D 0.000 | v_B̃/v_Ã = 1.82 | v : Ã 1.02, B̃ 1.86, C 0.000989 | d(part)/dt le long de −∇L : Ãd -0.012, Ão -0.001, B̃C +0.517
+  s1 t_c = 3 (3 pas) | parts de ‖∇L‖² : lecture 0.717, B̃ 0.183, Ã 0.043, E 0.033, portes 0.020, biais 0.006, C 0.000, D 0.000 | v_B̃/v_Ã = 3.03 | v : Ã 0.902, B̃ 2.73, C 0.000784 | d(part)/dt le long de −∇L : Ãd +0.022, Ão +0.049, B̃C +1.031
+  s2 t_c = 5 (5 pas) | parts de ‖∇L‖² : lecture 0.763, B̃ 0.144, Ã 0.051, E 0.033, portes 0.009, biais 0.001, C 0.000, D 0.000 | v_B̃/v_Ã = 2.25 | v : Ã 1.01, B̃ 2.28, C 0.000779 | d(part)/dt le long de −∇L : Ãd +0.013, Ão +0.018, B̃C +0.541
+  s3 t_c = 7 (7 pas) | parts de ‖∇L‖² : lecture 0.740, B̃ 0.148, Ã 0.054, E 0.031, biais 0.015, portes 0.012, C 0.000, D 0.000 | v_B̃/v_Ã = 2.34 | v : Ã 0.75, B̃ 1.75, C 0.000664 | d(part)/dt le long de −∇L : Ãd +0.014, Ão -0.027, B̃C +0.490
+  s4 t_c = 9 (9 pas) | parts de ‖∇L‖² : lecture 0.861, B̃ 0.100, E 0.018, Ã 0.015, portes 0.003, biais 0.003, C 0.000, D 0.000 | v_B̃/v_Ã = 3.59 | v : Ã 0.495, B̃ 1.77, C 0.000615 | d(part)/dt le long de −∇L : Ãd +0.007, Ão +0.009, B̃C +0.348
+H1a (part de B̃ > 0,5) : FAUSSE
+H1b (v_B̃/v_Ã > 3) : ambiguë
+
+== T3 — famille β sous GD (η = 0,03, P-int, arrêt au contact ou à 5000 pas)
+  β = 0.3 s0: η·t_c = 0.51, L(t_c−1)/L0 = 0.733, X* = B̃ orientation, parts Ãd/Ão/B̃C 0.041/0.177/0.681 → 0.034/0.185/0.782 | L/L0 fin = 0.725 ⇒ contact
+  β = 0.3 s1: η·t_c = 0.27, L(t_c−1)/L0 = 0.862, X* = B̃ échelle, parts Ãd/Ão/B̃C 0.020/0.204/0.674 → 0.028/0.228/0.755 | L/L0 fin = 0.850 ⇒ contact
+  β = 0.3 s2: η·t_c = 0.42, L(t_c−1)/L0 = 0.746, X* = B̃ échelle, parts Ãd/Ão/B̃C 0.036/0.171/0.693 → 0.043/0.205/0.762 | L/L0 fin = 0.734 ⇒ contact
+  β = 0.3 s3: η·t_c = 0.63, L(t_c−1)/L0 = 0.811, X* = B̃ échelle, parts Ãd/Ão/B̃C 0.039/0.126/0.734 → 0.047/0.131/0.826 | L/L0 fin = 0.806 ⇒ contact
+  β = 0.3 s4: η·t_c = 0.81, L(t_c−1)/L0 = 0.665, X* = B̃ échelle, parts Ãd/Ão/B̃C 0.028/0.132/0.740 → 0.036/0.146/0.822 | L/L0 fin = 0.659 ⇒ contact
+  β = 0.3 : {'apprend': 0, 'contact': 5, 'budget': 0, 'div': 0}
+  β = 0.1 s0: η·t_c = 1.11, L(t_c−1)/L0 = 0.641, X* = Ã échelle, parts Ãd/Ão/B̃C 0.019/0.134/0.746 → 0.036/0.210/0.754 | L/L0 fin = 0.639 ⇒ contact
+  β = 0.1 s1: η·t_c = 0.72, L(t_c−1)/L0 = 0.748, X* = Ã échelle, parts Ãd/Ão/B̃C 0.020/0.204/0.674 → 0.033/0.254/0.714 | L/L0 fin = 0.743 ⇒ contact
+  β = 0.1 s2: η·t_c = 0.72, L(t_c−1)/L0 = 0.661, X* = Ã échelle, parts Ãd/Ão/B̃C 0.036/0.171/0.693 → 0.049/0.242/0.712 | L/L0 fin = 0.654 ⇒ contact
+  β = 0.1 s3: η·t_c = 1.32, L(t_c−1)/L0 = 0.732, X* = Ã orientation, parts Ãd/Ão/B̃C 0.039/0.126/0.734 → 0.053/0.161/0.786 | L/L0 fin = 0.729 ⇒ contact
+  β = 0.1 s4: η·t_c = 2.1, L(t_c−1)/L0 = 0.562, X* = B̃ échelle, parts Ãd/Ão/B̃C 0.028/0.132/0.740 → 0.048/0.162/0.790 | L/L0 fin = 0.561 ⇒ contact
+  β = 0.1 : {'apprend': 0, 'contact': 5, 'budget': 0, 'div': 0}
+  β = 0.03 s0: η·t_c = 1.17, L(t_c−1)/L0 = 0.639, X* = Ã échelle, parts Ãd/Ão/B̃C 0.019/0.134/0.746 → 0.038/0.215/0.748 | L/L0 fin = 0.637 ⇒ contact
+  β = 0.03 s1: η·t_c = 1.95, L(t_c−1)/L0 = 0.664, X* = Ã échelle, parts Ãd/Ão/B̃C 0.035/0.227/0.637 → 0.026/0.339/0.636 | L/L0 fin = 0.663 ⇒ contact
+  β = 0.03 s2: η·t_c = 0.84, L(t_c−1)/L0 = 0.639, X* = Ã échelle, parts Ãd/Ão/B̃C 0.036/0.171/0.693 → 0.051/0.255/0.694 | L/L0 fin = 0.634 ⇒ contact
+  β = 0.03 s3: η·t_c = 1.26, L(t_c−1)/L0 = 0.739, X* = Ã orientation, parts Ãd/Ão/B̃C 0.015/0.198/0.686 → 0.032/0.293/0.675 | L/L0 fin = 0.736 ⇒ contact
+  β = 0.03 s4: η·t_c = 2.82, L(t_c−1)/L0 = 0.545, X* = Ã échelle, parts Ãd/Ão/B̃C 0.028/0.132/0.740 → 0.058/0.191/0.751 | L/L0 fin = 0.545 ⇒ contact
+  β = 0.03 : {'apprend': 0, 'contact': 5, 'budget': 0, 'div': 0}
+  régime de flot (β = 0,03, graine 0) : η·t_c = 1.17 (η 0,03) contre 1.16 (η 0,01) → valide
+Règle T3 : aucun β, contact sur la majorité → aucune métrique de la famille ne garde le flot GD dans S
+
+== T4 / T2 — Adam lr 1e-2, 3000 itér., init W₀'
+c0 (perte initiale identique pour les 6 bras) : passé
+c1 fix2 : écart max à F' tant que r brut < ρ_t = 0.0e+00 (pas vérifiés par graine : [2, 2, 2, 2, 2]) → passé
+c1 alent : écart max à F' tant que r brut < ρ_t = 4.3e-03 (pas vérifiés par graine : [808, 852, 786, 880, 906]) → ÉCHEC
+c1 arapide : écart max à F' tant que r brut < ρ_t = 8.9e-06 (pas vérifiés par graine : [1563, 1582, 1549, 1557, 1597]) → ÉCHEC
+c-fin (r max de W ≤ ρ + 1e-5 à la fin) : {'p': 'passé', 'pgd': 'passé', 'alent': 'passé', 'arapide': 'passé'}
+  free     test : 0.0012 0.0009 0.0019 0.0023 0.0018 | médiane 0.0018 | r max de W en fin : 56 60.5 64 59.5 64 | statuts : ['ok', 'ok', 'ok', 'ok', 'ok']
+  p        test : 0.1243 0.3404 0.2917 0.2878 0.2476 | médiane 0.2878 | r max de W en fin : 0.999 0.999 0.999 0.999 0.999 | statuts : ['ok', 'ok', 'ok', 'ok', 'ok']
+  pgd      test : 1.0423 0.9729 0.6576 0.7311 0.7693 | médiane 0.7693 | r max de W en fin : 0.999 0.999 0.999 0.999 0.999 | statuts : ['ok', 'ok', 'ok', 'ok', 'ok']
+  fix2     test : 0.0000 0.0318 0.1701 0.2262 0.0250 | médiane 0.0318 | r max de W en fin : 2 2 2 2 2 | statuts : ['ok', 'ok', 'ok', 'ok', 'ok']
+  alent    test : 0.1106 0.2009 0.1332 0.1621 0.1284 | médiane 0.1332 | r max de W en fin : 0.999 0.999 0.999 0.999 0.999 | statuts : ['ok', 'ok', 'ok', 'ok', 'ok']
+  arapide  test : 0.4012 0.2622 0.1246 0.3694 0.1259 | médiane 0.2622 | r max de W en fin : 0.999 0.999 0.999 0.999 0.999 | statuts : ['ok', 'ok', 'ok', 'ok', 'ok']
+  alent : perte train médiane en t = 500 (début) 0.0617, en t = 2500 (fin de la décroissance) 0.1114, en t = 3000 0.0547 ; F' en t = 3000 0.0004
+  arapide : perte train médiane en t = 1500 (début) 0.0005, en t = 2000 (fin de la décroissance) 0.1916, en t = 3000 0.0859 ; F' en t = 3000 0.0004
+  P : têtes saturées en fin : [8, 8, 8, 8, 8] | r brut max en fin : [4.561, 5.917, 4.973, 4.09, 5.642]
+Validité T4 : F' médiane = 0.0018 → valide ; c0 ok
+Meilleur bras A (sélection sur 2 plannings) : alent, médiane 0.1332 (partiel) ; P 0.2878 (échoue)
+Ligne T4 : partiel ; part d'écart fermée g = 0.54 — ATTENTION : contrôle c1 ou c-fin en échec pour ce bras
+  (autre bras A : arapide médiane 0.2622, g = 0.09)
+Ligne T2 (PGD médiane 0.7693, échoue) : compatible avec « S est l'obstacle » (pour cette projection)
+Secondaire fix2 (ρ = 2 fixe) : médiane 0.0318 → réussit
+Prédictions écrites : F' réussit, P échoue, PGD échoue, A partiel, fix2 partiel → observé : {'free': 'réussit', 'p': 'échoue', 'pgd': 'échoue', 'alent': 'partiel', 'arapide': 'échoue', 'fix2': 'réussit'}
+
+== T5 — contraction empirique (norme max-ℓ² par tête, 2000 pas, float64)
+  p        E : 0.9935 0.9685 0.96 0.9776 0.9779 | d_T/d0 méd. (grande) : 3.1e-12 0 0 0 0 | (petite) : 3.4e-12 0 0 0 0
+  alent    E : 0.9882 0.9785 0.987 0.9854 0.9691 | d_T/d0 méd. (grande) : 1.4e-14 0 3.1e-15 1.1e-15 0 | (petite) : 0 0 0 0 0
+  arapide  E : 0.9761 0.9764 0.9878 0.9801 0.9818 | d_T/d0 méd. (grande) : 0 0 6.5e-14 0 0 | (petite) : 0 0 2e-13 0 0
+  pgd      E : 0.9937 0.9507 0.9797 0.948 0.9136 | d_T/d0 méd. (grande) : 1.2e-06 0 0 0 0 | (petite) : 1.2e-06 0 0 0 0
+  fix2     E : 1.858 1.337 1.174 1.116 1.439 | d_T/d0 méd. (grande) : 1.9e-09 1.3e-09 4.1e-10 1.5e-11 4.7e-09 | (petite) : 1.9e-09 1.3e-09 4e-10 1.5e-11 4e-09
+  free     E : 2.31 1.555 2.536 1.788 1.987 | d_T/d0 méd. (grande) : 1.6e-09 1e-09 1.1e-09 1.1e-09 7.6e-10 | (petite) : 1.7e-09 1.1e-09 1.1e-09 1.1e-09 7.7e-10
+Contrôle T5 (P : E ≤ 1 + 1e-4 sur les 5 graines) : passé
+Ligne T5 : ambigu
