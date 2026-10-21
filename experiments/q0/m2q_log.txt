@@ -37,3 +37,34 @@ pint    gd lr=0.03 β=0.1 s4: ok L0=1.1811 train=0.6622 test=1.0468 | X*=B_ éch
 pint    gd lr=0.03 β=0.03 s4: ok L0=1.1811 train=0.6434 test=1.0310 | X*=A_ échelle parts(Ãd,Ão,B̃C) 0.028,0.132,0.740 → 0.058,0.191,0.751 | t_c=94 L(t_c−1)/L0=0.545 q=0.20 rmask(min/méd/max)=0.963/0.983/1.028 g_GD=+1.329 → mixte 13s
 pint    gd lr=0.01 β=0.03 s0: ok L0=0.8886 train=0.5667 test=0.9533 | X*=A_ échelle parts(Ãd,Ão,B̃C) 0.019,0.134,0.746 → 0.037,0.214,0.748 | t_c=116 L(t_c−1)/L0=0.638 q=0.45 rmask(min/méd/max)=0.947/0.995/1.025 g_GD=+0.577 → mixte 12s
 T3 fini 21:04:32
+t4 free    s0: ok train=0.0004 test=0.0012 rW_end=55.989 278s
+t4 p       s0: ok train=0.0568 test=0.1243 rW_end=0.999 281s
+t4 pgd     s0: ok train=0.3314 test=1.0423 rW_end=0.999 270s
+t4 fix2    s0: ok train=0.0000 test=0.0000 rW_end=2.000 273s
+t4 alent   s0: ok train=0.0547 test=0.1106 rW_end=0.999 286s
+t4 arapide s0: ok train=0.1676 test=0.4012 rW_end=0.999 285s
+t4 free    s1: ok train=0.0003 test=0.0009 rW_end=60.462 297s
+t4 p       s1: ok train=0.1084 test=0.3404 rW_end=0.999 299s
+t4 pgd     s1: ok train=0.4987 test=0.9729 rW_end=0.999 290s
+t4 fix2    s1: ok train=0.0127 test=0.0318 rW_end=2.000 293s
+t4 alent   s1: ok train=0.0425 test=0.2009 rW_end=0.999 295s
+t4 arapide s1: ok train=0.0859 test=0.2622 rW_end=0.999 299s
+t4 free    s2: ok train=0.0004 test=0.0019 rW_end=64.015 294s
+t4 p       s2: ok train=0.1231 test=0.2917 rW_end=0.999 302s
+t4 pgd     s2: ok train=0.2095 test=0.6576 rW_end=0.999 293s
+t4 fix2    s2: ok train=0.0990 test=0.1701 rW_end=2.000 294s
+t4 alent   s2: ok train=0.0547 test=0.1332 rW_end=0.999 280s
+t4 arapide s2: ok train=0.0553 test=0.1246 rW_end=0.999 278s
+t4 free    s3: ok train=0.0004 test=0.0023 rW_end=59.458 271s
+t4 p       s3: ok train=0.1428 test=0.2878 rW_end=0.999 270s
+t4 pgd     s3: ok train=0.3437 test=0.7311 rW_end=0.999 271s
+t4 fix2    s3: ok train=0.1369 test=0.2262 rW_end=2.000 275s
+t4 alent   s3: ok train=0.0670 test=0.1621 rW_end=0.999 269s
+t4 arapide s3: ok train=0.1515 test=0.3694 rW_end=0.999 267s
+t4 free    s4: ok train=0.0003 test=0.0018 rW_end=63.989 268s
+t4 p       s4: ok train=0.0846 test=0.2476 rW_end=0.999 271s
+t4 pgd     s4: ok train=0.3891 test=0.7693 rW_end=0.999 261s
+t4 fix2    s4: ok train=0.0131 test=0.0250 rW_end=2.000 264s
+t4 alent   s4: ok train=0.0335 test=0.1284 rW_end=0.999 275s
+t4 arapide s4: ok train=0.0314 test=0.1259 rW_end=0.999 278s
+T4 fini 22:15:08
