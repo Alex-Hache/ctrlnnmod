@@ -121,7 +121,7 @@ Tous les runs : statut ok, contact avant 2000 pas (A) ou 5000 pas (G). Aucune di
 | 0,01 | 11–14 | 1,1–1,4e-2 | 0,906–0,940 | 0/5 | Ã ×5 | échelle ×4, orientation ×1 |
 
 - β = 1 réplique la calibration M2-bis sur les graines 1 à 4 (contact au pas 3 ou 4, perte −2 à −3 %, B̃, échelle).
-- À β ≤ 0,1, la part Ã hors diagonale de la tête de contact monte de +0,08 à +0,09 ; la part Ã diagonale de +0,01 à +0,02 ; la part B̃·C reste stable (±0,005).
+- À β ≤ 0,1, tête de contact : part Ã hors diagonale +0,05 à +0,09 ; part Ã diagonale +0,00 à +0,02 ; part B̃·C −0,01 à +0,03 à β = 0,1, au plus ±0,01 à β ≤ 0,03.
 - La prédiction écrite avant calcul est confirmée sur ses quatre points : V faux partout ; X* = Ã à β = 0,01 ; mode échelle ; contact vers t·lr ≈ 1e-2.
 - **Règle : β* = aucun. Ligne A : « même effet d'échelle d'Adam sur un autre bloc (Ã) ; la famille β sur B̃ ne suffit pas ; rien sur l'ensemble ».** Étape B non lancée.
 
@@ -198,7 +198,7 @@ Contrôle c0 passé (r_h = 0,5ρ à 1e-7 près ; parts visées exactes, 5 graine
 Établi sur ce banc (oscillateurs, `blockp`, 5 graines) :
 1. Depuis trois inits dans S (marges 0,1 et 0,5 ; part B̃·C 80 % et 10 %), le flot de gradient euclidien (régime de flot vérifié) sort de S avant que la perte baisse sous 0,72·L₀.
 2. Dans tous ces cas, la sortie vient de la hausse de la part B̃·C de r. Les parts Ã bougent peu sous GD.
-3. Sous Adam (lr 1e-3 ; β de 1 à 0,01 sur B̃), le contact arrive avant 0,90·L₀ pour toutes les inits. À β petit, le bloc moteur passe de B̃ à Ã (blocs hors diagonale).
+3. Sous Adam (lr 1e-3), le contact arrive avant que la perte passe sous 0,90·L₀ : depuis W₀' pour β de 1 à 0,01, depuis I1 et I2 pour β = 1 (la grille β n'a pas tourné depuis I1 et I2). À β ≤ 0,1, le bloc moteur passe de B̃ à Ã (blocs hors diagonale).
 
 Non établi :
 - Pourquoi la descente fait monter la part B̃·C (mécanisme non testé).
