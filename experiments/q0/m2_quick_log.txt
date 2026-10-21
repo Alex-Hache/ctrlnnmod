@@ -8,3 +8,17 @@ ren  adam lr=0.003 s0: ok test=0.2882 train=0.1197 24s
 ren  adam lr=0.01 s0: ok test=0.8476 train=0.4362 24s
 psat gd   lr=0.03 s0: ok test=0.8917 train=0.5148 marge∈[-2.38e-07, 0] contact@0 37s
 psat gd   lr=0.1 s0: ok test=0.8291 train=0.4679 marge∈[-2.38e-07, 0] contact@0 38s
+psat gd   lr=0.3 s0: ok test=0.7717 train=0.4449 marge∈[-2.98e-07, 0] contact@0 37s
+psat gd   lr=1 s0: ok test=1.0961 train=0.6437 marge∈[-3.58e-07, 0] contact@0 37s
+free gd   lr=0.03 s0: ok test=0.7853 train=0.4531 marge∈[-3.82, -1.19e-07] contact@0 35s
+free gd   lr=0.1 s0: ok test=0.7737 train=0.4363 marge∈[-4.09, -1.19e-07] contact@0 34s
+free gd   lr=1 s0: ok test=0.4838 train=0.2830 marge∈[-27.1, -1.19e-07] contact@0 34s
+free gd   lr=0.3 s0: ok test=0.7718 train=0.3922 marge∈[-10.7, -1.19e-07] contact@0 35s
+pint gd   lr=0.03 s0: ok test=0.8293 train=0.4696 marge∈[-1.79e-07, 0.0999] contact@5 37s
+pint gd   lr=0.1 s0: ok test=0.7718 train=0.4451 marge∈[-2.98e-07, 0.0999] contact@2 36s
+pint gd   lr=0.3 s0: ok test=0.7877 train=0.4420 marge∈[-2.98e-07, 0.0999] contact@1 34s
+pint gd   lr=1 s0: ok test=1.2842 train=0.7125 marge∈[-3.58e-07, 0.0999] contact@1 35s
+ren  gd   lr=0.1 s0: ok test=0.7662 train=0.3957 25s
+ren  gd   lr=0.03 s0: ok test=0.8463 train=0.4665 25s
+ren  gd   lr=0.3 s0: ok test=0.7869 train=0.4120 24s
+ren  gd   lr=1 s0: ok test=0.8680 train=0.4851 24s
