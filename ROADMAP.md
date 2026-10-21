@@ -62,7 +62,7 @@ Prédiction (code) : `blockp*` a un déficit de rang égal au nombre de têtes s
 Lecture : pour le cas Q0 propre, ni la métrique (κ) ni un point parasite n'expliquent l'échec. Il reste le bord (le modèle est collé à ∂S) ou « pas la contrainte ». M2 tranche.
 Limites : une graine ; Adam (métrique J·D·Jᵀ, pas JJᵀ) ; θ_fin non sauvegardé.
 
-### M2 — Bord : le run libre des blocs (local, ~170 s/run sur 2 cœurs) — PROCHAIN
+### M2 — Bord : le run libre des blocs (local, ~150 s/run sur 2 cœurs) — FAIT (2026-10-21)
 
 Le run libre des équations blocs n'existe pas. Lancer contraint et libre depuis le même W₀, en GD pur et en Adam, 5 graines. Journaliser la marge m(t) = ρ − max_h r_h(W) et la perte.
 Précision après M1 : l'init de `blockp*` est saturée (r brut ≈ 5 > ρ), donc W₀ est sur ∂S. Ajouter un bras « proj, init dans S » (Ã, B̃ réduits pour r < ρ). Dans S, Φ = identité : ce bras est le libre tant qu'il ne touche pas ∂S.
@@ -70,7 +70,18 @@ Précision après M1 : l'init de `blockp*` est saturée (r brut ≈ 5 > ρ), don
 - Pas la contrainte : le libre reste > 0,2.
 Validité : en GD pur, blocs > 0,2 et REN < 0,05. Sinon, l'écart vient d'Adam ; T1–T3 ne s'appliquent pas tels quels.
 
-### M3 — Riemannien (Modal), seulement si M1–M2 sont ambigus
+**Résultat M2** (`experiments/q0/analysis/m2.md`, critères écrits avant calcul et poussés avant le premier run). Bras : P-sat (`blockp`), F (libre, même W₀), P-int (init à 0,9ρ), REN. Adam, 5 graines, médiane du test :
+- F **0,0015** ; P-sat 0,33 ; P-int 0,28 ; REN 0,0051. Les 5 graines vont dans le même sens. Critère « bord confirmé » atteint (F < 0,05, P-sat > 0,2) ; « pas la contrainte » réfuté.
+- m(t) : F sort de S **vers l'extérieur**, pas vers l'intérieur : 8 têtes hors de S dès 50 itér., r final 47 à 63. P-int touche ∂S au **premier pas** et y reste ; P-sat reste sur ∂S tout le run.
+- Contrôle : le maître est représentable exactement avec les 8 têtes sur ∂S (perte 1e-29). L'échec contraint est un échec d'optimisation sur ∂S, pas de capacité.
+- GD : validité non atteinte (graine 0 : REN 0,59, F 0,42, P-sat 0,87). GD arrêté après la graine 0 (écart à la règle, justifié dans `m2.md`). Conclusion sur Adam seulement.
+Note sur le critère : le texte ci-dessus dit « quitte ∂S vers l'intérieur ». Ce n'est pas ce qui se passe : F sort de S. La table de décision (« m(t) < 0 à un instant → bord ») et T3 (le terme de bord existe si le flot libre sort de S) classent ce cas en **bord**. Le texte « vers l'intérieur » supposait que le libre rejoint le maître à l'intérieur de S. Cette hypothèse est fausse : F trouve une autre solution, loin hors de S.
+Lecture : cause = **bord** (T3). Les équations blocs apprennent sans contrainte ; la métrique n'explique pas l'échec (M1). Sur le seul cas Q0 propre, l'affirmation centrale est **contredite** : c'est l'ensemble (par son bord) qui gouverne, pas la métrique. Deux paramétrisations de presque le même S échouent (`blockp` : rang perdu, κ ≤ 440 ; `blockh` : rang plein, κ → 1e7).
+Limites : Adam seulement ; un pas par bras (graine 0) ; P-int à 0,9ρ ne teste pas un run intérieur ; r est une borne suffisante, F hors de S n'est pas forcément instable (test 300 pas ≤ 0,022).
+
+### M3 — Riemannien (Modal), seulement si M1–M2 sont ambigus — NON NÉCESSAIRE
+
+Après M2 : le libre sort de S dès le départ. Par T3, il n'existe alors pas de flot riemannien à comparer au libre. M3 n'apporte rien.
 
 Si le rang est plein et si le libre reste dans S, T3 donne la réponse : riemannien = libre. M3 confirme seulement. Validité (T2) : écart du pas < 10 % sur ≥ 95 % des pas.
 
@@ -183,3 +194,4 @@ Ne pas commencer avant que les items 1 et 2 aient un résultat valide.
 - 2026-10-20 : conclusion de 1b corrigée (sorties = détours, pas un déficit). Ajout de 1e (métrique seule, ensemble fixé). Prochain : 1e.
 - 2026-10-21 : retour à Q0. ℓ∞ reclassé en défaut de capacité. Cas Q0 = blocs de 2 (proj, ρ = 0,999). Chemin M1 → M2 → M3 avec critères. Préalable vérifié par lecture du code. Items 1b–1e déplacés en validation. Prochain : M1.
 - 2026-10-21 : M1 fait. `blockp*` reste collé à ∂S (déficit = têtes saturées, 7–8), κ ≤ 440 ; le REN réussit avec κ = 3,3e4. Ni métrique ni point parasite pour le cas Q0 propre. Prochain : M2 (libre + proj init dans S).
+- 2026-10-21 : M2 fait (Adam, 5 graines). Libre 0,0015 hors de S (r ≈ 47–63) ; P-sat 0,33 et P-int 0,28 sur ∂S ; REN 0,0051. Cause = bord ; affirmation centrale contredite sur le cas Q0 propre. GD non valide (REN 0,59). M3 non nécessaire. Prochain (table de décision) : faire varier la marge du maître — critères à écrire avant calcul.
