@@ -5,3 +5,5 @@ t4 alent   s1: ok train=0.0341 test=0.1923 rW_end=0.999 268s
 t4 arapide s1: ok train=0.0874 test=0.2382 rW_end=0.999 268s
 t4 arapide s2: ok train=0.0553 test=0.1194 rW_end=0.999 357s
 t4 alent   s2: ok train=0.0559 test=0.1272 rW_end=0.999 360s
+t4 arapide s3: ok train=0.1609 test=0.3776 rW_end=0.999 303s
+t4 alent   s3: ok train=0.0648 test=0.1601 rW_end=0.999 309s
