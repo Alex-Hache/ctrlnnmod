@@ -54,7 +54,7 @@ Validité V1, V2, c3 et table de lecture : celles de `m2bis.md` (étape 2), avec
 
 Calcul de l'étape A : local, 4 runs, ≤ 3 min chacun, ≈ 6 min sur 2 cœurs.
 
-## Amendement avant calcul (2026-10-21, ≈ 12:30 ; aucun run de l'étape A n'a été lancé) — remplace les points indiqués
+## Amendement avant calcul (2026-10-21 ; commit `840561f`, 12:27:14 ; aucun run de l'étape A n'a été lancé) — remplace les points indiqués
 
 Raison : deux défauts trouvés en relisant le plan avant de lancer.
 1. La table de lecture de l'étape A n'utilise pas le témoin d'échelle. Un contact causé par Ã (même effet d'Adam, autre bloc) aurait été lu « ensemble × init ». C'est une conclusion hâtive possible ; je la ferme avant calcul.
@@ -106,7 +106,7 @@ Combinaison A + G, prévue avant calcul :
 
 Étape B : inchangée. Analyse : `analyze_m2ter.py`, écrit avant les résultats, applique ces règles sans jugement.
 
-## Résultats A et G (2026-10-21, 12:27–12:45) — `m2ter_analysis.txt`, `results_m2ter/`, `analyze_m2ter.py`
+## Résultats A et G (2026-10-21 ; runs de 12:27:26 à 12:27:52, après le commit des critères `840561f` de 12:27:14) — `m2ter_analysis.txt`, `results_m2ter/`, `analyze_m2ter.py`
 
 Tous les runs : statut ok, contact avant 2000 pas (A) ou 5000 pas (G). Aucune divergence.
 
@@ -146,7 +146,7 @@ Tous les runs : statut ok, contact avant 2000 pas (A) ou 5000 pas (G). Aucune di
 
 Ce qui n'est pas établi : si l'obstacle vient de l'init (marge 10 %, budget dans B̃·C) ou de S. Suite : étape I (ci-dessous).
 
-## Étape I — l'init ou l'ensemble ? (protocole et critères écrits avant calcul, 2026-10-21 ≈ 12:50)
+## Étape I — l'init ou l'ensemble ? (protocole et critères écrits avant calcul ; commit `aacf9bf`, 12:30:56)
 
 Pourquoi : la combinaison A + G laisse une seule question ouverte. L'obstacle vient-il de W₀' (marge 0,1 ; 80 % du budget dans B̃·C) ou de S ? Les critères listaient deux suites : « init avec budget dans Ã » ou « marge du maître ». Je prends l'init. Raison : le contact arrive à 83–98 % de L₀, loin du maître ; la marge du maître (< 1 %) ne peut pas agir si tôt. La marge du maître reste la suite de la roadmap si l'init n'explique rien.
 
@@ -173,3 +173,37 @@ Prédictions écrites avant calcul :
 - Adam : contact avant apprentissage pour I1 et I2. Raison : un déplacement uniforme δ par coordonnée monte r d'environ 118δ via B̃ (√2·Σ_q c_q) et 14δ via Ã, quand δ dépasse la taille des coefficients. Si Adam apprend dans S pour une init, ce raisonnement est faux.
 - GD (confiance faible) : contact pour I1 et I2.
 Analyse : `analyze_m2ter_I.py`, écrit avant les résultats.
+
+## Résultats de l'étape I (runs après le commit des critères `aacf9bf`) — `m2ter_I_analysis.txt`, `results_m2ter_I/`, `analyze_m2ter_I.py`
+
+Contrôle c0 passé (r_h = 0,5ρ à 1e-7 près ; parts visées exactes, 5 graines). Tous les runs : statut ok.
+
+| init (marge ; part B̃·C) | optimiseur | η·t_c ou t_c·lr | L(t_c−1)/L₀ | X* | Δ part B̃·C (tête de contact) | statut |
+|---|---|---|---|---|---|---|
+| W₀' (0,1 ; 80 %) | GD η 0,03 | 0,09–0,27 | 0,83–0,95 | B̃ ×5 | +0,10 à +0,12 | contact 5/5 |
+| I1 (0,5 ; 80 %) | GD η 0,03 | 0,27–0,54 | 0,72–0,85 | B̃ ×5 | +0,47 à +0,52 | contact 5/5 |
+| I2 (0,5 ; 10 %) | GD η 0,03 | 0,18–0,33 | 0,79–0,89 | B̃ ×5 | +0,50 à +0,53 | contact 5/5 |
+| W₀' | Adam 1e-3 | 3–4e-3 | 0,97–0,98 | B̃ ×5 | +0,12 à +0,17 | contact 5/5 |
+| I1 | Adam 1e-3 | 7e-3 | 0,92–0,94 | B̃ ×5 | +0,52 à +0,58 | contact 5/5 |
+| I2 | Adam 1e-3 | 5e-3 | 0,94–0,96 | B̃ ×5 | +0,51 à +0,55 | contact 5/5 |
+
+(Lignes W₀' : données des étapes A, β = 1, et G.)
+- Régime de flot valide : I1 η·t_c = 0,42 (η 0,03) contre 0,41 (η 0,01) ; I2 0,30 contre 0,30.
+- Sous GD, les parts Ã (diagonale et hors diagonale) varient de moins de 0,03 : toute la marge est consommée par la hausse de B̃·C. Avec I2, la part B̃·C part de 0,05 et monte à 0,55–0,58 avant le contact.
+- Sous GD, « X* = B̃, échelle » veut dire ici : le déplacement de B̃ dépasse la taille initiale de B̃ (surtout en I2), donc l'orientation ne change plus r. Les tailles viennent du gradient, pas d'Adam.
+- **Règle : GD-I1 = contact, GD-I2 = contact. Ligne : « le flot euclidien sort de S avant d'apprendre, même avec marge 0,5 et budget dans Ã : l'obstacle ne vient pas de W₀'. Indice pour l'ensemble. »** Prédictions Adam et GD (écrites avant calcul) : confirmées.
+
+## Bilan de M2-ter (lecture provisoire)
+
+Établi sur ce banc (oscillateurs, `blockp`, 5 graines) :
+1. Depuis trois inits dans S (marges 0,1 et 0,5 ; part B̃·C 80 % et 10 %), le flot de gradient euclidien (régime de flot vérifié) sort de S avant que la perte baisse sous 0,72·L₀.
+2. Dans tous ces cas, la sortie vient de la hausse de la part B̃·C de r. Les parts Ã bougent peu sous GD.
+3. Sous Adam (lr 1e-3 ; β de 1 à 0,01 sur B̃), le contact arrive avant 0,90·L₀ pour toutes les inits. À β petit, le bloc moteur passe de B̃ à Ã (blocs hors diagonale).
+
+Non établi :
+- Pourquoi la descente fait monter la part B̃·C (mécanisme non testé).
+- Si un run qui reste sur ∂S peut encore apprendre (M2 : P-int finit à 0,28 ; GD non mené à terme).
+- La généralité : un banc, une classe (`blockp`, proj), des inits obtenues par mise à l'échelle de l'init aléatoire.
+- Un autre S (par exemple une borne plus fine sur le chemin B̃·C) n'a pas été testé. « Indice pour l'ensemble » n'est pas une preuve.
+
+Pour l'affirmation centrale : aucune des métriques testées (Adam, Adam-β, flot euclidien) ne garde le run dans S pendant qu'il apprend. Cela ne soutient pas l'affirmation pour cette classe. Ce n'est pas une réfutation générale.
