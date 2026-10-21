@@ -6,3 +6,5 @@ pint adam lr=0.01 s0: ok test=0.4016 train=0.2025 marge∈[-2.98e-07, 0.0999] co
 pint adam lr=0.003 s0: ok test=0.7353 train=0.3918 marge∈[-2.98e-07, 0.0999] contact@1 39s
 ren  adam lr=0.003 s0: ok test=0.2882 train=0.1197 24s
 ren  adam lr=0.01 s0: ok test=0.8476 train=0.4362 24s
+psat gd   lr=0.03 s0: ok test=0.8917 train=0.5148 marge∈[-2.38e-07, 0] contact@0 37s
+psat gd   lr=0.1 s0: ok test=0.8291 train=0.4679 marge∈[-2.38e-07, 0] contact@0 38s
