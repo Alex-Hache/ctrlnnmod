@@ -1,0 +1,2 @@
+blockp_nogate: test=0.4297 train 167s, fd=7.6e-10
+blockp_half: test=0.1354 train 168s, fd=7.6e-10
