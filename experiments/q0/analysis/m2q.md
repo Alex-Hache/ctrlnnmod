@@ -98,3 +98,19 @@ T1 (< 1 min) ; T3 (runs courts, arrêt au contact) ; T4 (30 runs × 3000 itér.,
 - Correction : classe `ExactProjBlock` (dans `m2q.py`), s = min(1, ρ_t/r). Dans S_t, s = 1 exactement ; hors de S_t, même Φ à 1 ulp près. Appliquée aux seuls bras A-lent et A-rapide. La bibliothèque n'est pas modifiée.
 - Vérification avant la troisième relance (graine 0, A-lent, 700 pas) : écart de perte à F' = 0 sur tout le run, r brut jusqu'à 47,6.
 - Résultats du deuxième passage : dans l'historique (commit `c609be0`), identiques à `results_m2q/invalide_c1/`. Journal : `m2q_rerun_log.txt`. Règles inchangées.
+
+## T6 — le libre est-il équivalent en entrée-sortie à un point de S ? (critères écrits avant calcul ; question de l'utilisateur, 22:50)
+
+Idée (utilisateur) : la perte ne voit que la sortie. Un changement de coordonnées x' = T·x, avec T bloc-diagonal (un bloc 2×2 par tête), garde exactement la relation entrée-sortie : A' = TAT⁻¹, B' = TB, C' = CT⁻¹ (entrée des tanh), E' = TE, bₓ' = T·bₓ, lecture' = lecture·T⁻¹ ; D, b et les portes ne changent pas (z par tête commute avec T ; x₀ = 0). Mais r change.
+Modèles : les 5 modèles libres finaux de T4 (F', r = 56 à 64).
+- **S1** (convexe) : T = diag(α_h·I₂). r_h(α) = Σₖ ‖A_hk‖ α_h/α_k + Σ_q ‖B_hq‖ α_h Σₖ ‖C_qk‖/α_k est un posynôme : min_α maxₕ r_h est convexe en log α. Optimum global, au lissage près (log-sum-exp avec continuation, puis évaluation exacte du max).
+- **S2** (non convexe) : T_h général 2×2, optimisation locale (Adam sur un max lissé, départ en S1, 4 départs perturbés). Donne une borne supérieure du vrai minimum.
+Contrôles (sinon, pas de lecture) :
+- c-IO : après transformation, sortie identique : max|y − y'| / max|y| < 1e-9 (float64, entrées de test).
+- c-r : avec T = I, r = r max de W stocké en fin de T4 (écart relatif < 1e-5).
+Lecture (majorité ≥ 3/5 ; r* = minimum trouvé) :
+- r*(S1) ≤ ρ → le libre est exactement équivalent en entrée-sortie à un modèle de S : l'obstacle est le **système de coordonnées du certificat** (métrique fixe P = I), pas S comme famille de fonctions.
+- r*(S1) > ρ et r*(S2) ≤ ρ → même lecture, avec un changement de base général par tête.
+- r*(S2) > ρ → les changements de coordonnées par tête ne suffisent pas. Restent : directions peu observables, borne grossière sur le chemin tanh, ou modèle vraiment hors de toute version de S. Je rapporte r*/ρ.
+Limite : seules les transformations bloc-diagonales sont testées (celles qui commutent avec les portes par tête). Une couche tanh n'a pas de symétrie d'échelle (sauf signes et permutations, qui ne changent pas r).
+Pas de prédiction ferme : r(T = I) ≈ 60 ; une réduction d'un facteur 60 par mise à l'échelle me semble peu probable (confiance faible).
