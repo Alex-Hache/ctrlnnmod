@@ -1,0 +1,39 @@
+début 21:03:26
+Traceback (most recent call last):
+  File "/home/claude/ctrlnnmod/experiments/q0/m2q.py", line 199, in <module>
+    res = [t1(s) for s in seeds]
+           ~~^^^
+  File "/home/claude/ctrlnnmod/experiments/q0/m2q.py", line 69, in t1
+    gr = torch.autograd.grad(part, [P[X] for X in mb.RP], retain_graph=True)
+  File "/usr/local/lib/python3.13/dist-packages/torch/autograd/__init__.py", line 594, in grad
+    result = _engine_run_backward(
+        outputs,
+    ...<5 lines>...
+        accumulate_grad=False,
+    )
+  File "/usr/local/lib/python3.13/dist-packages/torch/autograd/graph.py", line 1072, in _engine_run_backward
+    return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        t_outputs, *args, **kwargs
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )  # Calls into the C++ engine to run the backward pass
+    ^
+RuntimeError: The differentiated Tensor at index 1 appears to not have been used in the graph. Set allow_unused=True if this is the desired behavior.
+T1 fini 21:03:33
+pint    gd lr=0.03 β=0.3 s0: ok L0=0.8886 train=0.6441 test=1.0290 | X*=B_ orientation parts(Ãd,Ão,B̃C) 0.041,0.177,0.681 → 0.034,0.185,0.782 | t_c=17 L(t_c−1)/L0=0.733 q=0.20 rmask(min/méd/max)=0.944/0.976/1.033 g_GD=+2.875 → mixte 2s
+pint    gd lr=0.03 β=0.1 s0: ok L0=0.8886 train=0.5680 test=0.9545 | X*=A_ échelle parts(Ãd,Ão,B̃C) 0.019,0.134,0.746 → 0.036,0.210,0.754 | t_c=37 L(t_c−1)/L0=0.641 q=0.45 rmask(min/méd/max)=0.958/0.996/1.028 g_GD=+0.842 → mixte 4s
+pint    gd lr=0.03 β=0.3 s1: ok L0=1.1804 train=1.0030 test=1.5016 | X*=B_ échelle parts(Ãd,Ão,B̃C) 0.020,0.204,0.674 → 0.028,0.228,0.755 | t_c=9 L(t_c−1)/L0=0.862 q=0.05 rmask(min/méd/max)=0.928/0.960/1.003 g_GD=+2.508 → mixte 1s
+pint    gd lr=0.03 β=0.03 s0: ok L0=0.8886 train=0.5656 test=0.9522 | X*=A_ échelle parts(Ãd,Ão,B̃C) 0.019,0.134,0.746 → 0.038,0.215,0.748 | t_c=39 L(t_c−1)/L0=0.639 q=0.45 rmask(min/méd/max)=0.948/0.996/1.026 g_GD=+0.559 → mixte 4s
+pint    gd lr=0.03 β=0.1 s1: ok L0=1.1804 train=0.8773 test=1.3716 | X*=A_ échelle parts(Ãd,Ão,B̃C) 0.020,0.204,0.674 → 0.033,0.254,0.714 | t_c=24 L(t_c−1)/L0=0.748 q=0.00 rmask(min/méd/max)=0.929/0.959/0.994 g_GD=+1.485 → gradient 2s
+pint    gd lr=0.03 β=0.3 s2: ok L0=1.0001 train=0.7342 test=1.2102 | X*=B_ échelle parts(Ãd,Ão,B̃C) 0.036,0.171,0.693 → 0.043,0.205,0.762 | t_c=14 L(t_c−1)/L0=0.746 q=0.50 rmask(min/méd/max)=0.961/0.993/1.063 g_GD=+2.306 → échelle 2s
+pint    gd lr=0.03 β=0.1 s2: ok L0=1.0001 train=0.6544 test=1.1214 | X*=A_ échelle parts(Ãd,Ão,B̃C) 0.036,0.171,0.693 → 0.049,0.242,0.712 | t_c=24 L(t_c−1)/L0=0.661 q=0.25 rmask(min/méd/max)=0.948/0.975/1.035 g_GD=+1.902 → mixte 3s
+pint    gd lr=0.03 β=0.03 s1: ok L0=1.1804 train=0.7828 test=1.2761 | X*=A_ échelle parts(Ãd,Ão,B̃C) 0.035,0.227,0.637 → 0.026,0.339,0.636 | t_c=65 L(t_c−1)/L0=0.664 q=0.90 rmask(min/méd/max)=0.971/1.014/1.106 g_GD=+0.316 → échelle 6s
+pint    gd lr=0.03 β=0.3 s3: ok L0=1.0126 train=0.8159 test=1.3005 | X*=B_ échelle parts(Ãd,Ão,B̃C) 0.039,0.126,0.734 → 0.047,0.131,0.826 | t_c=21 L(t_c−1)/L0=0.811 q=0.50 rmask(min/méd/max)=0.962/0.998/1.042 g_GD=+2.425 → échelle 2s
+pint    gd lr=0.03 β=0.03 s2: ok L0=1.0001 train=0.6338 test=1.0979 | X*=A_ échelle parts(Ãd,Ão,B̃C) 0.036,0.171,0.693 → 0.051,0.255,0.694 | t_c=28 L(t_c−1)/L0=0.639 q=0.15 rmask(min/méd/max)=0.948/0.975/1.019 g_GD=+0.839 → mixte 3s
+pint    gd lr=0.03 β=0.1 s3: ok L0=1.0126 train=0.7385 test=1.2096 | X*=A_ orientation parts(Ãd,Ão,B̃C) 0.039,0.126,0.734 → 0.053,0.161,0.786 | t_c=44 L(t_c−1)/L0=0.732 q=0.85 rmask(min/méd/max)=0.983/1.018/1.056 g_GD=+2.476 → échelle 4s
+pint    gd lr=0.03 β=0.03 s3: ok L0=1.0126 train=0.7454 test=1.2180 | X*=A_ orientation parts(Ãd,Ão,B̃C) 0.015,0.198,0.686 → 0.032,0.293,0.675 | t_c=42 L(t_c−1)/L0=0.739 q=0.35 rmask(min/méd/max)=0.971/0.995/1.012 g_GD=-0.695 → mixte 4s
+pint    gd lr=0.03 β=0.3 s4: ok L0=1.1811 train=0.7782 test=1.1511 | X*=B_ échelle parts(Ãd,Ão,B̃C) 0.028,0.132,0.740 → 0.036,0.146,0.822 | t_c=27 L(t_c−1)/L0=0.665 q=0.70 rmask(min/méd/max)=0.974/1.023/1.085 g_GD=+2.695 → échelle 4s
+pint    gd lr=0.03 β=0.1 s4: ok L0=1.1811 train=0.6622 test=1.0468 | X*=B_ échelle parts(Ãd,Ão,B̃C) 0.028,0.132,0.740 → 0.048,0.162,0.790 | t_c=70 L(t_c−1)/L0=0.562 q=0.40 rmask(min/méd/max)=0.952/0.994/1.025 g_GD=+2.061 → mixte 12s
+pint    gd lr=0.03 β=0.03 s4: ok L0=1.1811 train=0.6434 test=1.0310 | X*=A_ échelle parts(Ãd,Ão,B̃C) 0.028,0.132,0.740 → 0.058,0.191,0.751 | t_c=94 L(t_c−1)/L0=0.545 q=0.20 rmask(min/méd/max)=0.963/0.983/1.028 g_GD=+1.329 → mixte 13s
+pint    gd lr=0.01 β=0.03 s0: ok L0=0.8886 train=0.5667 test=0.9533 | X*=A_ échelle parts(Ãd,Ão,B̃C) 0.019,0.134,0.746 → 0.037,0.214,0.748 | t_c=116 L(t_c−1)/L0=0.638 q=0.45 rmask(min/méd/max)=0.947/0.995/1.025 g_GD=+0.577 → mixte 12s
+T3 fini 21:04:32
