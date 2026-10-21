@@ -2,3 +2,5 @@ blockp_nogate: test=0.4297 train 167s, fd=7.6e-10
 blockp_half: test=0.1354 train 168s, fd=7.6e-10
 blockp: test=0.1988 train 162s, fd=7.6e-10
 block: test=0.4493 train 164s, fd=7.7e-10
+ren: test=0.0045 train 106s, fd=1.8e-09
+blockh: test=0.4063 train 160s, fd=7.7e-10
