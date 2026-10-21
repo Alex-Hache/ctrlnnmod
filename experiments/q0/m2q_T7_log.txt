@@ -1,2 +1,4 @@
 g0 (maître linéaire, écart relatif W_o empirique / analytique) : c=0.001 : 3.7e-13, c=0.01 : 4.6e-14, c=0.1 : 5.1e-15, c=1 : 6.9e-16 → passé
   oh = [float(torch.trace(Wo[2 * h:2 * h + 2, 2 * h:2 * h + 2])) for h in range(m.H)]
+free  s0 : r_h max 56 | Spearman(o_h, r_h) à c=1e-2 nominale : -0.02 (balayage : -0.02 -0.02 -0.02 -0.02 -0.02 -0.02 -0.02 -0.02) | n_eff (c=1e-2 nom.) 10 | Hankel σ_i/σ₁ : 1.0e+00 9.3e-01 9.3e-01 8.9e-01 8.7e-01 8.2e-01 7.9e-01 6.4e-01 1.8e-03 1.4e-03 9.9e-04 8.2e-04
+free  s1 : r_h max 60.5 | Spearman(o_h, r_h) à c=1e-2 nominale : +0.52 (balayage : +0.52 +0.52 +0.52 +0.45 +0.52 +0.52 +0.52 +0.52) | n_eff (c=1e-2 nom.) 10 | Hankel σ_i/σ₁ : 1.0e+00 9.1e-01 5.1e-01 4.9e-01 3.6e-01 3.1e-01 3.0e-01 2.5e-01 1.9e-03 1.5e-03 1.0e-03 4.7e-04

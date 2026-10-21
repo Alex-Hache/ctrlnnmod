@@ -10,3 +10,34 @@ t4 alent   s3: ok train=0.0648 test=0.1601 rW_end=0.999 309s
 t4 alent   s4: ok train=0.0341 test=0.1335 rW_end=0.999 270s
 t4 arapide s4: ok train=0.0841 test=0.2298 rW_end=0.999 270s
 T4 A fini 23:08:19
+t5 free    s0: E=2.31 | d_T/d0 méd. grande 1.62e-09, petite 1.73e-09 | rW_end=55.989
+t5 free    s1: E=1.555 | d_T/d0 méd. grande 1.03e-09, petite 1.06e-09 | rW_end=60.462
+t5 free    s2: E=2.536 | d_T/d0 méd. grande 1.05e-09, petite 1.08e-09 | rW_end=64.015
+t5 free    s3: E=1.788 | d_T/d0 méd. grande 1.06e-09, petite 1.09e-09 | rW_end=59.458
+t5 free    s4: E=1.987 | d_T/d0 méd. grande 7.63e-10, petite 7.74e-10 | rW_end=63.989
+t5 p       s0: E=0.9935 | d_T/d0 méd. grande 3.07e-12, petite 3.4e-12 | rW_end=0.999
+t5 p       s1: E=0.9685 | d_T/d0 méd. grande 0, petite 0 | rW_end=0.999
+t5 p       s2: E=0.96 | d_T/d0 méd. grande 0, petite 0 | rW_end=0.999
+t5 p       s3: E=0.9776 | d_T/d0 méd. grande 0, petite 0 | rW_end=0.999
+t5 p       s4: E=0.9779 | d_T/d0 méd. grande 0, petite 0 | rW_end=0.999
+t5 pgd     s0: E=0.9937 | d_T/d0 méd. grande 1.23e-06, petite 1.19e-06 | rW_end=0.999
+t5 pgd     s1: E=0.9507 | d_T/d0 méd. grande 0, petite 0 | rW_end=0.999
+t5 pgd     s2: E=0.9797 | d_T/d0 méd. grande 0, petite 0 | rW_end=0.999
+t5 pgd     s3: E=0.948 | d_T/d0 méd. grande 0, petite 0 | rW_end=0.999
+t5 pgd     s4: E=0.9136 | d_T/d0 méd. grande 0, petite 0 | rW_end=0.999
+t5 fix2    s0: E=1.858 | d_T/d0 méd. grande 1.86e-09, petite 1.93e-09 | rW_end=2.000
+t5 fix2    s1: E=1.337 | d_T/d0 méd. grande 1.28e-09, petite 1.29e-09 | rW_end=2.000
+t5 fix2    s2: E=1.174 | d_T/d0 méd. grande 4.06e-10, petite 4.04e-10 | rW_end=2.000
+t5 fix2    s3: E=1.116 | d_T/d0 méd. grande 1.47e-11, petite 1.46e-11 | rW_end=2.000
+t5 fix2    s4: E=1.439 | d_T/d0 méd. grande 4.68e-09, petite 3.99e-09 | rW_end=2.000
+t5 alent   s0: E=0.98 | d_T/d0 méd. grande 0, petite 0 | rW_end=0.999
+t5 alent   s1: E=0.9774 | d_T/d0 méd. grande 0, petite 0 | rW_end=0.999
+t5 alent   s2: E=0.9822 | d_T/d0 méd. grande 1.56e-12, petite 1.69e-12 | rW_end=0.999
+t5 alent   s3: E=0.9828 | d_T/d0 méd. grande 1.86e-16, petite 0 | rW_end=0.999
+t5 alent   s4: E=0.9633 | d_T/d0 méd. grande 0, petite 0 | rW_end=0.999
+t5 arapide s0: E=0.9809 | d_T/d0 méd. grande 0, petite 0 | rW_end=0.999
+t5 arapide s1: E=0.9788 | d_T/d0 méd. grande 0, petite 0 | rW_end=0.999
+t5 arapide s2: E=0.9886 | d_T/d0 méd. grande 5.21e-13, petite 7.23e-13 | rW_end=0.999
+t5 arapide s3: E=0.98 | d_T/d0 méd. grande 0, petite 0 | rW_end=0.999
+t5 arapide s4: E=0.9792 | d_T/d0 méd. grande 0, petite 0 | rW_end=0.999
+FIN 23:09:06

@@ -152,3 +152,15 @@ Contrôles (sinon, pas de lecture) :
 - g1 : élagage k = 0 → erreur de test identique à celle de T4 (écart < 1e-9, float64).
 Limites : modèle non linéaire à portes ; les grammiens empiriques dépendent de c et des entrées (d'où le balayage). Élagage sans réentraînement : un « réfute » est donc conservateur (un réentraînement pourrait récupérer). Un « soutient » est une preuve forte.
 Prédiction (confiance faible) : H7b réfutée (f < 2), car la part B̃·C est grande sur toutes les têtes (moyennes 35 à 43).
+
+## Résultats T1 à T5 (règles appliquées par `analyze_m2q.py` ; tous les contrôles passés après la 3ᵉ relance) — `m2q_analysis.txt`
+
+- **T1** : H1a FAUSSE (part de B̃ dans ‖∇L‖² : 0,10 à 0,18 ; la lecture prend 0,72 à 0,86). H1b ambiguë (v_B̃/v_Ã = 1,8 à 3,6). Le long de −∇L, la part B̃·C monte (+0,35 à +1,03), les parts Ã bougent de moins de 0,05.
+- **T3** : aucun β (0,3 ; 0,1 ; 0,03) ne garde le flot GD dans S : contact 15/15 ; perte au contact 0,55 à 0,86 L₀. Régime de flot valide (1,17 contre 1,16).
+- **T4** (c0, c1, c-fin passés ; 5 graines, médianes du test) : F' 0,0018 ; P 0,288 ; PGD 0,769 ; fix2 0,032 ; A-lent 0,160 ; A-rapide 0,238.
+  - Ligne T4 (meilleur bras A = A-lent, sélection sur 2 plannings) : **partiel, g = 0,45**. A-rapide : échoue (g = 0,17).
+  - Perte d'entraînement d'A-lent (médiane) : 0,062 au début de la décroissance, 0,082 à la fin, 0,056 à t = 3000 (F' : 0,0004).
+  - Ligne T2 : PGD échoue → compatible avec « S est l'obstacle » (pour cette projection).
+  - Secondaire : fix2 réussit (0,032).
+  - Prédictions : 4 sur 6 justes (fix2 prédit partiel, observé réussit ; A-rapide prédit partiel, observé échoue).
+- **T5** (contrôle passé) : F' E = 1,6 à 2,5 → ambigu par la règle ; d₂₀₀₀/d₀ ≈ 1e-9 (convergence en pratique).
