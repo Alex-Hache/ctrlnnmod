@@ -1,0 +1,5 @@
+t1 s0: t_c = 5, pas avant contact = 5
+t1 s1: t_c = 3, pas avant contact = 3
+t1 s2: t_c = 5, pas avant contact = 5
+t1 s3: t_c = 7, pas avant contact = 7
+t1 s4: t_c = 9, pas avant contact = 9
