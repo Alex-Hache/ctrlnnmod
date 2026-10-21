@@ -114,3 +114,20 @@ Lecture (majorité ≥ 3/5 ; r* = minimum trouvé) :
 - r*(S2) > ρ → les changements de coordonnées par tête ne suffisent pas. Restent : directions peu observables, borne grossière sur le chemin tanh, ou modèle vraiment hors de toute version de S. Je rapporte r*/ρ.
 Limite : seules les transformations bloc-diagonales sont testées (celles qui commutent avec les portes par tête). Une couche tanh n'a pas de symétrie d'échelle (sauf signes et permutations, qui ne changent pas r).
 Pas de prédiction ferme : r(T = I) ≈ 60 ; une réduction d'un facteur 60 par mise à l'échelle me semble peu probable (confiance faible).
+
+### Résultat T6 (règles appliquées par `m2q_coords.py`) — `m2q_T6_analysis.txt`, `results_m2q/t6.json`, `m2q_T6_parts.txt`
+
+Contrôles c-r et c-IO passés (erreur de sortie relative ≤ 3e-15 ; r(T = I) = valeur stockée).
+
+| graine | r(T = I) | r*(S1, échelles) | r*(S2, 2×2 général) |
+|---|---|---|---|
+| 0 | 55,99 | 46,44 | 44,71 |
+| 1 | 60,46 | 49,20 | 47,89 |
+| 2 | 64,02 | 41,82 | 40,71 |
+| 3 | 59,46 | 49,25 | 47,52 |
+| 4 | 63,99 | 41,51 | 40,41 |
+
+- **Ligne T6 : les changements de coordonnées par tête ne suffisent pas.** Le meilleur changement de base réduit r de 17 à 37 % seulement ; r* reste 40 à 49 fois au-dessus de ρ (0/5 graines dans S).
+- Décomposition descriptive (`m2q_T6_parts.txt`) : à l'optimum S1, la part B̃·C vaut 37 à 45 à la tête de r max ; Ã hors diagonale 3 à 5 ; Ã diagonale < 1. La part B̃·C porte 85 à 90 % de r, et les changements de coordonnées la réduisent peu.
+- Restent, par la table : directions peu observables, borne grossière sur le chemin tanh, ou modèle hors de toute version de S. Non testés.
+- Note : un import par erreur a relancé T6 une seconde fois (calcul déterministe, même résultat).

@@ -1,0 +1,10 @@
+graine 0 T=I : tête de r max 1 : Ã diag 0.67, Ã hors diag 6.46, B̃·C 48.86 | moyennes sur têtes : 0.49 / 5.51 / 40.88
+graine 0 S1  : tête de r max 2 : Ã diag 0.35, Ã hors diag 5.45, B̃·C 40.64 | moyennes sur têtes : 0.49 / 5.81 / 40.14
+graine 1 T=I : tête de r max 1 : Ã diag 0.46, Ã hors diag 4.31, B̃·C 55.69 | moyennes sur têtes : 0.60 / 5.08 / 42.53
+graine 1 S1  : tête de r max 1 : Ã diag 0.46, Ã hors diag 3.30, B̃·C 45.44 | moyennes sur têtes : 0.60 / 5.35 / 43.25
+graine 2 T=I : tête de r max 5 : Ã diag 0.84, Ã hors diag 5.80, B̃·C 57.38 | moyennes sur têtes : 0.51 / 4.06 / 35.86
+graine 2 S1  : tête de r max 5 : Ã diag 0.84, Ã hors diag 3.39, B̃·C 37.59 | moyennes sur têtes : 0.51 / 4.59 / 36.72
+graine 3 T=I : tête de r max 5 : Ã diag 0.86, Ã hors diag 4.88, B̃·C 53.72 | moyennes sur têtes : 0.64 / 4.73 / 41.46
+graine 3 S1  : tête de r max 5 : Ã diag 0.86, Ã hors diag 3.81, B̃·C 44.58 | moyennes sur têtes : 0.64 / 5.05 / 43.55
+graine 4 T=I : tête de r max 7 : Ã diag 0.76, Ã hors diag 6.41, B̃·C 56.82 | moyennes sur têtes : 0.65 / 4.69 / 35.20
+graine 4 S1  : tête de r max 7 : Ã diag 0.76, Ã hors diag 3.82, B̃·C 36.93 | moyennes sur têtes : 0.65 / 4.96 / 35.91
