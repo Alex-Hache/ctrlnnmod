@@ -131,3 +131,24 @@ Contrôles c-r et c-IO passés (erreur de sortie relative ≤ 3e-15 ; r(T = I) =
 - Décomposition descriptive (`m2q_T6_parts.txt`) : à l'optimum S1, la part B̃·C vaut 37 à 45 à la tête de r max ; Ã hors diagonale 3 à 5 ; Ã diagonale < 1. La part B̃·C porte 85 à 90 % de r, et les changements de coordonnées la réduisent peu.
 - Restent, par la table : directions peu observables, borne grossière sur le chemin tanh, ou modèle hors de toute version de S. Non testés.
 - Note : un import par erreur a relancé T6 une seconde fois (calcul déterministe, même résultat).
+
+## T7 — observabilité : grammiens empiriques et élagage (critères écrits avant calcul ; demande de l'utilisateur, 23:06)
+
+Hypothèse (utilisateur) : la perte ne voit que la sortie. Le libre met de grands gains (grand r) dans des directions que la sortie voit peu ; ces directions ne servent pas à la relation entrée-sortie.
+Modèles : libres finaux de T4 (5 graines) ; P et fix2 en référence pour (a) et (b).
+
+(a) **Grammiens empiriques** (Lall, Marsden, Glavaški), différences centrées, balayage : amplitude c ∈ {1e-3 ; 1e-2 ; 1e-1 ; 1}, entrées ∈ {nominales (`inputs(32, 300, 40 + graine)`), nulles}.
+- W_o[i, j] = (1/4c²) moyenne_lot Σ_t ⟨Δy_i(t), Δy_j(t)⟩, avec x₀ = ±c·e_i (16 directions).
+- W_c = (1/4c²) Σ_m moyenne_lot Σ_t Δx_m(t) Δx_m(t)ᵀ, avec une impulsion ±c sur l'entrée m en t = 0 (en plus de l'entrée nominale).
+- Valeurs de Hankel σ_i = √λ_i(W_c·W_o) ; n_eff = nombre de σ_i > 1e-3·σ₁. Descriptif ; le maître a 8 états.
+(b) **Têtes** : énergie d'observabilité o_h = trace du bloc h de W_o ; corrélation de Spearman entre o_h et r_h (8 têtes), par graine. Lecture principale à c = 1e-2, entrées nominales ; les autres points du balayage sont rapportés pour la stabilité.
+- H7a : Spearman < −0,5 sur la majorité → **soutient** (les têtes à grand r sont peu observables) ; > 0 sur la majorité → **contre** ; sinon ambiguë.
+(c) **Élagage des têtes** (libre seulement) : glouton itératif sur la perte d'entraînement (on retire la tête dont le retrait coûte le moins), k = 0 à 7 têtes retirées. À chaque k : erreur de test, r max des têtes gardées.
+(d) **Élagage des unités tanh** : même procédé sur les 32 unités cachées (colonne de B̃, ligne de C, D, b), k = 0 à 31.
+- f = r(modèle complet) / min{ r max (gardé) : test ≤ 0,05 }, sur (c) et (d) (le meilleur des deux).
+- H7b : f ≥ 10 sur la majorité → **soutient** : l'essentiel de r est dans des directions dont la sortie n'a pas besoin. Si en plus r max (gardé) ≤ ρ sur la majorité → le modèle utile est dans S. f < 2 sur la majorité → **réfute** (sans réentraînement) : r est porté par ce dont la sortie a besoin. Sinon : partiel.
+Contrôles (sinon, pas de lecture) :
+- g0 : sur le maître linéaire, W_o empirique = W_o analytique Σ_{t=1}^{T} (Aᵗ)ᵀCᵀC Aᵗ (écart relatif < 1e-6), aux 4 amplitudes.
+- g1 : élagage k = 0 → erreur de test identique à celle de T4 (écart < 1e-9, float64).
+Limites : modèle non linéaire à portes ; les grammiens empiriques dépendent de c et des entrées (d'où le balayage). Élagage sans réentraînement : un « réfute » est donc conservateur (un réentraînement pourrait récupérer). Un « soutient » est une preuve forte.
+Prédiction (confiance faible) : H7b réfutée (f < 2), car la part B̃·C est grande sur toutes les têtes (moyennes 35 à 43).
