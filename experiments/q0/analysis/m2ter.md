@@ -136,7 +136,7 @@ Tous les runs : statut ok, contact avant 2000 pas (A) ou 5000 pas (G). Aucune di
 | 4 | 0,27 | 0,832 | B̃ | échelle | 0,688 → 0,807 |
 
 - Régime de flot (graine 0) : η·t_c = 0,15 à η = 0,03 et à η = 0,01 ; mêmes parts au contact (0,039 / 0,177 / 0,785). **Valide** : c'est le chemin du flot, pas un écart du pas.
-- Parts Ã (diagonale et hors diagonale) : stables à ±0,005 sous GD. Toute la hausse de r vient de B̃·C.
+- Parts Ã (diagonale et hors diagonale) : variation ≤ 0,008 sous GD. La hausse de r vient de B̃·C.
 - Sous GD, « échelle » a un sens précis : le déplacement de B̃ a la taille de B̃ lui-même, et toute orientation de même taille donne le même r. Ici les tailles viennent du gradient, pas d'un rythme uniforme : ce n'est pas un effet d'Adam.
 - **Ligne G : « le flot libre euclidien sort de S depuis W₀' avant d'apprendre (T3, sans Adam) ».**
 
@@ -189,7 +189,7 @@ Contrôle c0 passé (r_h = 0,5ρ à 1e-7 près ; parts visées exactes, 5 graine
 
 (Lignes W₀' : données des étapes A, β = 1, et G.)
 - Régime de flot valide : I1 η·t_c = 0,42 (η 0,03) contre 0,41 (η 0,01) ; I2 0,30 contre 0,30.
-- Sous GD, les parts Ã (diagonale et hors diagonale) varient de moins de 0,03 : toute la marge est consommée par la hausse de B̃·C. Avec I2, la part B̃·C part de 0,05 et monte à 0,55–0,58 avant le contact.
+- Sous GD, les parts Ã (diagonale et hors diagonale) varient d'au plus 0,035 (I1, graine 2) ; la marge est consommée par la hausse de B̃·C (+0,47 à +0,53). Avec I2, la part B̃·C part de 0,05 et monte à 0,55–0,58 avant le contact.
 - Sous GD, « X* = B̃, échelle » veut dire ici : le déplacement de B̃ dépasse la taille initiale de B̃ (surtout en I2), donc l'orientation ne change plus r. Les tailles viennent du gradient, pas d'Adam.
 - **Règle : GD-I1 = contact, GD-I2 = contact. Ligne : « le flot euclidien sort de S avant d'apprendre, même avec marge 0,5 et budget dans Ã : l'obstacle ne vient pas de W₀'. Indice pour l'ensemble. »** Prédictions Adam et GD (écrites avant calcul) : confirmées.
 
