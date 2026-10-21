@@ -1,0 +1,15 @@
+graine 0 : r = 0.899 | part Ã moy. 0.170 [0.137, 0.219] | part B̃·C moy. 0.729 [0.681, 0.762] | |B̃|/|Ã| = 0.565
+   GD (par unité de pas) : d(part Ã) moy. -0.042, d(part B̃·C) moy. +0.347 | têtes où B̃·C baisse : 2/8
+   Adam lr=0.0001 (1 pas)  : Δ(part Ã) moy. -1.72e-04, Δ(part B̃·C) moy. +3.05e-04 | têtes où B̃·C baisse : 3/8
+graine 1 : r = 0.899 | part Ã moy. 0.194 [0.146, 0.262] | part B̃·C moy. 0.705 [0.637, 0.753] | |B̃|/|Ã| = 0.481
+   GD (par unité de pas) : d(part Ã) moy. -0.013, d(part B̃·C) moy. +0.418 | têtes où B̃·C baisse : 2/8
+   Adam lr=0.0001 (1 pas)  : Δ(part Ã) moy. -8.00e-05, Δ(part B̃·C) moy. +1.02e-03 | têtes où B̃·C baisse : 2/8
+graine 2 : r = 0.899 | part Ã moy. 0.195 [0.176, 0.237] | part B̃·C moy. 0.704 [0.662, 0.723] | |B̃|/|Ã| = 0.518
+   GD (par unité de pas) : d(part Ã) moy. -0.017, d(part B̃·C) moy. -0.032 | têtes où B̃·C baisse : 4/8
+   Adam lr=0.0001 (1 pas)  : Δ(part Ã) moy. -7.70e-05, Δ(part B̃·C) moy. -1.44e-05 | têtes où B̃·C baisse : 4/8
+graine 3 : r = 0.899 | part Ã moy. 0.196 [0.165, 0.214] | part B̃·C moy. 0.704 [0.685, 0.734] | |B̃|/|Ã| = 0.507
+   GD (par unité de pas) : d(part Ã) moy. +0.015, d(part B̃·C) moy. -0.135 | têtes où B̃·C baisse : 6/8
+   Adam lr=0.0001 (1 pas)  : Δ(part Ã) moy. -1.27e-05, Δ(part B̃·C) moy. -2.81e-04 | têtes où B̃·C baisse : 4/8
+graine 4 : r = 0.899 | part Ã moy. 0.198 [0.159, 0.243] | part B̃·C moy. 0.701 [0.656, 0.740] | |B̃|/|Ã| = 0.493
+   GD (par unité de pas) : d(part Ã) moy. -0.028, d(part B̃·C) moy. -0.409 | têtes où B̃·C baisse : 7/8
+   Adam lr=0.0001 (1 pas)  : Δ(part Ã) moy. -1.50e-04, Δ(part B̃·C) moy. +1.11e-04 | têtes où B̃·C baisse : 5/8
