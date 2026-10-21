@@ -1,0 +1,8 @@
+psat gd   lr=0.3 s0: ok test=0.8654 train=0.4321 marge∈[-3.58e-07, 0] contact@0 147s
+psat adam lr=0.01 s0: ok test=0.1988 train=0.0588 marge∈[-3.58e-07, 5.96e-08] contact@0 148s
+free gd   lr=1 s0: ok test=0.4198 train=0.2436 marge∈[-35.8, -1.19e-07] contact@0 138s
+free adam lr=0.01 s0: ok test=0.0015 train=0.0003 marge∈[-56.6, -1.19e-07] contact@0 140s
+pint gd   lr=0.3 s0: ok test=0.8791 train=0.4323 marge∈[-2.98e-07, 0.0999] contact@1 141s
+pint adam lr=0.01 s0: ok test=0.1534 train=0.0582 marge∈[-3.58e-07, 0.0999] contact@1 145s
+ren  adam lr=0.003 s0: ok test=0.0045 train=0.0010 99s
+ren  gd   lr=0.1 s0: ok test=0.5873 train=0.2367 97s
