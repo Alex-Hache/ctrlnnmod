@@ -1,2 +1,4 @@
 psat adam lr=0.003 s0: ok test=0.7443 train=0.3286 marge∈[-4.17e-07, 0] contact@0 35s
 psat adam lr=0.01 s0: ok test=0.4264 train=0.2086 marge∈[-2.98e-07, 5.96e-08] contact@0 35s
+free adam lr=0.003 s0: ok test=0.3182 train=0.2144 marge∈[-17, -1.19e-07] contact@0 40s
+free adam lr=0.01 s0: ok test=0.0935 train=0.0619 marge∈[-44.9, -1.19e-07] contact@0 41s
