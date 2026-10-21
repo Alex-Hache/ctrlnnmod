@@ -50,7 +50,15 @@ def r_raw(H, k, nq, A, B, C):
     return nA.sum(-1) + (nB * c[..., None, :]).sum(-1)                                    # (..., H)
 
 
-def run(arm, lr, seed, iters):
+def parts(H, k, nq, A, B, C):
+    """(part Ã, part B̃·C) de r_h, par tête."""
+    a = torch.linalg.matrix_norm(A.reshape(H, k, H, k).transpose(1, 2), ord=2).sum(1)
+    c = C.reshape(nq, H, k).norm(dim=2).sum(1)
+    return a, B.reshape(H, k, nq).norm(dim=1) @ c
+
+
+def run(arm, lr, seed, iters, beta=1.0, stop=False):
+    """beta : lr de B̃ = beta·lr (M2-ter). stop : arrêt au premier contact (étape A de M2-ter)."""
     torch.set_num_threads(1)
     u_tr, y_tr, u_te, y_te = m2.data(seed)
     model = build(arm, seed)
@@ -61,7 +69,8 @@ def run(arm, lr, seed, iters):
     g = torch.Generator().manual_seed(1000 + seed)       # mêmes masques pour pint et freeint
     masks = {n: (2 * torch.randint(0, 2, (NMASK, *th0[n].shape), generator=g) - 1).to(th0[n].dtype)
              for n in RP}
-    opt = torch.optim.Adam(model.parameters(), lr=lr)
+    others = [p for p in model.parameters() if p is not m.B_]
+    opt = torch.optim.Adam([dict(params=others, lr=lr), dict(params=[m.B_], lr=beta * lr)])
     log, tc, status, L0, t0 = [], None, "ok", None, time.time()
     for it in range(iters + 1):
         loss = ((model(u_tr) - y_tr) ** 2).mean()
@@ -84,26 +93,30 @@ def run(arm, lr, seed, iters):
             gl = [P[n].grad for n in RP]
             gnorm = torch.sqrt(sum((x ** 2).sum() for x in gl))
             ggd = float(-sum((a * b).sum() for a, b in zip(gr, gl)) / gnorm)
+            with torch.no_grad():
+                pa, pb = parts(H, k, nq, *(P[n] for n in RP))
             rec.update(q=float((rm >= RHO - TOL).float().mean()), rmask_min=float(rm.min()),
-                       rmask_med=float(rm.median()), rmask_max=float(rm.max()), ggd=ggd, h=hs)
+                       rmask_med=float(rm.median()), rmask_max=float(rm.max()), ggd=ggd, h=hs,
+                       partA=float(pa[hs]), partBC=float(pb[hs]))
             if rmax >= RHO - TOL:
                 tc = it
             log.append(rec)
         elif it % LOG_EVERY == 0:
             log.append(rec)
-        if it == iters:
+        if it == iters or (stop and tc is not None):
             break
         torch.nn.utils.clip_grad_norm_(model.parameters(), 10.0)
         opt.step()
     with torch.no_grad():
         test = float(((model(u_te) - y_te) ** 2).mean()) if status == "ok" else float("inf")
     by_it = {e["it"]: e for e in log}
-    out = dict(arm=arm, lr=lr, seed=seed, iters=iters, status=status, test=test, L0=L0,
+    out = dict(arm=arm, lr=lr, beta=beta, stop=stop, seed=seed, iters=iters, status=status, test=test, L0=L0,
                train=log[-1]["loss"], tc=tc, time=time.time() - t0, log=log)
     if tc is not None:
         pre = [by_it[i]["ggd"] for i in range(max(0, tc - 10), tc)]
         out.update(L_pre=by_it[tc - 1]["loss"], q_tc=by_it[tc]["q"], ggd_pre=sum(pre) / len(pre),
-                   rmask_tc=[by_it[tc][x] for x in ("rmask_min", "rmask_med", "rmask_max")])
+                   rmask_tc=[by_it[tc][x] for x in ("rmask_min", "rmask_med", "rmask_max")],
+                   partA_tc=by_it[tc]["partA"], partBC_tc=by_it[tc]["partBC"])
     return out
 
 
@@ -120,9 +133,14 @@ def cause(r):
 
 def _job(a):
     r = run(*a)
-    arm, lr, seed, iters = a
-    json.dump(r, open(os.path.join(OUT, f"m2bis_{arm}_lr{lr:g}_s{seed}_it{iters}.json"), "w"), indent=1)
-    s = f"{arm:7s} lr={lr:g} s{seed}: {r['status']} L0={r['L0']:.4f} train={r['train']:.4f} test={r['test']:.4f}"
+    arm, lr, seed, iters, beta, stop = a
+    tag = "" if beta == 1 else f"_beta{beta:g}"
+    tag += "_stop" if stop else ""
+    json.dump(r, open(os.path.join(OUT, f"m2bis_{arm}_lr{lr:g}{tag}_s{seed}_it{iters}.json"), "w"), indent=1)
+    s = (f"{arm:7s} lr={lr:g} β={beta:g} s{seed}: {r['status']} L0={r['L0']:.4f} train={r['train']:.4f}"
+         f" test={r['test']:.4f}")
+    if r["tc"] is not None:
+        s += f" | partÃ={r['partA_tc']:.3f} partB̃C={r['partBC_tc']:.3f}"
     if r["tc"] is None:
         s += f" | pas de contact, rmax fin={r['log'][-1]['rmax']:.3f}"
     else:
@@ -155,13 +173,15 @@ if __name__ == "__main__":
     ap.add_argument("--lrs", default="1e-3")
     ap.add_argument("--seeds", default="0")
     ap.add_argument("--iters", type=int, default=300)
+    ap.add_argument("--betas", default="1", help="lr de B̃ = β·lr (M2-ter)")
+    ap.add_argument("--stop", action="store_true", help="arrêt au premier contact")
     a = ap.parse_args()
     if a.check:
         check()
         sys.exit()
     os.makedirs(OUT, exist_ok=True)
-    jobs = [(ar, float(lr), int(s), a.iters) for s, ar, lr in
-            itertools.product(a.seeds.split(","), a.arms.split(","), a.lrs.split(","))]
+    jobs = [(ar, float(lr), int(s), a.iters, float(b), a.stop) for s, ar, lr, b in
+            itertools.product(a.seeds.split(","), a.arms.split(","), a.lrs.split(","), a.betas.split(","))]
     with mp.get_context("fork").Pool(int(os.environ.get("NPROC", os.cpu_count() or 1))) as pool:
         for line in pool.imap_unordered(_job, jobs):
             print(line, flush=True)
