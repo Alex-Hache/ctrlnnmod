@@ -105,3 +105,43 @@ Combinaison A + G, prévue avant calcul :
 - β* existe : étape B d'abord, G en complément.
 
 Étape B : inchangée. Analyse : `analyze_m2ter.py`, écrit avant les résultats, applique ces règles sans jugement.
+
+## Résultats A et G (2026-10-21, 12:27–12:45) — `m2ter_analysis.txt`, `results_m2ter/`, `analyze_m2ter.py`
+
+Tous les runs : statut ok, contact avant 2000 pas (A) ou 5000 pas (G). Aucune divergence.
+
+### Étape A (Adam lr 1e-3 ; B̃ à β·1e-3 ; 5 graines)
+
+| β | t_c (pas) | t_c·lr | L(t_c−1)/L₀ | V vrai | X* | mode |
+|---|---|---|---|---|---|---|
+| 1 | 3–4 | 3–4e-3 | 0,966–0,979 | 0/5 | B̃ ×5 | échelle ×5 |
+| 0,5 | 4–6 | 4–6e-3 | 0,953–0,976 | 0/5 | B̃ ×5 | échelle ×5 |
+| 0,1 | 9–12 | 0,9–1,2e-2 | 0,913–0,950 | 0/5 | Ã ×5 | échelle ×5 |
+| 0,03 | 10–14 | 1,0–1,4e-2 | 0,904–0,943 | 0/5 | Ã ×5 | échelle ×5 |
+| 0,01 | 11–14 | 1,1–1,4e-2 | 0,906–0,940 | 0/5 | Ã ×5 | échelle ×4, orientation ×1 |
+
+- β = 1 réplique la calibration M2-bis sur les graines 1 à 4 (contact au pas 3 ou 4, perte −2 à −3 %, B̃, échelle).
+- À β ≤ 0,1, la part Ã hors diagonale de la tête de contact monte de +0,08 à +0,09 ; la part Ã diagonale de +0,01 à +0,02 ; la part B̃·C reste stable (±0,005).
+- La prédiction écrite avant calcul est confirmée sur ses quatre points : V faux partout ; X* = Ã à β = 0,01 ; mode échelle ; contact vers t·lr ≈ 1e-2.
+- **Règle : β* = aucun. Ligne A : « même effet d'échelle d'Adam sur un autre bloc (Ã) ; la famille β sur B̃ ne suffit pas ; rien sur l'ensemble ».** Étape B non lancée.
+
+### Étape G (GD sans moment, clip 10, η = 0,03 ; 5 graines)
+
+| graine | η·t_c | L(t_c−1)/L₀ | X* | mode | part B̃·C (W₀' → t_c) |
+|---|---|---|---|---|---|
+| 0 | 0,15 | 0,891 | B̃ | échelle | 0,681 → 0,785 |
+| 1 | 0,09 | 0,951 | B̃ | échelle | 0,674 → 0,797 |
+| 2 | 0,15 | 0,883 | B̃ | échelle | 0,693 → 0,795 |
+| 3 | 0,21 | 0,909 | B̃ | échelle | 0,734 → 0,850 |
+| 4 | 0,27 | 0,832 | B̃ | échelle | 0,688 → 0,807 |
+
+- Régime de flot (graine 0) : η·t_c = 0,15 à η = 0,03 et à η = 0,01 ; mêmes parts au contact (0,039 / 0,177 / 0,785). **Valide** : c'est le chemin du flot, pas un écart du pas.
+- Parts Ã (diagonale et hors diagonale) : stables à ±0,005 sous GD. Toute la hausse de r vient de B̃·C.
+- Sous GD, « échelle » a un sens précis : le déplacement de B̃ a la taille de B̃ lui-même, et toute orientation de même taille donne le même r. Ici les tailles viennent du gradient, pas d'un rythme uniforme : ce n'est pas un effet d'Adam.
+- **Ligne G : « le flot libre euclidien sort de S depuis W₀' avant d'apprendre (T3, sans Adam) ».**
+
+### Combinaison (ligne prévue avant calcul)
+
+**Aucun β* et V_G faux : deux métriques (famille Adam-β, euclidienne) touchent ∂S avant d'apprendre, depuis W₀'. Lecture provisoire : obstacle de chemin dans S depuis cette init. Pas une preuve sur l'ensemble seul : W₀' met 80 % du budget dans B̃·C.**
+
+Ce qui n'est pas établi : si l'obstacle vient de l'init (marge 10 %, budget dans B̃·C) ou de S. Suite : étape I (ci-dessous).
