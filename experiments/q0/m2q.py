@@ -90,10 +90,21 @@ def rho_t(arm, t):
     return 100.0 * (RHO / 100.0) ** ((t - t0) / (t1_ - t0))
 
 
+class ExactProjBlock(m2.BlockGatedRNN):
+    """Même Φ que `proj`, avec s = min(1, ρ/r) : s = 1 exactement dans S_t.
+    (Dans la lib, s = ρ / max(r, ρ) est calculé par PyTorch comme ρ × (1/max(r, ρ)), qui peut valoir 1 ± 1 ulp.)"""
+
+    def weights(self) -> dict:
+        s = torch.clamp(self.rho / self._block_rows(), max=1.0).repeat_interleave(self.k)[:, None]
+        return dict(A=self.A_ * s, B=self.B_ * s)
+
+
 def build4(arm, seed):
     model = mb.build("pint", seed)                         # W₀' (0,9ρ) ; Φ = identité dans S
     if arm in ("free", "pgd"):
         model.m.__class__ = m2.FreeBlockGatedRNN
+    elif arm in ("alent", "arapide"):                      # correction après échec de c1
+        model.m.__class__ = ExactProjBlock
     return model
 
 
