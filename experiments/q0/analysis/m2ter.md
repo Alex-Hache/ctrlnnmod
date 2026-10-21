@@ -145,3 +145,31 @@ Tous les runs : statut ok, contact avant 2000 pas (A) ou 5000 pas (G). Aucune di
 **Aucun β* et V_G faux : deux métriques (famille Adam-β, euclidienne) touchent ∂S avant d'apprendre, depuis W₀'. Lecture provisoire : obstacle de chemin dans S depuis cette init. Pas une preuve sur l'ensemble seul : W₀' met 80 % du budget dans B̃·C.**
 
 Ce qui n'est pas établi : si l'obstacle vient de l'init (marge 10 %, budget dans B̃·C) ou de S. Suite : étape I (ci-dessous).
+
+## Étape I — l'init ou l'ensemble ? (protocole et critères écrits avant calcul, 2026-10-21 ≈ 12:50)
+
+Pourquoi : la combinaison A + G laisse une seule question ouverte. L'obstacle vient-il de W₀' (marge 0,1 ; 80 % du budget dans B̃·C) ou de S ? Les critères listaient deux suites : « init avec budget dans Ã » ou « marge du maître ». Je prends l'init. Raison : le contact arrive à 83–98 % de L₀, loin du maître ; la marge du maître (< 1 %) ne peut pas agir si tôt. La marge du maître reste la suite de la roadmap si l'init n'explique rien.
+
+Inits (toutes dans S ; Φ = identité ; P-int = libre jusqu'au contact). Mise à l'échelle par ligne h, exacte : r_h est homogène de degré 1 en Ã_h· et en B̃_h· séparément.
+- **I1 « marge »** : r_h = 0,5ρ, même répartition que W₀' (B̃·C ≈ 80 %).
+- **I2 « budget dans Ã »** : r_h = 0,5ρ, part Ã = 0,45ρ, part B̃·C = 0,05ρ.
+I1 et I2 ont la même marge (0,5) ; seule la répartition change. W₀' (marge 0,1) : données de A (β = 1) et de G.
+Limite d'I2 : Ã est l'init aléatoire agrandie (≈ ×2,5), hors diagonale compris. Ce n'est pas une init « proche du maître ».
+
+Runs (P-int, arrêt au contact, graines 0 à 4) : GD η = 0,03 (≤ 5000 pas) ; Adam lr 1e-3, β = 1 (≤ 2000 pas). Régime de flot : graine 0, GD η = 0,01, pour I1 et I2 (même règle que G : écart de η·t_c < 20 %). Contrôle c0 : r_h = 0,5ρ et parts visées à l'init (écart < 1e-5).
+V et statuts (apprend / contact / budget) et diagnostic au contact : comme l'étape G.
+
+Lecture GD (majorité ≥ 3/5 ; régime de flot valide exigé pour une lecture « flot ») :
+
+| GD-I1 | GD-I2 | lecture provisoire |
+|---|---|---|
+| contact | contact | le flot euclidien sort de S avant d'apprendre, même avec marge 0,5 et budget dans Ã : l'obstacle ne vient pas de W₀'. Indice pour l'ensemble : depuis plusieurs inits, la descente sort de S |
+| contact | apprend | la répartition du budget à l'init décide : obstacle lié à l'init, pas à S |
+| apprend | apprend | la marge suffit : W₀' était trop près de ∂S |
+| apprend | contact | inattendu ; ambigu |
+| budget ou pas de majorité | — | non concluant pour cette init |
+
+Prédictions écrites avant calcul :
+- Adam : contact avant apprentissage pour I1 et I2. Raison : un déplacement uniforme δ par coordonnée monte r d'environ 118δ via B̃ (√2·Σ_q c_q) et 14δ via Ã, quand δ dépasse la taille des coefficients. Si Adam apprend dans S pour une init, ce raisonnement est faux.
+- GD (confiance faible) : contact pour I1 et I2.
+Analyse : `analyze_m2ter_I.py`, écrit avant les résultats.

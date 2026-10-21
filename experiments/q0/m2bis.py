@@ -32,8 +32,21 @@ RHO, TOL, NMASK, LOG_EVERY = m2.RHO, m2.TOL, 20, 10
 RP = ("A_", "B_", "C")                                  # paramètres dont dépend r
 
 
-def build(arm, seed):
+INITS = {"i1": (None, None), "i2": (0.45, 0.05)}       # M2-ter étape I : parts visées (Ã, B̃·C), en unités de ρ
+
+
+def build(arm, seed, init="w0p"):
+    """init : w0p (0,9ρ, comme M2) ; i1 (r_h = 0,5ρ, même répartition) ; i2 (Ã 0,45ρ, B̃·C 0,05ρ)."""
     model = m2.build("pint", seed)
+    if init != "w0p":
+        m = model.m
+        with torch.no_grad():
+            d, o, b = parts(m.H, m.k, m.nq, m.A_, m.B_, m.C)
+            a = d + o
+            ta, tb = INITS[init]
+            fa, fb = (0.5 * RHO / (a + b),) * 2 if ta is None else (ta * RHO / a, tb * RHO / b)
+            m.A_.mul_(fa.repeat_interleave(m.k)[:, None])
+            m.B_.mul_(fb.repeat_interleave(m.k)[:, None])
     if arm == "freeint":
         model.m.__class__ = m2.FreeBlockGatedRNN           # Φ(θ₀') = θ₀' : W₀' = (Ã, B̃)
     elif arm != "pint":
@@ -77,11 +90,11 @@ def contact_diag(H, k, nq, th0, P, masks, hc):
                 contact=dict(Ad=float(d1[hc]), Ao=float(o1[hc]), BC=float(b1[hc])))
 
 
-def run(arm, lr, seed, iters, beta=1.0, stop=False, opt_name="adam"):
+def run(arm, lr, seed, iters, beta=1.0, stop=False, opt_name="adam", init="w0p"):
     """beta : lr de B̃ = beta·lr (M2-ter). stop : arrêt au premier contact. opt_name : adam ou gd (sans moment)."""
     torch.set_num_threads(1)
     u_tr, y_tr, u_te, y_te = m2.data(seed)
-    model = build(arm, seed)
+    model = build(arm, seed, init)
     m = model.m
     H, k, nq = m.H, m.k, m.nq
     P = dict(m.named_parameters())
@@ -132,7 +145,7 @@ def run(arm, lr, seed, iters, beta=1.0, stop=False, opt_name="adam"):
     with torch.no_grad():
         test = float(((model(u_te) - y_te) ** 2).mean()) if status == "ok" else float("inf")
     by_it = {e["it"]: e for e in log}
-    out = dict(arm=arm, opt=opt_name, lr=lr, beta=beta, stop=stop, seed=seed, iters=iters, status=status,
+    out = dict(arm=arm, opt=opt_name, init=init, lr=lr, beta=beta, stop=stop, seed=seed, iters=iters, status=status,
                test=test, L0=L0, train=log[-1]["loss"], tc=tc, time=time.time() - t0, contact=cdiag, log=log)
     if tc is not None:
         pre = [by_it[i]["ggd"] for i in range(max(0, tc - 10), tc)]
@@ -154,8 +167,8 @@ def cause(r):
 
 def _job(a):
     r = run(*a)
-    arm, lr, seed, iters, beta, stop, opt_name = a
-    tag = ("_gd" if opt_name == "gd" else "") + ("" if beta == 1 else f"_beta{beta:g}") + ("_stop" if stop else "")
+    arm, lr, seed, iters, beta, stop, opt_name, init = a
+    tag = ("" if init == "w0p" else f"_{init}") + ("_gd" if opt_name == "gd" else "") + ("" if beta == 1 else f"_beta{beta:g}") + ("_stop" if stop else "")
     json.dump(r, open(os.path.join(OUT, f"m2bis_{arm}_lr{lr:g}{tag}_s{seed}_it{iters}.json"), "w"), indent=1)
     s = (f"{arm:7s} {opt_name} lr={lr:g} β={beta:g} s{seed}: {r['status']} L0={r['L0']:.4f} train={r['train']:.4f}"
          f" test={r['test']:.4f}")
@@ -198,12 +211,13 @@ if __name__ == "__main__":
     ap.add_argument("--betas", default="1", help="lr de B̃ = β·lr (M2-ter)")
     ap.add_argument("--stop", action="store_true", help="arrêt au premier contact")
     ap.add_argument("--opt", default="adam", choices=("adam", "gd"))
+    ap.add_argument("--init", default="w0p", choices=("w0p", "i1", "i2"))
     a = ap.parse_args()
     if a.check:
         check()
         sys.exit()
     os.makedirs(OUT, exist_ok=True)
-    jobs = [(ar, float(lr), int(s), a.iters, float(b), a.stop, a.opt) for s, ar, lr, b in
+    jobs = [(ar, float(lr), int(s), a.iters, float(b), a.stop, a.opt, a.init) for s, ar, lr, b in
             itertools.product(a.seeds.split(","), a.arms.split(","), a.lrs.split(","), a.betas.split(","))]
     with mp.get_context("fork").Pool(int(os.environ.get("NPROC", os.cpu_count() or 1))) as pool:
         for line in pool.imap_unordered(_job, jobs):
