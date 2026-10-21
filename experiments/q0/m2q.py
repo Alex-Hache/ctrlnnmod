@@ -66,8 +66,8 @@ def t1(seed, eta=0.03, iters=5000):
         d, o, b = mb.parts(H, k, nq, P["A_"], P["B_"], P["C"])
         dpart = {}
         for lab, part in (("Ad", d[hs]), ("Ao", o[hs]), ("BC", b[hs])):
-            gr = torch.autograd.grad(part, [P[X] for X in mb.RP], retain_graph=True)
-            dpart[lab] = float(-sum((a * g["m." + X]).sum() for a, X in zip(gr, mb.RP)))
+            gr = torch.autograd.grad(part, [P[X] for X in mb.RP], retain_graph=True, allow_unused=True)
+            dpart[lab] = float(-sum((a * g["m." + X]).sum() for a, X in zip(gr, mb.RP) if a is not None))
         steps.append(dict(it=it, loss=float(loss.detach()), share=share, v=v, dpart=dpart, h=hs))
         torch.nn.utils.clip_grad_norm_(model.parameters(), 10.0)
         opt.step()
