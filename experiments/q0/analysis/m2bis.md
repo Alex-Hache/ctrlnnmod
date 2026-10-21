@@ -76,3 +76,33 @@ Critères (erreur de test, médiane sur 5 graines ; réussit < 0,05 ; échoue > 
 | échoue | — | — | V2 non atteinte ; pas de conclusion |
 
 Autre cas : ambigu. Toute lecture reste « provisoire » dans `ROADMAP.md` et `Contexte` (Adam seulement ; GD non valide en M2).
+
+## Étape 1 — calibration (faite le 2026-10-21 ; graine 0, 300 pas) — `m2bis_calib_log.txt`, `results_m2bis/`
+
+Contrôles :
+- c0 passé : écart r / `_block_rows()` = 6e-8 ; marge initiale 0,0999 ; W₀' identique pour les deux bras ; perte initiale identique (0,8886).
+- c3 passé : pertes et r_max identiques (écart 0) pour t < t_c ; même t_c ; à t_c, r_max identique et la perte diffère (P-int est projeté). Ma première lecture de c3 incluait t_c (écart 1e-4) ; le protocole dit t < t_c.
+
+| lr | t_c | t_c·lr | L(t_c−1)/L₀ | V(lr) | q | g_GD (pts avant t_c) | cause |
+|---|---|---|---|---|---|---|---|
+| 1e-3 | 3 | 3,0e-3 | 0,970 | non | 0,85 | +0,53 | échelle |
+| 3e-4 | 9 | 2,7e-3 | 0,964 | non | 0,55 | +0,81 | échelle |
+| 1e-4 | 25 | 2,5e-3 | 0,964 | non | 0,35 | +1,13 | mixte |
+
+**Règle : aucun lr valide. Arrêt, pas d'étape 2.**
+
+Diagnostic ajouté (`m2bis_blocks.py`, `m2bis_blocks_log.txt`, < 1 min) : r_max de θ₀' avec un seul bloc déplacé à θ_tc.
+
+| lr | r_max à t_c | B̃ seul (réel / méd. aléatoire) | Ã seul | C seul | \|Δ\|/\|θ₀'\| (B̃, Ã, C) |
+|---|---|---|---|---|---|
+| 1e-3 | 1,033 | 1,016 / 1,018 | 0,917 | 0,900 | 0,53 ; 0,30 ; 0,01 |
+| 1e-4 | 0,999 | 0,992 / 0,990 | 0,913 | 0,900 | 0,44 ; 0,25 ; 0,01 |
+
+Lecture (provisoire) :
+- Le contact arrive au même point du chemin d'Adam, quel que soit lr : t_c·lr ≈ 2,5 à 3e-3 par coordonnée, et la perte n'a baissé que de 3 à 4 %. Un lr global plus petit ne change pas le chemin ; il ajoute des pas. Le levier « lr global » est vide.
+- La recommandation du post-mortem (« lr 1e-3 : pas de contact ») reposait sur un seul pas. Le contact arrive au pas 3.
+- B̃ porte ≈ 90 % de la hausse de r. Le déplacement réel de B̃ et des orientations aléatoires de même |Δ| donnent le même r : c'est la **taille** du déplacement de B̃ (≈ 50 % de |B̃|), pas son orientation. Ã contribue +0,015 ; C rien.
+- g_GD > 0 dès le pas 1 sur la tête 2 : le gradient pousse aussi cette tête vers ∂S. Le témoin par bloc montre que cette orientation n'est pas nécessaire au contact.
+- Après t_c (observation hors critères) : F' sort loin de S (r_max 3,9 à 16,5 à 300 pas) ; P-int reste sur ∂S (6 à 8 têtes).
+
+Suite : décision avec l'utilisateur. Levier prévu : lr par bloc pour B̃ (équivalent à B̃ = β·B̂ sous Adam). Il change la métrique induite J·D·Jᵀ à S fixe : test direct de l'affirmation centrale. Critères à écrire avant calcul.

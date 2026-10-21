@@ -1,0 +1,6 @@
+pint    lr=0.001 s0: ok L0=0.8886 train=0.4523 test=0.7854 | t_c=3 L(t_c−1)/L0=0.970 q=0.85 rmask(min/méd/max)=0.960/1.015/1.070 g_GD=+0.529 → échelle 27s
+pint    lr=0.0003 s0: ok L0=0.8886 train=0.5272 test=0.9079 | t_c=9 L(t_c−1)/L0=0.964 q=0.55 rmask(min/méd/max)=0.951/0.999/1.047 g_GD=+0.807 → échelle 28s
+pint    lr=0.0001 s0: ok L0=0.8886 train=0.6718 test=1.0580 | t_c=25 L(t_c−1)/L0=0.964 q=0.35 rmask(min/méd/max)=0.945/0.988/1.034 g_GD=+1.134 → mixte 26s
+freeint lr=0.001 s0: ok L0=0.8886 train=0.3085 test=0.5596 | t_c=3 L(t_c−1)/L0=0.970 q=0.85 rmask(min/méd/max)=0.960/1.015/1.070 g_GD=+0.529 → échelle 26s
+freeint lr=0.0003 s0: ok L0=0.8886 train=0.4610 test=0.7786 | t_c=9 L(t_c−1)/L0=0.964 q=0.55 rmask(min/méd/max)=0.951/0.999/1.047 g_GD=+0.807 → échelle 27s
+freeint lr=0.0001 s0: ok L0=0.8886 train=0.6132 test=1.0015 | t_c=25 L(t_c−1)/L0=0.964 q=0.35 rmask(min/méd/max)=0.945/0.988/1.034 g_GD=+1.134 → mixte 26s

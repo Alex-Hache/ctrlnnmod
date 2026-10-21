@@ -1,0 +1,8 @@
+lr=0.001 : t_c=3, r_max=1.033 (départ 0,899)
+  A_ seul : r_max réel=0.917 | orientations aléatoires méd.=0.918 [0.910, 0.925] | |Δ|/|θ₀'| = 0.30
+  B_ seul : r_max réel=1.016 | orientations aléatoires méd.=1.018 [0.974, 1.083] | |Δ|/|θ₀'| = 0.53
+  C  seul : r_max réel=0.900 | orientations aléatoires méd.=0.899 [0.899, 0.900] | |Δ|/|θ₀'| = 0.01
+lr=0.0001 : t_c=25, r_max=0.999 (départ 0,899)
+  A_ seul : r_max réel=0.913 | orientations aléatoires méd.=0.914 [0.907, 0.920] | |Δ|/|θ₀'| = 0.25
+  B_ seul : r_max réel=0.992 | orientations aléatoires méd.=0.990 [0.949, 1.043] | |Δ|/|θ₀'| = 0.44
+  C  seul : r_max réel=0.900 | orientations aléatoires méd.=0.899 [0.899, 0.900] | |Δ|/|θ₀'| = 0.01
