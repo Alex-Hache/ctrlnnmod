@@ -90,3 +90,11 @@ T1 (< 1 min) ; T3 (runs courts, arrêt au contact) ; T4 (30 runs × 3000 itér.,
 - Cause trouvée : pour certaines valeurs de ρ_t (non représentables en float32, par ex. t = 504), s = ρ_t / max(r, ρ_t) vaut 1 + 6e-8 au lieu de 1. Première différence de perte : t = 504–505 (A-lent), 1501–1502 (A-rapide), soit juste après le début de la décroissance, avec un écart de 1e-8 ; l'écart grandit ensuite (dynamique sensible).
 - Correction : ρ_t arrondi en float32 avant usage (s = 1 exactement dans S_t). Seuls A-lent et A-rapide sont relancés (5 graines). Règles inchangées. Les résultats du premier passage sont gardés dans `results_m2q/invalide_c1/` (avec l'analyse d'avant correction) ; ils ne servent à aucune lecture.
 - T5 est relancé ensuite pour tous les bras (F', P, PGD, fix2 inchangés : runs déterministes).
+
+### Deuxième passage : correction sans effet, diagnostic corrigé
+
+- La relance avec ρ_t arrondi en float32 a donné des résultats identiques au bit près à ceux du premier passage, et c1 a encore échoué (même écart). Mon diagnostic était incomplet : l'effet (s = 1 ± 1 ulp) était juste, le mécanisme faux.
+- Vrai mécanisme : PyTorch calcule `ρ / tenseur` comme ρ × (1/tenseur). Le produit x·(1/x) n'est pas toujours exactement 1 en float32, même si ρ est représentable.
+- Correction : classe `ExactProjBlock` (dans `m2q.py`), s = min(1, ρ_t/r). Dans S_t, s = 1 exactement ; hors de S_t, même Φ à 1 ulp près. Appliquée aux seuls bras A-lent et A-rapide. La bibliothèque n'est pas modifiée.
+- Vérification avant la troisième relance (graine 0, A-lent, 700 pas) : écart de perte à F' = 0 sur tout le run, r brut jusqu'à 47,6.
+- Résultats du deuxième passage : dans l'historique (commit `c609be0`), identiques à `results_m2q/invalide_c1/`. Journal : `m2q_rerun_log.txt`. Règles inchangées.
