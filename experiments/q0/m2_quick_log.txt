@@ -2,3 +2,7 @@ psat adam lr=0.003 s0: ok test=0.7443 train=0.3286 marge∈[-4.17e-07, 0] contac
 psat adam lr=0.01 s0: ok test=0.4264 train=0.2086 marge∈[-2.98e-07, 5.96e-08] contact@0 35s
 free adam lr=0.003 s0: ok test=0.3182 train=0.2144 marge∈[-17, -1.19e-07] contact@0 40s
 free adam lr=0.01 s0: ok test=0.0935 train=0.0619 marge∈[-44.9, -1.19e-07] contact@0 41s
+pint adam lr=0.01 s0: ok test=0.4016 train=0.2025 marge∈[-2.98e-07, 0.0999] contact@1 38s
+pint adam lr=0.003 s0: ok test=0.7353 train=0.3918 marge∈[-2.98e-07, 0.0999] contact@1 39s
+ren  adam lr=0.003 s0: ok test=0.2882 train=0.1197 24s
+ren  adam lr=0.01 s0: ok test=0.8476 train=0.4362 24s
