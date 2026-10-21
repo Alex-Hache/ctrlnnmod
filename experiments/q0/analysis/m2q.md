@@ -164,3 +164,10 @@ Prédiction (confiance faible) : H7b réfutée (f < 2), car la part B̃·C est g
   - Secondaire : fix2 réussit (0,032).
   - Prédictions : 4 sur 6 justes (fix2 prédit partiel, observé réussit ; A-rapide prédit partiel, observé échoue).
 - **T5** (contrôle passé) : F' E = 1,6 à 2,5 → ambigu par la règle ; d₂₀₀₀/d₀ ≈ 1e-9 (convergence en pratique).
+
+### Incident T7 : contrôle g1 en échec (premier passage)
+
+- g1 : avec 0 élagage, test 2,2 à 3,0 au lieu de 0,0012 à 0,0023. Règle : pas de lecture.
+- Cause : le script met le type par défaut en float64 ; le générateur aléatoire tire alors d'autres nombres. Le maître et les entrées (`teacher`, `inputs`) n'étaient pas ceux du banc. L'élagage était évalué sur un autre maître. Les grammiens étaient mesurés sur une autre réalisation de la même classe d'entrées.
+- Correction : données générées en float32 puis converties en float64 (`f32`). Relance complète de T7. Règles inchangées. Premier passage gardé dans `results_m2q/invalide_T7/`.
+- T6 n'est pas touché : il compare deux réalisations du même modèle sur les mêmes entrées (identité entrée-sortie), et r ne dépend pas des données.

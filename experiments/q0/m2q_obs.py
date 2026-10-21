@@ -20,6 +20,16 @@ RHO, D = m2.RHO, os.path.join(HERE, "results_m2q")
 AMPS, CLASSES = (1e-3, 1e-2, 1e-1, 1.0), ("nominale", "nulle")
 
 
+def f32(fn, *a):
+    """Génère avec le type par défaut float32 (le tirage aléatoire dépend du type), puis convertit en float64."""
+    torch.set_default_dtype(torch.float32)
+    try:
+        out = fn(*a)
+    finally:
+        torch.set_default_dtype(torch.float64)
+    return [t.double() for t in out] if isinstance(out, (tuple, list)) else out.double()
+
+
 def load(arm, seed):
     model = m2q.build4(arm, seed)
     model.load_state_dict(torch.load(os.path.join(D, f"t4_{arm}_s{seed}.pt")))
@@ -65,7 +75,7 @@ def model_sim(model):
 
 # ------------------------------------------------------------------ contrôle g0 : maître linéaire
 def check_g0(seed=0):
-    A, B, C = [t.double() for t in m2.osc.teacher(seed)]
+    A, B, C = f32(m2.osc.teacher, seed)
     T = 300
 
     def sim(u, x0):
@@ -75,7 +85,7 @@ def check_g0(seed=0):
             xs.append(x)
         xs = torch.stack(xs, 1)
         return xs, xs @ C.T
-    u = m2.osc.inputs(32, T, 40 + seed).double()
+    u = f32(m2.osc.inputs, 32, T, 40 + seed)
     Wo_an, P = torch.zeros(8, 8), torch.eye(8)
     for t in range(1, T + 1):
         P = A @ P
@@ -172,7 +182,7 @@ for arm in ("free", "p", "fix2"):
         rh = [float(x) for x in rh]
         rec = dict(arm=arm, seed=seed, r_h=rh, sweep={})
         for cls in CLASSES:
-            u = m2.osc.inputs(32, 300, 40 + seed).double()
+            u = f32(m2.osc.inputs, 32, 300, 40 + seed)
             if cls == "nulle":
                 u = torch.zeros_like(u)
             for c in AMPS:
@@ -192,7 +202,7 @@ say("\n== Élagage (libre)")
 P = {}
 for seed in range(5):
     model = load("free", seed)
-    u_tr, y_tr, u_te, y_te = [t.double() for t in m2.data(seed)]
+    u_tr, y_tr, u_te, y_te = f32(m2.data, seed)
     t4 = json.load(open(os.path.join(D, f"t4_free_s{seed}.json")))["test"]
     P[seed] = {kind: prune(model, kind, u_tr, y_tr, u_te, y_te) for kind in ("tête", "unité")}
     g1 = abs(P[seed]["tête"][0]["test"] - t4)
