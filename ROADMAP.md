@@ -44,7 +44,7 @@ Tri des résultats existants :
   - `blockh*` (« homo », 0,23 à 0,31) : s = 1/(r + softplus(c)). Rang plein ; marge réglée par c.
 - Portes : biais −3, z ≈ 0,05 au départ. Avec les contraintes, une tête qui doit reproduire une rotation rapide exige z proche de 1 (≈ 0,98 à 45°). Le libre peut compenser par un A de grande norme.
 
-### M1 — Rang et κ de J, sans sweep (local, minutes) — PROCHAIN
+### M1 — Rang et κ de J, sans sweep (local, minutes) — FAIT (2026-10-21)
 
 Points : θ₀ ; θ_fin d'un run échoué (un run Adam de 2000 itér., ~70 s, aucun checkpoint n'existe) ; θ* si une préimage finie existe. Classes : `blockp_nogate`, `blockp`, `block`, `blockh` ; REN en témoin.
 Mesures : rang de J (seuil σ/σ_max < 1e-6), σ_min, κ(JJᵀ) sur l'image, nombre de têtes saturées (r_h > ρ), part de g = ∇_W L hors de l'image de J en θ_fin, ‖Jᵀg‖/(σ_max‖g‖).
@@ -53,9 +53,21 @@ Prédiction (code) : `blockp*` a un déficit de rang égal au nombre de têtes s
 - Terme de rang réfuté : rang plein le long du run (toutes les têtes à r_h < ρ).
 - Métrique plausible : rang plein et κ_blocs ≥ 100 × κ_REN.
 
-### M2 — Bord : le run libre des blocs (local, ~70 s/run)
+**Résultat M1** (`experiments/q0/analysis/m1.md`, graine 0, Adam, 2000 itér.). Contrôles : perte en W = perte du module, J exact aux différences finies (1e-9), L(θ*) = 1e-9.
+- `blockp*` (cas Q0 propre) : déficit de rang = nombre de têtes saturées = 7 à 8, **sur tout le run**. La marge vaut 0 : le modèle reste **sur ∂S**, alors que le maître est à l'intérieur (marge 0,009). La direction normale (vers l'intérieur) est perdue. Mais critère de blocage non atteint : 2 à 24 % de ‖g‖² hors de l'image, ‖Jᵀg‖/(σ_max‖g‖) = 0,15 à 0,9. Pas de point parasite. κ ≤ 440.
+- REN (réussit, test 0,0045) : κ monte à 3,3e4. **κ(JJᵀ) ne sépare donc pas réussite et échec** : `blockp*` échoue avec un κ 75× plus faible.
+- `blockh` : κ monte à 1,4e7 quand la marge tombe à 0,0025 ; κ(θ*) = 1,7e6. Critère « métrique plausible » atteint, mais frac_slow ≤ 17 %.
+- `block` (sat) : θ* n'existe pas ; le maître est hors de S. Confirmé hors Q0.
+- Écart d'entraînement réel : perte train 0,06 à 0,21 (blocs) contre 0,001 (REN). L'écart n'est pas qu'un effet d'horizon (test sur 300 pas, train sur 100).
+Lecture : pour le cas Q0 propre, ni la métrique (κ) ni un point parasite n'expliquent l'échec. Il reste le bord (le modèle est collé à ∂S) ou « pas la contrainte ». M2 tranche.
+Limites : une graine ; Adam (métrique J·D·Jᵀ, pas JJᵀ) ; θ_fin non sauvegardé.
+
+### M2 — Bord : le run libre des blocs (local, ~170 s/run sur 2 cœurs) — PROCHAIN
 
 Le run libre des équations blocs n'existe pas. Lancer contraint et libre depuis le même W₀, en GD pur et en Adam, 5 graines. Journaliser la marge m(t) = ρ − max_h r_h(W) et la perte.
+Précision après M1 : l'init de `blockp*` est saturée (r brut ≈ 5 > ρ), donc W₀ est sur ∂S. Ajouter un bras « proj, init dans S » (Ã, B̃ réduits pour r < ρ). Dans S, Φ = identité : ce bras est le libre tant qu'il ne touche pas ∂S.
+- Bord confirmé : le libre (ou proj init dans S) quitte ∂S vers l'intérieur et atteint < 0,05, alors que proj saturé reste > 0,2.
+- Pas la contrainte : le libre reste > 0,2.
 Validité : en GD pur, blocs > 0,2 et REN < 0,05. Sinon, l'écart vient d'Adam ; T1–T3 ne s'appliquent pas tels quels.
 
 ### M3 — Riemannien (Modal), seulement si M1–M2 sont ambigus
@@ -170,3 +182,4 @@ Ne pas commencer avant que les items 1 et 2 aient un résultat valide.
 - 2026-10-20 : 1b fait. Terme de bord confirmé en maître–élève (Adam sort de S dès l'itér. 50–250). Prochain : 1d.
 - 2026-10-20 : conclusion de 1b corrigée (sorties = détours, pas un déficit). Ajout de 1e (métrique seule, ensemble fixé). Prochain : 1e.
 - 2026-10-21 : retour à Q0. ℓ∞ reclassé en défaut de capacité. Cas Q0 = blocs de 2 (proj, ρ = 0,999). Chemin M1 → M2 → M3 avec critères. Préalable vérifié par lecture du code. Items 1b–1e déplacés en validation. Prochain : M1.
+- 2026-10-21 : M1 fait. `blockp*` reste collé à ∂S (déficit = têtes saturées, 7–8), κ ≤ 440 ; le REN réussit avec κ = 3,3e4. Ni métrique ni point parasite pour le cas Q0 propre. Prochain : M2 (libre + proj init dans S).
