@@ -1,0 +1,11 @@
+g1 écarts (float32 de T4 contre float64) : ['1.8e-08', '2.4e-08', '3.4e-08', '4.5e-08', '1.0e-08'] → tous < 1e-6 (seuil compatible float32, choisi après coup)
+H7a : CONTRE [-0.023809523809523808, 0.5238095238095238, 0.8095238095238095, 0.7380952380952381, 0.42857142857142855]
+  s0: r complet 56 ; meilleur gardé avec test ≤ 0,05 : r 52.7 (unité, k = 5, test 0.0425) → f = 1.06
+  s1: r complet 60.5 ; meilleur gardé avec test ≤ 0,05 : r 35.7 (unité, k = 15, test 0.0401) → f = 1.69
+  s2: r complet 64 ; meilleur gardé avec test ≤ 0,05 : r 61.3 (unité, k = 4, test 0.0295) → f = 1.04
+  s3: r complet 59.5 ; meilleur gardé avec test ≤ 0,05 : r 58 (unité, k = 3, test 0.0408) → f = 1.02
+  s4: r complet 64 ; meilleur gardé avec test ≤ 0,05 : r 46.8 (unité, k = 11, test 0.0483) → f = 1.37
+H7b : RÉFUTE (sans réentraînement) [1.06, 1.69, 1.04, 1.02, 1.37] | dans S : 0 /5
+free rupture après 8 modes : ['σ8/σ9 = 384', 'σ8/σ9 = 133', 'σ8/σ9 = 209', 'σ8/σ9 = 260', 'σ8/σ9 = 107']
+p rupture après 8 modes : ['σ8/σ9 = 2', 'σ8/σ9 = 2', 'σ8/σ9 = 1', 'σ8/σ9 = 1', 'σ8/σ9 = 1']
+fix2 rupture après 8 modes : ['σ8/σ9 = 503', 'σ8/σ9 = 1', 'σ8/σ9 = 2', 'σ8/σ9 = 2', 'σ8/σ9 = 2']

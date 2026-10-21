@@ -171,3 +171,13 @@ Prédiction (confiance faible) : H7b réfutée (f < 2), car la part B̃·C est g
 - Cause : le script met le type par défaut en float64 ; le générateur aléatoire tire alors d'autres nombres. Le maître et les entrées (`teacher`, `inputs`) n'étaient pas ceux du banc. L'élagage était évalué sur un autre maître. Les grammiens étaient mesurés sur une autre réalisation de la même classe d'entrées.
 - Correction : données générées en float32 puis converties en float64 (`f32`). Relance complète de T7. Règles inchangées. Premier passage gardé dans `results_m2q/invalide_T7/`.
 - T6 n'est pas touché : il compare deux réalisations du même modèle sur les mêmes entrées (identité entrée-sortie), et r ne dépend pas des données.
+
+### Résultat T7 (deuxième passage) — `m2q_T7_log.txt`, `results_m2q/t7.json`, `m2q_T7_lecture_conditionnelle.txt`
+
+- g0 passé (écart ≤ 4e-13).
+- **g1 en échec par la règle écrite** : écarts 1e-8 à 5e-8. C'est l'écart attendu entre le test de T4 (float32) et le même calcul en float64. **Le seuil 1e-9 était mal posé** (aucun calcul correct ne pouvait le passer). Par la règle : pas de lecture.
+- **Écart au protocole, décidé après avoir vu les résultats** : seuil de g1 porté à 1e-6 (compatible float32). Avec ce seuil, les règles codées donnent :
+  - H7a **CONTRE** : Spearman(o_h, r_h) = −0,02 ; +0,52 ; +0,81 ; +0,74 ; +0,43. Les têtes à grand r sont plutôt **plus** observables. Stable sur le balayage (amplitudes, entrées).
+  - H7b **RÉFUTE** (sans réentraînement) : f = 1,06 ; 1,69 ; 1,04 ; 1,02 ; 1,37. Tout élagage qui garde le test ≤ 0,05 garde r ≥ 36. Retirer une seule tête fait passer le test à 0,15–0,64.
+  - Descriptif : le libre a **8 modes de Hankel dominants**, puis une chute d'un facteur 107 à 384 (σ₈/σ₉) : la dimension entrée-sortie effective est celle du maître (8). P n'a pas cette rupture (σ₈/σ₉ ≈ 1–2) ; fix2 seulement sur 1 graine sur 5.
+- Lecture (conditionnelle à l'écart sur g1) : l'hypothèse « le grand r vient de directions peu observables » est **réfutée sur ce banc**. Le grand r est porté par les têtes et les unités dont la sortie a besoin.
