@@ -1,0 +1,33 @@
+== T8 — finesse du certificat (modèles finaux de T4)
+k1 (r_box_lo ≤ r_mid ≤ r partout) : passé ; k2 (P : r ≤ ρ) : passé
+  p     s0: r 0.999 | r_mid 0.9985 (r_mid/r = 0.999) | R_lin 0.998 | sommet 0.998 | R_loc 0.998 | r_box_lo 0.998 | lâcheté ≤ r/r_box_lo = 1.00 | part de l'écart fermée par r_mid 0.54
+  p     s1: r 0.999 | r_mid 0.9986 (r_mid/r = 1.000) | R_lin 0.9982 | sommet 0.9983 | R_loc 0.9983 | r_box_lo 0.9983 | lâcheté ≤ r/r_box_lo = 1.00 | part de l'écart fermée par r_mid 0.54
+  p     s2: r 0.999 | r_mid 0.9987 (r_mid/r = 1.000) | R_lin 0.9983 | sommet 0.9984 | R_loc 0.9983 | r_box_lo 0.9984 | lâcheté ≤ r/r_box_lo = 1.00 | part de l'écart fermée par r_mid 0.54
+  p     s3: r 0.999 | r_mid 0.9973 (r_mid/r = 0.998) | R_lin 0.9956 | sommet 0.9957 | R_loc 0.9956 | r_box_lo 0.9957 | lâcheté ≤ r/r_box_lo = 1.00 | part de l'écart fermée par r_mid 0.52
+  p     s4: r 0.999 | r_mid 0.9967 (r_mid/r = 0.998) | R_lin 0.9943 | sommet 0.9945 | R_loc 0.9943 | r_box_lo 0.9945 | lâcheté ≤ r/r_box_lo = 1.00 | part de l'écart fermée par r_mid 0.52
+  free  s0: r 55.99 | r_mid 45 (r_mid/r = 0.804) | R_lin 36.42 | sommet 36.45 | R_loc 27.41 | r_box_lo 36.45 | lâcheté ≤ r/r_box_lo = 1.54 | part de l'écart fermée par r_mid 0.56
+  free  s1: r 60.46 | r_mid 46.57 (r_mid/r = 0.770) | R_lin 34.27 | sommet 34.38 | R_loc 29.16 | r_box_lo 34.38 | lâcheté ≤ r/r_box_lo = 1.76 | part de l'écart fermée par r_mid 0.53
+  free  s2: r 64.02 | r_mid 49.73 (r_mid/r = 0.777) | R_lin 36.53 | sommet 36.62 | R_loc 30.2 | r_box_lo 36.62 | lâcheté ≤ r/r_box_lo = 1.75 | part de l'écart fermée par r_mid 0.52
+  free  s3: r 59.46 | r_mid 43.56 (r_mid/r = 0.733) | R_lin 30.34 | sommet 30.38 | R_loc 24.28 | r_box_lo 30.38 | lâcheté ≤ r/r_box_lo = 1.96 | part de l'écart fermée par r_mid 0.55
+  free  s4: r 63.99 | r_mid 48.51 (r_mid/r = 0.758) | R_lin 35.38 | sommet 35.39 | R_loc 28.04 | r_box_lo 35.39 | lâcheté ≤ r/r_box_lo = 1.81 | part de l'écart fermée par r_mid 0.54
+  fix2  s0: r 2 | r_mid 1.983 (r_mid/r = 0.991) | R_lin 1.965 | sommet 1.967 | R_loc 1.966 | r_box_lo 1.967 | lâcheté ≤ r/r_box_lo = 1.02 | part de l'écart fermée par r_mid 0.53
+  fix2  s1: r 2 | r_mid 1.997 (r_mid/r = 0.998) | R_lin 1.994 | sommet 1.995 | R_loc 1.994 | r_box_lo 1.995 | lâcheté ≤ r/r_box_lo = 1.00 | part de l'écart fermée par r_mid 0.58
+  fix2  s2: r 2 | r_mid 1.998 (r_mid/r = 0.999) | R_lin 1.997 | sommet 1.997 | R_loc 1.997 | r_box_lo 1.997 | lâcheté ≤ r/r_box_lo = 1.00 | part de l'écart fermée par r_mid 0.52
+  fix2  s3: r 2 | r_mid 1.958 (r_mid/r = 0.979) | R_lin 1.917 | sommet 1.919 | R_loc 1.917 | r_box_lo 1.919 | lâcheté ≤ r/r_box_lo = 1.04 | part de l'écart fermée par r_mid 0.51
+  fix2  s4: r 2 | r_mid 1.976 (r_mid/r = 0.988) | R_lin 1.953 | sommet 1.958 | R_loc 1.956 | r_box_lo 1.958 | lâcheté ≤ r/r_box_lo = 1.02 | part de l'écart fermée par r_mid 0.56
+Ligne T8 (libre) : aucun certificat de cette forme n'admet la solution libre, même le plus fin
+Ligne T8 (fix2) : fix2 non admissible même par le certificat le plus fin (admissible sur 0/5)
+
+== T9–T11 — entraînement avec un certificat plus fin ou une métrique apprise
+Références T4 : P médiane 0.2878 ; libre médiane 0.0018
+  mid      test : 0.1564 0.3188 0.2876 0.3815 0.2186 | médiane 0.2876 (échoue) | g = 0.00 | c_end max 0.99900 | r fixe en fin : 1.01 1.01 1.01 1.02 1.05 | statuts ['ok', 'ok', 'ok', 'ok', 'ok']
+    contrôles : d0 ok ; d-fin ok ; d-val ok (E : 0.987191 0.964629 0.975018 0.980318 0.986490)
+    Ligne : cette forme de l'hypothèse est RÉFUTÉE sur ce banc
+  alpha    test : 0.1021 0.1096 0.2337 0.2786 0.1898 | médiane 0.1898 (partiel) | g = 0.34 | c_end max 0.99900 | r fixe en fin : 3.79 1.95 2.92 3.58 6.42 | α min/max en fin : 0.14/5.3e+02 0.032/73 0.093/16 0.18/3.8e+02 0.1/73 | statuts ['ok', 'ok', 'ok', 'ok', 'ok']
+    contrôles : d0 ok ; d-fin ok ; d-val ok (E : 0.920778 0.960590 0.945258 0.937979 0.967661)
+    Ligne : partiel (g = 0.34)
+  midalpha test : 0.0916 0.1316 0.2517 0.1371 0.1827 | médiane 0.1371 (partiel) | g = 0.53 | c_end max 0.99900 | r fixe en fin : 2.18 4.81 5.36 2.18 7.1 | α min/max en fin : 0.11/2.8e+02 0.11/1.6e+02 0.1/32 0.065/91 0.14/27 | statuts ['ok', 'ok', 'ok', 'ok', 'ok']
+    contrôles : d0 ok ; d-fin ok ; d-val ok (E : 0.951283 0.963606 0.921773 0.971575 0.917895)
+    Ligne : partiel (g = 0.53)
+Lecture d'ensemble : voir les lignes par bras.
+Prédictions écrites : T9 partiel, T10 échoue, T11 partiel → observé : {'mid': 'échoue', 'alpha': 'partiel', 'midalpha': 'partiel'}

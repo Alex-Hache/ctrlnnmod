@@ -29,3 +29,21 @@ train alpha    s3: ok train=0.1057 test=0.2786 c_end=0.9990 r_fixe_end=3.580 216
 train midalpha s3: ok train=0.0665 test=0.1371 c_end=0.9990 r_fixe_end=2.179 217s
 train mid      s4: ok train=0.0853 test=0.2186 c_end=0.9990 r_fixe_end=1.050 214s
 train alpha    s4: ok train=0.0811 test=0.1898 c_end=0.9990 r_fixe_end=6.417 212s
+train midalpha s4: ok train=0.0791 test=0.1827 c_end=0.9990 r_fixe_end=7.099 215s
+train fini 07:57:28
+dval mid      s0: E=0.987191 c_end=0.99900
+dval mid      s1: E=0.964629 c_end=0.99900
+dval mid      s2: E=0.975018 c_end=0.99900
+dval mid      s3: E=0.980318 c_end=0.99900
+dval mid      s4: E=0.986490 c_end=0.99900
+dval alpha    s0: E=0.920778 c_end=0.99900
+dval alpha    s1: E=0.960590 c_end=0.99900
+dval alpha    s2: E=0.945258 c_end=0.99900
+dval alpha    s3: E=0.937979 c_end=0.99900
+dval alpha    s4: E=0.967661 c_end=0.99900
+dval midalpha s0: E=0.951283 c_end=0.99900
+dval midalpha s1: E=0.963606 c_end=0.99900
+dval midalpha s2: E=0.921773 c_end=0.99900
+dval midalpha s3: E=0.971575 c_end=0.99900
+dval midalpha s4: E=0.917895 c_end=0.99900
+FIN 07:57:48
