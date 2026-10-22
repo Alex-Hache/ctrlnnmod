@@ -1,0 +1,15 @@
+début 07:28:04
+t8 p     s0: r=0.999 r_mid=0.9985 R_lin=0.998 sommet=0.998 R_loc=0.998 → r_box_lo=0.998
+t8 p     s1: r=0.999 r_mid=0.9986 R_lin=0.9982 sommet=0.9983 R_loc=0.9983 → r_box_lo=0.9983
+t8 p     s2: r=0.999 r_mid=0.9987 R_lin=0.9983 sommet=0.9984 R_loc=0.9983 → r_box_lo=0.9984
+t8 p     s3: r=0.999 r_mid=0.9973 R_lin=0.9956 sommet=0.9957 R_loc=0.9956 → r_box_lo=0.9957
+t8 p     s4: r=0.999 r_mid=0.9967 R_lin=0.9943 sommet=0.9945 R_loc=0.9943 → r_box_lo=0.9945
+t8 free  s0: r=55.99 r_mid=45 R_lin=36.42 sommet=36.45 R_loc=27.41 → r_box_lo=36.45
+t8 free  s1: r=60.46 r_mid=46.57 R_lin=34.27 sommet=34.38 R_loc=29.16 → r_box_lo=34.38
+t8 free  s2: r=64.02 r_mid=49.73 R_lin=36.53 sommet=36.62 R_loc=30.2 → r_box_lo=36.62
+t8 free  s3: r=59.46 r_mid=43.56 R_lin=30.34 sommet=30.38 R_loc=24.28 → r_box_lo=30.38
+t8 free  s4: r=63.99 r_mid=48.51 R_lin=35.38 sommet=35.39 R_loc=28.04 → r_box_lo=35.39
+t8 fix2  s0: r=2 r_mid=1.983 R_lin=1.965 sommet=1.967 R_loc=1.966 → r_box_lo=1.967
+t8 fix2  s1: r=2 r_mid=1.997 R_lin=1.994 sommet=1.995 R_loc=1.994 → r_box_lo=1.995
+t8 fix2  s2: r=2 r_mid=1.998 R_lin=1.997 sommet=1.997 R_loc=1.997 → r_box_lo=1.997
+t8 fix2  s3: r=2 r_mid=1.958 R_lin=1.917 sommet=1.919 R_loc=1.917 → r_box_lo=1.919
