@@ -1,0 +1,20 @@
+Références T4 : P 0.2878 ; libre 0.0018
+  lin      test : 0.2940 0.3348 0.2440 0.4141 0.1085 | médiane 0.2940 (échoue) | g = -0.02 | test à t=0 : 1.27 1.69 1.5 1.52 1.57 | r fin : 0.999 0.999 0.999 0.999 0.999 | statuts ['ok', 'ok', 'ok', 'ok', 'ok']
+    z fin (médiane par tête) : 0.18 0.08 0.22 0.28 0.25 0.30 0.14 0.14 | contrôles : e-lin ok, e-fin ok, e-val ok | E : 0.986690 0.978982 0.986090 0.985416 0.978751
+  linfree  test : 0.0001 0.0198 0.0002 0.0001 0.0001 | médiane 0.0001 (réussit) | g = 1.01 | test à t=0 : 1.27 1.69 1.5 1.52 1.57 | r fin : 12.3 8.93 11.2 8.52 11.4 | statuts ['ok', 'ok', 'ok', 'ok', 'ok']
+    z fin (médiane par tête) : 0.07 0.07 0.06 0.14 0.08 0.05 0.15 0.07 | contrôles : e-lin ok
+  gate0    test : 0.1128 0.1981 0.1363 0.2123 0.1181 | médiane 0.1363 (partiel) | g = 0.53 | test à t=0 : 1.48 2.09 1.59 2.01 1.96 | r fin : 0.999 0.999 0.999 0.999 0.999 | statuts ['ok', 'ok', 'ok', 'ok', 'ok']
+    z fin (médiane par tête) : 0.74 0.61 0.50 0.60 0.47 0.71 0.57 0.46 | contrôles : e-fin ok, e-val ok | E : 0.983770 0.960895 0.987863 0.992070 0.990804
+  lingate0 test : 0.0309 0.0388 0.0474 0.2502 0.0297 | médiane 0.0388 (réussit) | g = 0.87 | test à t=0 : 1.49 2.1 1.59 2.02 1.95 | r fin : 0.999 0.999 0.999 0.999 0.999 | statuts ['ok', 'ok', 'ok', 'ok', 'ok']
+    z fin (médiane par tête) : 0.74 0.25 0.73 0.80 0.77 0.51 0.63 0.79 | contrôles : e-lin ok, e-fin ok, e-val ok | E : 0.988241 0.990034 0.986036 0.985273 0.990064
+  basin2   test : 0.0772 0.1692 0.0662 0.0451 0.0561 | médiane 0.0662 (partiel) | g = 0.77 | test à t=0 : 0.0521 0.0236 0.0404 0.0856 0.0705 | r fin : 0.999 0.999 0.999 0.999 0.999 | statuts ['ok', 'ok', 'ok', 'ok', 'ok']
+    z fin (médiane par tête) : 0.14 0.67 1.00 1.00 0.07 0.20 0.08 0.12 | contrôles : e-basin ÉCHEC, e-fin ok, e-val ok | E : 0.991943 0.993806 0.988224 0.990514 0.991158
+  basin1   test : 0.1479 0.2273 0.0615 0.0526 0.1012 | médiane 0.1012 (partiel) | g = 0.65 | test à t=0 : 0.532 0.306 0.437 0.78 0.737 | r fin : 0.999 0.999 0.999 0.999 0.999 | statuts ['ok', 'ok', 'ok', 'ok', 'ok']
+    z fin (médiane par tête) : 0.14 0.67 1.00 1.00 0.05 0.07 0.22 0.08 | contrôles : e-fin ok, e-val ok | E : 0.996554 0.995206 0.986988 0.987701 0.996701
+
+H-tanh : RÉFUTÉE sous cette forme : même sans tanh, la contrainte bloque
+H-portes : partiel (g = 0.53)
+lingate0 : réussit
+H-bassin : contrôle en échec → pas de lecture
+basin1 (descriptif) : partiel
+Prédictions : linfree réussit, lin partiel, gate0 échoue, lingate0 partiel, basin2 réussit, basin1 partiel → observé : {'lin': 'échoue', 'linfree': 'réussit', 'gate0': 'partiel', 'lingate0': 'réussit', 'basin2': 'partiel', 'basin1': 'partiel'}

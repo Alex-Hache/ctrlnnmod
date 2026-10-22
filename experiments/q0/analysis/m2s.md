@@ -41,3 +41,22 @@ Lecture :
 Prédictions (confiance faible) : linfree réussit ; lin partiel ; gate0 échoue ; lingate0 partiel ; basin2 réussit ; basin1 partiel.
 
 Coût : 30 runs × ≈ 4,5 min sur 2 cœurs ≈ 70 min, après la fin de T9–T11.
+
+## Résultats (règles appliquées par `analyze_m2s.py`) — `m2s_analysis.txt`, `results_m2s/`
+
+Contrôles : e-lin, e-fin, e-val passés pour tous les bras concernés (E = 0,96 à 0,997). **e-basin en échec** : avec 1 % de bruit multiplicatif, le test au départ vaut déjà 0,024 à 0,086 (seuil 0,01). Pas de lecture de H-bassin.
+
+| bras | test (5 graines) | médiane | g | lecture |
+|---|---|---|---|---|
+| linfree (témoin) | 0,0001 0,0198 0,0002 0,0001 0,0001 | 0,0001 | 1,01 | réussit (validité de lin acquise) |
+| lin (sans tanh, portes fermées au départ) | 0,294 0,335 0,244 0,414 0,109 | 0,294 | −0,02 | **H-tanh réfutée** sous cette forme |
+| gate0 (portes ouvertes au départ) | 0,113 0,198 0,136 0,212 0,118 | 0,136 | 0,53 | H-portes partielle |
+| **lingate0 (sans tanh et portes ouvertes)** | 0,031 0,039 0,047 0,250 0,030 | **0,039** | 0,87 | **réussit** (4 graines sur 5 < 0,05) |
+| basin2 (maître + 1 %) | 0,077 0,169 0,066 0,045 0,056 | 0,066 | 0,77 | pas de lecture (e-basin) |
+| basin1 (maître + 10 %) | 0,148 0,227 0,062 0,053 0,101 | 0,101 | 0,65 | descriptif : partiel |
+
+- **Premier bras contraint qui réussit, avec r = ρ et la non-expansion vérifiée : lingate0.** Il faut à la fois retirer le chemin tanh et ouvrir les portes au départ. Aucun des deux seuls ne suffit : lin échoue, gate0 est partiel. (La ligne « les deux sont nécessaires ensemble » de la règle exige que gate0 échoue ; il est partiel, donc cette ligne ne s'applique pas strictement.)
+- Portes en fin (médiane par tête) : lingate0 0,25 à 0,80 ; lin 0,08 à 0,30 ; linfree 0,05 à 0,15. Le libre n'a pas besoin d'ouvrir ses portes (il compense par un grand Ã, r = 8,5 à 12,3) ; le contraint, si.
+- Descriptif bassin : depuis le maître perturbé (1 % ou 10 %), l'entraînement contraint finit à 0,05–0,23, au-dessus du point de départ pour basin2 sur 4 graines sur 5.
+- Défaut de protocole à noter : le seuil e-basin (0,01) n'était pas compatible avec un bruit de 1 % sur un maître posé sur le bord.
+- Prédictions : 2 sur 6 justes (linfree, basin1).
