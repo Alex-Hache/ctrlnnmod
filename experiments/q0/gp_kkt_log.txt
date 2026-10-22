@@ -1,0 +1,26 @@
+  s0 δ=0: R/‖g‖=1 (optimal) | témoin méd. 0.999 min 0.997 | plis {'A_zero': 0, 'A_tie': 0, 'B_zero': 0, 'C_zero': 0, 'nA': 64, 'nB': 256, 'nC': 256} | 2s
+  s0 δ=0.0001: R/‖g‖=0.999 (optimal) | témoin méd. 0.994 min 0.988 | plis {'A_zero': 0, 'A_tie': 0, 'B_zero': 1, 'C_zero': 1, 'nA': 64, 'nB': 256, 'nC': 256} | 1s
+  s0 δ=0.001: R/‖g‖=0.995 (optimal) | témoin méd. 0.955 min 0.945 | plis {'A_zero': 6, 'A_tie': 8, 'B_zero': 52, 'C_zero': 46, 'nA': 64, 'nB': 256, 'nC': 256} | 1s
+  s0 δ=0.01: R/‖g‖=0.99 (optimal) | témoin méd. 0.885 min 0.862 | plis {'A_zero': 31, 'A_tie': 12, 'B_zero': 171, 'C_zero': 227, 'nA': 64, 'nB': 256, 'nC': 256} | 1s
+s0: v1 True (train 0.0567775/0.0567774, test 0.124316/0.124316) | v2 True (R0 0.6851, NNLS 0.6851) | ‖g_unc‖/‖g_con‖ 0.249 | résidu signé (U1) 0.987 | sat 8
+  s1 δ=0: R/‖g‖=0.997 (optimal) | témoin méd. 0.999 min 0.996 | plis {'A_zero': 0, 'A_tie': 0, 'B_zero': 0, 'C_zero': 0, 'nA': 64, 'nB': 256, 'nC': 256} | 1s
+  s1 δ=0.0001: R/‖g‖=0.996 (optimal) | témoin méd. 0.993 min 0.988 | plis {'A_zero': 0, 'A_tie': 0, 'B_zero': 3, 'C_zero': 3, 'nA': 64, 'nB': 256, 'nC': 256} | 1s
+  s1 δ=0.001: R/‖g‖=0.92 (optimal) | témoin méd. 0.962 min 0.948 | plis {'A_zero': 4, 'A_tie': 13, 'B_zero': 89, 'C_zero': 131, 'nA': 64, 'nB': 256, 'nC': 256} | 1s
+  s1 δ=0.01: R/‖g‖=0.627 (optimal) | témoin méd. 0.918 min 0.902 | plis {'A_zero': 32, 'A_tie': 11, 'B_zero': 201, 'C_zero': 253, 'nA': 64, 'nB': 256, 'nC': 256} | 1s
+s1: v1 True (train 0.108401/0.108401, test 0.340387/0.340387) | v2 True (R0 2.881, NNLS 2.881) | ‖g_unc‖/‖g_con‖ 0.126 | résidu signé (U1) 0.988 | sat 8
+  s2 δ=0: R/‖g‖=0.997 (optimal) | témoin méd. 0.999 min 0.995 | plis {'A_zero': 0, 'A_tie': 0, 'B_zero': 0, 'C_zero': 0, 'nA': 64, 'nB': 256, 'nC': 256} | 1s
+  s2 δ=0.0001: R/‖g‖=0.995 (optimal) | témoin méd. 0.99 min 0.981 | plis {'A_zero': 0, 'A_tie': 1, 'B_zero': 4, 'C_zero': 2, 'nA': 64, 'nB': 256, 'nC': 256} | 1s
+  s2 δ=0.001: R/‖g‖=0.983 (optimal) | témoin méd. 0.952 min 0.94 | plis {'A_zero': 9, 'A_tie': 6, 'B_zero': 43, 'C_zero': 93, 'nA': 64, 'nB': 256, 'nC': 256} | 1s
+  s2 δ=0.01: R/‖g‖=0.95 (optimal) | témoin méd. 0.883 min 0.864 | plis {'A_zero': 20, 'A_tie': 13, 'B_zero': 129, 'C_zero': 253, 'nA': 64, 'nB': 256, 'nC': 256} | 1s
+s2: v1 True (train 0.123104/0.123104, test 0.29168/0.29168) | v2 True (R0 0.5142, NNLS 0.5142) | ‖g_unc‖/‖g_con‖ 0.283 | résidu signé (U1) 0.958 | sat 8
+  s3 δ=0: R/‖g‖=0.988 (optimal) | témoin méd. 0.999 min 0.996 | plis {'A_zero': 0, 'A_tie': 0, 'B_zero': 0, 'C_zero': 0, 'nA': 64, 'nB': 256, 'nC': 256} | 1s
+  s3 δ=0.0001: R/‖g‖=0.95 (optimal) | témoin méd. 0.993 min 0.987 | plis {'A_zero': 0, 'A_tie': 1, 'B_zero': 2, 'C_zero': 0, 'nA': 64, 'nB': 256, 'nC': 256} | 1s
+  s3 δ=0.001: R/‖g‖=0.837 (optimal) | témoin méd. 0.958 min 0.948 | plis {'A_zero': 2, 'A_tie': 6, 'B_zero': 70, 'C_zero': 26, 'nA': 64, 'nB': 256, 'nC': 256} | 1s
+  s3 δ=0.01: R/‖g‖=0.654 (optimal) | témoin méd. 0.872 min 0.852 | plis {'A_zero': 34, 'A_tie': 12, 'B_zero': 160, 'C_zero': 227, 'nA': 64, 'nB': 256, 'nC': 256} | 1s
+s3: v1 True (train 0.142801/0.142801, test 0.287756/0.287756) | v2 True (R0 0.352, NNLS 0.352) | ‖g_unc‖/‖g_con‖ 0.441 | résidu signé (U1) 0.977 | sat 8
+  s4 δ=0: R/‖g‖=0.976 (optimal) | témoin méd. 0.999 min 0.996 | plis {'A_zero': 0, 'A_tie': 0, 'B_zero': 0, 'C_zero': 0, 'nA': 64, 'nB': 256, 'nC': 256} | 1s
+  s4 δ=0.0001: R/‖g‖=0.967 (optimal) | témoin méd. 0.996 min 0.991 | plis {'A_zero': 0, 'A_tie': 0, 'B_zero': 0, 'C_zero': 0, 'nA': 64, 'nB': 256, 'nC': 256} | 1s
+  s4 δ=0.001: R/‖g‖=0.926 (optimal) | témoin méd. 0.975 min 0.967 | plis {'A_zero': 1, 'A_tie': 3, 'B_zero': 24, 'C_zero': 12, 'nA': 64, 'nB': 256, 'nC': 256} | 1s
+  s4 δ=0.01: R/‖g‖=0.62 (optimal) | témoin méd. 0.877 min 0.863 | plis {'A_zero': 19, 'A_tie': 6, 'B_zero': 121, 'C_zero': 208, 'nA': 64, 'nB': 256, 'nC': 256} | 1s
+s4: v1 True (train 0.0845743/0.0845743, test 0.24764/0.24764) | v2 True (R0 1.171, NNLS 1.171) | ‖g_unc‖/‖g_con‖ 0.373 | résidu signé (U1) 0.976 | sat 8
+DÉCISION : {'delta_dec': 0.01, 'R_rel': [0.9899971063324811, 0.6272220600916858, 0.9495228233608161, 0.6537633046061029, 0.619700014540849], 'v3_meds': [0.8852357794120569, 0.9175854479000569, 0.8825587622184852, 0.8722453891061774, 0.8769902423846363], 'n_conf': 0, 'n_refu': 5, 'verdict': 'piste 2 réfutée', 'v1_all': True, 'v2_all': True}

@@ -101,9 +101,35 @@ Lecture (majorité = 3/5 graines, au δ de décision) :
 Portée : un point KKT à δ près dit que le « gradient non nul » de U1 est un artefact des plis et que le plateau est une oscillation autour d'un point stationnaire du problème contraint. Il ne dit pas pourquoi ce point est mauvais (question Q0, hors session). Une réfutation dit qu'une direction de descente admissible existe à l'échelle δ : le plateau vient alors de la dynamique (piste 3).
 Coût : régénération 5 runs ≈ 15 min (2 cœurs) ; test < 2 min.
 
-## 7. Résultat du test
+## 7. Résultat du test KKT relâché (2026-10-22, `gp_kkt.py`, `results_gp/kkt.json`, `gp_kkt_log.txt`)
 
-(à remplir après calcul)
+Validité : v1 tenue (5/5 : perte et test régénérés = JSON de T4 à 1e-6 près) ; v2 tenue (5/5 : R_0 = résidu NNLS) ; v3 tenue (témoin aléatoire, médiane 0,87–0,92 ≥ 0,5 à δ = 1e-2). δ de décision = 1e-2 (pas de repli).
+
+| graine | R_δ/‖g_con‖, δ = 0 | 1e-3 | **1e-2** | témoin (1e-2) | termes à < 1e-2 d'un pli (A nuls / A σ₁≈σ₂ / B nuls / C nuls) | ‖g_unc‖/‖g_con‖ |
+|---|---|---|---|---|---|---|
+| 0 | 1,00 | 0,995 | **0,99** | 0,885 | 31 / 12 / 171 / 227 | 0,25 |
+| 1 | 0,997 | 0,92 | **0,63** | 0,918 | 32 / 11 / 201 / 253 | 0,13 |
+| 2 | 0,997 | 0,98 | **0,95** | 0,883 | 20 / 13 / 129 / 253 | 0,28 |
+| 3 | 0,988 | 0,84 | **0,65** | 0,872 | 34 / 12 / 160 / 227 | 0,44 |
+| 4 | 0,976 | 0,93 | **0,62** | 0,877 | 19 / 6 / 121 / 208 | 0,37 |
+(sur 64 blocs A, 256 termes B, 256 termes C.)
+
+Verdict pré-enregistré : **piste 2 réfutée** (5/5 graines ≥ 0,5). Lecture provisoire.
+- Le point final est bien **près de nombreux plis** (prédiction (a) confirmée : 19–34 blocs A presque nuls, 121–201 termes B, 208–253 termes C sur 256 ; C est presque nul, donc le chemin tanh est presque fermé).
+- Mais ces plis n'absorbent qu'une petite part du gradient (en norme) : 1 % à 38 % (contre 8 à 13 % pour une direction aléatoire). Le « gradient non nul » de U1 **n'est pas** un artefact des plis : une direction de descente admissible existe à l'échelle δ = 1e-2.
+- Fait supplémentaire : le gradient des paramètres **sans contrainte** (D, E, biais, portes, lecture) vaut 13 à 44 % de ‖g_con‖. Même hors de toute contrainte, le point n'est pas stationnaire. Le plateau ne vient donc pas d'abord de la géométrie de S : il vient de la **dynamique** de l'optimiseur.
+
+## 6b. Test de la piste 3 — critère écrit avant calcul (2026-10-22)
+
+Question : le plateau oscillant vient-il d'un pas trop grand pour la courbure locale ?
+Montage (`gp_lr.py`) : départ = P final régénéré (θ brut tel quel, donc mêmes W et même r brut). Adam neuf, clip 10, perte pleine, 1000 pas. Bras : **lr 1e-2** (témoin : même pas, Adam remis à zéro) et **lr 1e-3**. 5 graines.
+Mesures : baisse relative b = (L₀ − L₁₀₀₀)/L₀ (perte d'entraînement) ; fraction de pas montants u sur [500, 1000).
+Validité : le témoin lr 1e-2 reproduit le plateau : b < 0,10 et u ≥ 0,30 sur ≥ 3/5. Sinon, la remise à zéro d'Adam change le régime : pas de conclusion.
+Lecture (majorité 3/5, bras lr 1e-3) :
+- **piste 3 confirmée** : b ≥ 0,20 et u < 0,20 ;
+- **piste 3 réfutée** : b < 0,05 (un pas plus petit n'aide pas : vallée plate, lenteur) ;
+- sinon **partielle** (une part du plateau est l'amplitude de l'oscillation).
+Coût : 10 runs × 1000 pas ≈ 5 min sur 2 cœurs.
 
 ## 8. Bilan : ce qui est expliqué, ce qui ne l'est pas
 
