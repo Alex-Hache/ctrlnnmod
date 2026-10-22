@@ -60,3 +60,4 @@ Contrôles : e-lin, e-fin, e-val passés pour tous les bras concernés (E = 0,96
 - Descriptif bassin : depuis le maître perturbé (1 % ou 10 %), l'entraînement contraint finit à 0,05–0,23, au-dessus du point de départ pour basin2 sur 4 graines sur 5.
 - Défaut de protocole à noter : le seuil e-basin (0,01) n'était pas compatible avec un bruit de 1 % sur un maître posé sur le bord.
 - Prédictions : 2 sur 6 justes (linfree, basin1).
+- Incident : `m2s_log.txt` a été réécrit par un `git pull --rebase` pendant que le calcul y écrivait ; le fichier visible s'arrête après la graine 0. Les résultats (30 fichiers JSON, `dval.json`) sont complets et sont la seule source de l'analyse.
