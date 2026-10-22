@@ -61,3 +61,11 @@ Contrôles : e-lin, e-fin, e-val passés pour tous les bras concernés (E = 0,96
 - Défaut de protocole à noter : le seuil e-basin (0,01) n'était pas compatible avec un bruit de 1 % sur un maître posé sur le bord.
 - Prédictions : 2 sur 6 justes (linfree, basin1).
 - Incident : `m2s_log.txt` a été réécrit par un `git pull --rebase` pendant que le calcul y écrivait ; le fichier visible s'arrête après la graine 0. Les résultats (30 fichiers JSON, `dval.json`) sont complets et sont la seule source de l'analyse.
+
+## Analyse descriptive (2026-10-22, 10:45, sans entraînement, pas de règle) — `m2s_spectres.txt`
+
+À la lumière de la session parallèle (`sessions/theorie_gradient_plat.md` : pas de composante radiale sur une tête saturée, ∂S absorbant sous GD).
+- Répartition du budget en fin de run (moyenne sur les têtes) : P : B̃·C 0,004–0,043 (chemin tanh **fermé**), Ã diag. 0,24–0,42, Ã hors diag. 0,57–0,74 ; lin : Ã hors diag. 0,58–0,74 ; lingate0 : Ã diag. 0,42–0,63.
+- Lemme (disques, preuve en une ligne) : si r_h ≤ ρ et des portes constantes z_h, toute valeur propre λ de x ↦ (1 − Z)x + Z·J x vérifie |λ − (1 − z_h)| ≤ ρ z_h pour une tête h (prendre h = argmax ‖x_h‖ dans le vecteur propre). Un pôle 0,99·e^{iθ} du maître exige donc une tête avec z ≥ z*(θ) : 0,125 (3°), 0,618 (10°), 0,911 (25°), 0,970 (45°). À ρ = 2 (fix2), z*(45°) ≈ 0,35.
+- Mesure (linéarisation en x = 0, u = 0) : les pôles rapides (25°, 45°) ne sont atteints que si une porte dépasse le seuil. P et lin : z max 0,3–0,98, pôle 45° manqué partout (distance 0,34–0,60). lingate0 : 45° atteint sur 2/5 (z ≥ 0,98 sur deux têtes) ; sa seule graine en échec (s3, test 0,25) a z max = 0,74 et manque 25° et 45°. Le libre atteint 3–4 pôles sur 4 avec z ≈ 0,07 : il compense par r ≫ 1 (rayon z·r grand).
+- Lecture provisoire : dans S, les portes portent la capacité de représenter les dynamiques rapides. Le contraint doit ouvrir ses portes ; le libre, non.

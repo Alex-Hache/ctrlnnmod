@@ -1,0 +1,26 @@
+z minimal par oscillateur (une tête, dans S) : {3: 0.125, 10: 0.618, 25: 0.911, 45: 0.97}
+p        s0 test 0.1243 | distance pôle maître → valeur propre la plus proche (3°/10°/25°/45°) : 0.023 0.005 0.003 0.343 | pôles couverts (< 0,02) : 2/4 | z tri 0.98 0.72 0.41 0.19
+p        s1 test 0.3404 | distance pôle maître → valeur propre la plus proche (3°/10°/25°/45°) : 0.107 0.043 0.263 0.590 | pôles couverts (< 0,02) : 0/4 | z tri 0.39 0.29 0.28 0.25
+p        s2 test 0.2917 | distance pôle maître → valeur propre la plus proche (3°/10°/25°/45°) : 0.036 0.011 0.258 0.593 | pôles couverts (< 0,02) : 1/4 | z tri 0.52 0.46 0.20 0.12
+p        s3 test 0.2878 | distance pôle maître → valeur propre la plus proche (3°/10°/25°/45°) : 0.027 0.013 0.261 0.596 | pôles couverts (< 0,02) : 1/4 | z tri 0.61 0.56 0.21 0.13
+p        s4 test 0.2476 | distance pôle maître → valeur propre la plus proche (3°/10°/25°/45°) : 0.044 0.019 0.266 0.568 | pôles couverts (< 0,02) : 1/4 | z tri 0.59 0.32 0.28 0.26
+free     s0 test 0.0012 | distance pôle maître → valeur propre la plus proche (3°/10°/25°/45°) : 0.000 0.000 0.005 0.032 | pôles couverts (< 0,02) : 3/4 | z tri 0.09 0.08 0.07 0.07
+free     s1 test 0.0009 | distance pôle maître → valeur propre la plus proche (3°/10°/25°/45°) : 0.000 0.000 0.016 0.039 | pôles couverts (< 0,02) : 3/4 | z tri 0.07 0.07 0.07 0.07
+free     s2 test 0.0019 | distance pôle maître → valeur propre la plus proche (3°/10°/25°/45°) : 0.000 0.000 0.011 0.011 | pôles couverts (< 0,02) : 4/4 | z tri 0.11 0.09 0.08 0.07
+free     s3 test 0.0023 | distance pôle maître → valeur propre la plus proche (3°/10°/25°/45°) : 0.000 0.001 0.009 0.036 | pôles couverts (< 0,02) : 3/4 | z tri 0.09 0.08 0.08 0.08
+free     s4 test 0.0018 | distance pôle maître → valeur propre la plus proche (3°/10°/25°/45°) : 0.000 0.000 0.002 0.012 | pôles couverts (< 0,02) : 4/4 | z tri 0.13 0.09 0.07 0.06
+lin      s0 test 0.2940 | distance pôle maître → valeur propre la plus proche (3°/10°/25°/45°) : 0.036 0.007 0.238 0.385 | pôles couverts (< 0,02) : 1/4 | z tri 0.68 0.59 0.51 0.31
+lin      s1 test 0.3348 | distance pôle maître → valeur propre la plus proche (3°/10°/25°/45°) : 0.061 0.040 0.269 0.579 | pôles couverts (< 0,02) : 0/4 | z tri 0.36 0.34 0.31 0.30
+lin      s2 test 0.2440 | distance pôle maître → valeur propre la plus proche (3°/10°/25°/45°) : 0.016 0.008 0.260 0.595 | pôles couverts (< 0,02) : 2/4 | z tri 0.76 0.18 0.17 0.11
+lin      s3 test 0.4141 | distance pôle maître → valeur propre la plus proche (3°/10°/25°/45°) : 0.015 0.041 0.283 0.590 | pôles couverts (< 0,02) : 1/4 | z tri 0.30 0.28 0.25 0.22
+lin      s4 test 0.1085 | distance pôle maître → valeur propre la plus proche (3°/10°/25°/45°) : 0.046 0.011 0.016 0.348 | pôles couverts (< 0,02) : 2/4 | z tri 0.89 0.60 0.48 0.16
+gate0    s0 test 0.1128 | distance pôle maître → valeur propre la plus proche (3°/10°/25°/45°) : 0.008 0.006 0.011 0.343 | pôles couverts (< 0,02) : 3/4 | z tri 0.98 0.76 0.75 0.64
+gate0    s1 test 0.1981 | distance pôle maître → valeur propre la plus proche (3°/10°/25°/45°) : 0.092 0.010 0.166 0.337 | pôles couverts (< 0,02) : 1/4 | z tri 0.71 0.67 0.61 0.60
+gate0    s2 test 0.1363 | distance pôle maître → valeur propre la plus proche (3°/10°/25°/45°) : 0.009 0.004 0.010 0.341 | pôles couverts (< 0,02) : 3/4 | z tri 0.95 0.69 0.63 0.50
+gate0    s3 test 0.2123 | distance pôle maître → valeur propre la plus proche (3°/10°/25°/45°) : 0.007 0.005 0.134 0.354 | pôles couverts (< 0,02) : 2/4 | z tri 0.80 0.74 0.73 0.68
+gate0    s4 test 0.1181 | distance pôle maître → valeur propre la plus proche (3°/10°/25°/45°) : 0.002 0.001 0.125 0.365 | pôles couverts (< 0,02) : 2/4 | z tri 0.76 0.74 0.74 0.46
+lingate0 s0 test 0.0309 | distance pôle maître → valeur propre la plus proche (3°/10°/25°/45°) : 0.001 0.006 0.006 0.005 | pôles couverts (< 0,02) : 4/4 | z tri 0.99 0.99 0.83 0.80
+lingate0 s1 test 0.0388 | distance pôle maître → valeur propre la plus proche (3°/10°/25°/45°) : 0.005 0.003 0.004 0.343 | pôles couverts (< 0,02) : 3/4 | z tri 0.98 0.82 0.81 0.80
+lingate0 s2 test 0.0474 | distance pôle maître → valeur propre la plus proche (3°/10°/25°/45°) : 0.011 0.005 0.007 0.007 | pôles couverts (< 0,02) : 4/4 | z tri 0.99 0.98 0.98 0.69
+lingate0 s3 test 0.2502 | distance pôle maître → valeur propre la plus proche (3°/10°/25°/45°) : 0.006 0.006 0.215 0.469 | pôles couverts (< 0,02) : 2/4 | z tri 0.74 0.73 0.69 0.68
+lingate0 s4 test 0.0297 | distance pôle maître → valeur propre la plus proche (3°/10°/25°/45°) : 0.005 0.001 0.004 0.343 | pôles couverts (< 0,02) : 3/4 | z tri 0.98 0.81 0.80 0.79
