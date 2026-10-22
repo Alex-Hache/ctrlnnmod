@@ -13,3 +13,5 @@ t8 fix2  s0: r=2 r_mid=1.983 R_lin=1.965 sommet=1.967 R_loc=1.966 → r_box_lo=1
 t8 fix2  s1: r=2 r_mid=1.997 R_lin=1.994 sommet=1.995 R_loc=1.994 → r_box_lo=1.995
 t8 fix2  s2: r=2 r_mid=1.998 R_lin=1.997 sommet=1.997 R_loc=1.997 → r_box_lo=1.997
 t8 fix2  s3: r=2 r_mid=1.958 R_lin=1.917 sommet=1.919 R_loc=1.917 → r_box_lo=1.919
+t8 fix2  s4: r=2 r_mid=1.976 R_lin=1.953 sommet=1.958 R_loc=1.956 → r_box_lo=1.958
+T8 fini 07:28:16
