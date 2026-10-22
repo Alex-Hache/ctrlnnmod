@@ -15,3 +15,5 @@ t8 fix2  s2: r=2 r_mid=1.998 R_lin=1.997 sommet=1.997 R_loc=1.997 → r_box_lo=1
 t8 fix2  s3: r=2 r_mid=1.958 R_lin=1.917 sommet=1.919 R_loc=1.917 → r_box_lo=1.919
 t8 fix2  s4: r=2 r_mid=1.976 R_lin=1.953 sommet=1.958 R_loc=1.956 → r_box_lo=1.958
 T8 fini 07:28:16
+train alpha    s0: ok train=0.0027 test=0.1021 c_end=0.9990 r_fixe_end=3.786 207s
+train mid      s0: ok train=0.0558 test=0.1564 c_end=0.9990 r_fixe_end=1.013 210s
