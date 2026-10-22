@@ -2,6 +2,8 @@
 
 Fiche écrite le 2026-10-22 (07:50) à la demande de l'utilisateur. **À lire en premier par la session qui la reçoit.**
 
+**Statut (2026-10-22, 08:30)** : session faite. Livrables : `biblio_gradient_plat.md`, `theorie_gradient_plat.md` (§ 8 bilan, § 9 prochain test), `these-lean/TheseLean/Ext/ScaleInvariance.lean` (16 énoncés, 0 `sorry`).
+
 ## Objectif unique de la session
 
 Expliquer **théoriquement**, puis **démontrer en Lean** (dépôt `these-lean`), le phénomène suivant : pendant l'entraînement d'un modèle contraint par reparamétrisation, le gradient reste non nul (même tangent au bord de l'ensemble contraint), mais la perte ne baisse plus. L'utilisateur a observé ce phénomène plusieurs fois pendant sa thèse.

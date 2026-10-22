@@ -23,29 +23,34 @@ Notation : x ∈ E, f : E → ℝ, g = ∇f(x).
 **P1 (Euler).** Si f(t·x) = f(x) pour t voisin de 1 et si f a le gradient g en x, alors ⟨g, x⟩ = 0.
 Preuve : φ(t) = f(t·x) a la dérivée ⟨g, x⟩ en t = 1 (règle de la chaîne) et φ est constante près de 1.
 Version par bloc : si f(x + s·v) = f(x) pour s voisin de 0, alors ⟨g, v⟩ = 0. Avec v = composante radiale du bloc h, on obtient ⟨∇_h f, θ_h⟩ = 0.
+Lean : `inner_grad_eq_zero_of_ray_invariant`, `inner_grad_eq_zero_of_line_invariant`.
 Conséquence : **la direction radiale d'une tête saturée est dans le noyau de J**, et le gradient en θ n'a aucune composante radiale. C'est le déficit de rang de M1 (= nombre de têtes saturées), maintenant démontré en général.
 
 **P2 (degré −1).** Si f(c·y) = f(y) pour y voisin de x (c > 0) et si f a le gradient g en x, alors f a le gradient c⁻¹·g en c·x.
 Preuve : près de c·x, f = f ∘ (c⁻¹·) ; règle de la chaîne ; l'adjoint de c⁻¹·Id est c⁻¹·Id.
+Lean : `hasGradientAt_smul_of_invariant` (c ≠ 0) ; version générale `hasGradientAt_comp_symm` : si f ∘ A = f près de x, A linéaire inversible symétrique, le gradient en A x vaut A⁻¹ g (sert pour une homothétie par bloc, A = diag(s)).
 
-**P3 (Pythagore).** Si ⟨g, x⟩ = 0, alors ‖x − η·g‖² = ‖x‖² + η²‖g‖² [A1, A4].
+**P3 (Pythagore).** Si ⟨g, x⟩ = 0, alors ‖x − η·g‖² = ‖x‖² + η²‖g‖² [A1, A4]. Lean : `norm_sub_smul_sq_of_inner_eq_zero`.
 
 **P4 (pas angulaire).** Si ⟨d, x⟩ = 0 et x ≠ 0, alors ‖(x+d)/‖x+d‖ − x/‖x‖‖ ≤ ‖d‖/‖x‖.
 Preuve : avec a = ‖x‖, b = ‖d‖, n = ‖x+d‖ = √(a²+b²), le carré de la corde vaut 2 − 2a/n = 2b²/(n(n+a)) ≤ b²/a².
 Avec P2 (c = ‖x‖, x̂ = x/‖x‖) : un pas de GD tourne la direction d'au plus η·‖∇f(x̂)‖/‖x‖². Le taux effectif de GD sur la direction est η/‖x‖² [A2, A3].
+Lean : `norm_dir_add_sub_dir_le` ; `dir_gd_step_le` (f invariante par toute homothétie c > 0).
 
-**P5 (GD : croissance de la norme et absorption).** Si chaque gradient est orthogonal à son itéré, alors ‖x_t‖² = ‖x_0‖² + η² Σ_{s<t} ‖g_s‖², donc ‖x_t‖ croît.
-Absorption : soit N positivement homogène avec N(x) ≥ α‖x‖ (α > 0), et f localement invariante le long des rayons sur {N > ρ}. Si α‖x_0‖ > ρ, alors, pour **tout** pas η, toutes les itérations de GD vérifient N(x_t) > ρ.
+**P5 (GD : croissance de la norme et absorption).** Si chaque gradient est orthogonal à son itéré, alors ‖x_t‖² = ‖x_0‖² + η² Σ_{s<t} ‖g_s‖², donc ‖x_t‖ croît (Lean : `gd_norm_sq_eq`).
+Absorption (Lean, version par bloc : `gd_absorbing`) : soit P le projecteur orthogonal sur un bloc, N avec N(x) ≥ α‖P x‖ (α > 0), et f localement invariante le long de P x sur {N > ρ}. Si α‖P x_0‖ > ρ, alors, pour **tout** pas η, toutes les itérations de GD vérifient N(x_t) > ρ, et ‖P x_t‖ ne décroît pas. Pour `proj` (Lean : `projBlock`, `projBlock_line_invariant`, `proj_gd_absorbing`) : Φ(y) = (y − P y) + (ρ / max(N y, ρ))·P y est invariante le long de P y dès que N y > ρ > 0 et que N est homogène de degré 1 le long du bloc ; la conclusion d'absorption suit.
+Version sur tout l'espace (P = Id) : soit N positivement homogène avec N(x) ≥ α‖x‖ (α > 0), et f localement invariante le long des rayons sur {N > ρ}. Si α‖x_0‖ > ρ, alors, pour **tout** pas η, toutes les itérations de GD vérifient N(x_t) > ρ.
 Lecture pour `proj` (à C fixé, N = r_h, α > 0 tant que les c_q = Σ_k‖C_qk‖ sont minorés) : sous GD, une tête saturée assez loin du bord **ne revient jamais** dans S. Le gradient ne donne aucun signal vers l'intérieur (P1), et chaque pas éloigne θ_h de l'origine (P3). C'est F1 sous GD (flots GD de M2-ter et M2-q, T3 : 15/15 contacts sans retour).
 
 **P6 (taux effectifs : conjugaison exacte).** Coordonnées (ι → ℝ), échelle s : ι → ℝ, s_i > 0, gradient G avec G(s⊙x) = s⁻¹⊙G(x) (vrai pour un bloc invariant par P2, s = c sur le bloc, 1 ailleurs).
 - GD : l'itéré de GD depuis s⊙x₀ au pas η est s⊙(itéré de GD depuis x₀ au pas η/s²).
 - Adam avec ε = 0, sans clip : la mise à jour m̂/√v̂ est inchangée si tous les gradients passés sont multipliés par un même c > 0. Donc l'itéré d'Adam depuis s⊙x₀ au pas η est s⊙(itéré d'Adam depuis x₀ au pas η/s).
+Lean : `gd_conj`, `adam_dir_scale`, `adam_conj` (G abstrait ; le passage « bloc invariant ⇒ G(s⊙x) = s⁻¹⊙G(x) » est `hasGradientAt_comp_symm`, non refait en coordonnées).
 Lecture : sur une tête saturée, l'échelle brute ‖θ_h‖ divise le pas : η/‖θ_h‖² sous GD, **η/‖θ_h‖ sous Adam** (version exacte de l'énoncé approché de [A2]). Adam est coordonnée par coordonnée : la conjugaison vaut bloc par bloc. Le clip global couple les blocs : s'il est actif, il casse la conjugaison (facteur variable dans le temps). ε = 1e-8 ne compte que si √v̂ est de cet ordre.
 
-**P7 (ε-sous-différentiel d'une norme).** Pour N positivement homogène et sous-additive : g vérifie N(y) ≥ N(x) + ⟨g, y − x⟩ − ε pour tout y **si et seulement si** ⟨g, z⟩ ≤ N(z) pour tout z, et ⟨g, x⟩ ≥ N(x) − ε. (Sert au test du § 6.)
+**P7 (ε-sous-différentiel d'une jauge).** Pour N positivement homogène (aucune autre hypothèse ; Lean : `eps_subgrad_iff`) : g vérifie N(y) ≥ N(x) + ⟨g, y − x⟩ − ε pour tout y **si et seulement si** ⟨g, z⟩ ≤ N(z) pour tout z, et ⟨g, x⟩ ≥ N(x) − ε. (Sert au test du § 6.)
 
-**P8 (pli : gradient tangent non nul mais point KKT).** Exemple : S = {|a| + |b| ≤ 1}, W = (1, 0), g = −(1 ; ½). La normale « lisse » prise par la dérivation automatique (signe(0) = 0) est (1, 0) ; la partie tangente de g vaut (0 ; −½) ≠ 0. Mais −g = (1 ; ½) ∈ N_S(W) = {λ(1, s) : λ ≥ 0, |s| ≤ 1} : W est un point KKT. Une projection sur la normale lisse peut donc annoncer un gradient tangent non nul en un point stationnaire.
+**P8 (pli : gradient tangent non nul mais point KKT).** Exemple : S = {|a| + |b| ≤ 1}, W = (1, 0), g = −(1 ; ½). La normale « lisse » prise par la dérivation automatique (signe(0) = 0) est (1, 0) ; la partie tangente de g vaut (0 ; −½) ≠ 0. Mais −g = (1 ; ½) ∈ N_S(W) = {λ(1, s) : λ ≥ 0, |s| ≤ 1} : W est un point KKT. Une projection sur la normale lisse peut donc annoncer un gradient tangent non nul en un point stationnaire. Lean : `kink_kkt_tangent_ne_zero`.
 
 ## 3. Piste 1 (invariance d'échelle) : ce qu'elle explique, ce qu'elle n'explique pas
 
@@ -131,6 +136,45 @@ Lecture (majorité 3/5, bras lr 1e-3) :
 - sinon **partielle** (une part du plateau est l'amplitude de l'oscillation).
 Coût : 10 runs × 1000 pas ≈ 5 min sur 2 cœurs.
 
+## 7b. Résultat du test du pas (2026-10-22, `gp_lr.py`, `results_gp/lr.json`, `gp_lr_log.txt`)
+
+| graine | Adam neuf, lr 1e-2 (témoin) : b / u / test | Adam neuf, lr 1e-3 : b / u / test | test de P (T4) |
+|---|---|---|---|
+| 0 | **0,98** / 0,48 / 0,059 | 0,16 / 0,10 / 0,142 | 0,124 |
+| 1 | −0,02 / 0,52 / 0,327 | 0,04 / 0,46 / 0,314 | 0,340 |
+| 2 | **0,43** / 0,39 / 0,202 | 0,24 / 0,29 / 0,225 | 0,292 |
+| 3 | 0,03 / 0,45 / 0,266 | 0,04 / 0,43 / 0,255 | 0,288 |
+| 4 | **0,77** / 0,42 / 0,062 | 0,47 / 0,17 / 0,119 | 0,248 |
+(b = baisse relative de la perte d'entraînement en 1000 pas ; u = fraction de pas montants sur [500, 1000). Tous les runs restent sur ∂S : r(W) = 0,999.)
+
+Verdict pré-enregistré : **invalide**. Le témoin devait reproduire le plateau (b < 0,10 sur ≥ 3/5) ; il ne le fait que sur 2/5. La piste 3 n'est ni confirmée ni réfutée par ce test.
+
+Observation (non pré-enregistrée, lecture provisoire) : à θ identique (donc W, r brut identiques) et au **même pas** 1e-2, remettre à zéro l'état d'Adam (m, v, compteur) fait sortir 3 graines sur 5 du plateau, dont 2 de façon nette (graine 0 : perte 0,057 → 0,0009, test 0,124 → 0,059 ; graine 4 : test 0,248 → 0,062). Le modèle contraint, **sur ∂S**, peut donc atteindre une perte bien plus basse depuis le point du plateau. Le plateau dépend de l'**état interne de l'optimiseur**, pas seulement de (θ, lr).
+Limites : (1) pas de bras « continuer avec l'état d'Adam d'origine » (T4 ne sauvegarde pas l'état d'Adam) ; T4 montre seulement que la perte était plate depuis t ≈ 1500–2000. (2) La remise à zéro mélange deux effets : l'oubli de v (mémoire de β₂ = 0,999 ≈ 1000 pas, gonflée par les pics de perte et par les gradients de début de run, plus grands quand ‖θ_h‖ était petit, P2) et le « coup de pied » des premiers pas d'un Adam neuf (≈ η·signe(g) sur chaque coordonnée).
+
 ## 8. Bilan : ce qui est expliqué, ce qui ne l'est pas
 
-(à remplir après le § 7)
+Expliqué (démontré, Lean `Ext/ScaleInvariance`, 16 énoncés, 0 `sorry`) :
+- sur une tête saturée, le gradient en θ n'a pas de composante radiale ; la direction radiale est dans le noyau de J (déficit de rang de M1) ;
+- sous GD, ∂S est **absorbant** pour `proj`, quel que soit le pas : une tête saturée assez loin du bord ne revient jamais dans S ;
+- l'échelle brute agit comme un diviseur du pas : η/‖θ_h‖² sous GD, η/‖θ_h‖ sous Adam (conjugaison exacte, ε = 0, sans clip). Cela explique le saut initial de r brut et, en lecture, pourquoi la rétraction radiale fait pire.
+
+Exclu (mesuré, critères écrits avant calcul) :
+- le plateau n'est **pas** un point KKT caché par les plis (piste 2 réfutée, 5/5) ; une direction de descente admissible existe ;
+- le point du plateau n'est même pas stationnaire dans les coordonnées **sans contrainte** (‖g_unc‖/‖g_con‖ = 0,13–0,44).
+
+Pas encore expliqué :
+- **pourquoi la perte reste plate alors que le gradient ne s'annule pas**. Les faits pointent vers la dynamique d'Adam (oscillation entretenue, perte qui monte à ≈ 45 % des pas ; sortie du plateau par simple remise à zéro de l'état sur 3/5). Candidats : mémoire de v gonflée par les pics (pas effectifs trop petits sur certaines coordonnées, trop grands sur d'autres), ou régime d'« équilibre chaotique » [B1] dont on sort par perturbation. Aucun n'est démontré ici.
+- la baisse de r brut sous Adam (t ≈ 50 → 500) ; P5 l'interdit sous GD seulement.
+
+Réponse courte à la question de la fiche : le « gradient non nul, perte plate » n'est **pas** une propriété de l'ensemble S ni de ses plis. La paramétrisation `proj` crée une structure (absorption, taux effectif ∝ 1/‖θ_h‖) ; le plateau lui-même est un **état de l'optimiseur** sur ∂S (lecture provisoire, 3/5).
+
+## 9. Prochain test proposé (non lancé ; critère à pousser avant calcul)
+
+But : séparer « mémoire de v » et « coup de pied ». Régénérer P (T4, bras p) en sauvegardant l'état d'Adam à t = 3000 (≈ 8 min). Depuis t = 3000, 1000 pas, lr 1e-2, 5 graines, bras :
+- **cont** : état d'origine (témoin du plateau) ;
+- **reset** : état remis à zéro (reproduit § 7b) ;
+- **v-court** : v remplacé par g_t² (mémoire de v effacée), m et compteur gardés ;
+- **kick** : état gardé, un seul pas η·signe(g) ajouté, puis Adam d'origine.
+Validité : cont plat (b < 0,10 sur ≥ 3/5) ; reset reproduit § 7b (mêmes graines sorties, à 1e-6 près).
+Lecture : v-court sort (b ≥ 0,3) et kick non → mémoire de v ; kick sort et v-court non → perturbation (équilibre chaotique) ; les deux → ambigu ; aucun → l'effet vient de m ou du compteur.

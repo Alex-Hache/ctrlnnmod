@@ -117,3 +117,5 @@ Notation de notre cas : f(θ) = L(Φ(θ)) ; tête saturée h ⇒ Φ homogène de
 1. Piste 1 est solide comme **structure** (A1–A4, A8) : sur une tête saturée, l'échelle brute agit comme un diviseur du taux (η/‖θ‖² en GD, η/‖θ‖ en Adam). Mais, pour une perte lisse et GD, elle prédit une descente lente et un gradient qui tend vers 0 (A4), pas un plateau oscillant.
 2. La signature observée (oscillation, plateau, gradient non nul, perte pleine) correspond au régime « équilibre chaotique » (B1) ou à un pas constant sur un problème non lisse (C1).
 3. C1 a un argument propre à notre classe : le maître est sur les plis de r. C'est la piste à tester en premier (voir la théorie, § 4).
+
+Après tests (même jour, `theorie_gradient_plat.md` § 7–8) : piste 2 réfutée (le plateau n'est pas un point KKT caché par les plis) ; le plateau dépend de l'état d'Adam (lecture provisoire, 3/5). Les entrées B1 et D1 restent les plus proches du phénomène observé.
