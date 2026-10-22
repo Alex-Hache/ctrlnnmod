@@ -1,0 +1,24 @@
+début U3/U4 08:53:12
+  log.append(dict(it=it, loss=losses[-1], rho=m.rho, rW=float(m2q.r_W(m).max()), BC=float(bc)))
+  log.append(dict(it=it, loss=losses[-1], rho=m.rho, rW=float(m2q.r_W(m).max()), BC=float(bc)))
+train pen0.03  s0: ok train=0.0549 test=0.1531 rW_end=0.9990 222s
+train pen0.3   s0: ok train=0.0618 test=0.1861 rW_end=0.9990 223s
+train reopen   s0: ok train=0.0612 test=0.1905 rW_end=0.9990 225s
+train cont     s0: ok train=0.0060 test=0.0906 rW_end=0.9990 227s
+train pen0.03  s1: ok train=0.1042 test=0.3365 rW_end=0.9990 222s
+train pen0.3   s1: ok train=0.1149 test=0.3855 rW_end=0.9990 222s
+train cont     s1: ok train=0.1085 test=0.3248 rW_end=0.9990 219s
+train reopen   s1: ok train=0.0152 test=0.0951 rW_end=0.9990 221s
+train pen0.03  s2: ok train=0.1166 test=0.2368 rW_end=0.9990 222s
+train pen0.3   s2: ok train=0.1240 test=0.2305 rW_end=0.9990 224s
+train cont     s2: ok train=0.0656 test=0.1792 rW_end=0.9990 236s
+train reopen   s2: ok train=0.0647 test=0.1688 rW_end=0.9990 231s
+train pen0.3   s3: ok train=0.1376 test=0.2658 rW_end=0.9990 230s
+train pen0.03  s3: ok train=0.1394 test=0.2899 rW_end=0.9990 231s
+train cont     s3: ok train=0.1411 test=0.2870 rW_end=0.9990 234s
+train reopen   s3: ok train=0.1639 test=0.4164 rW_end=0.9990 235s
+train pen0.03  s4: ok train=0.0829 test=0.2296 rW_end=0.9990 232s
+train pen0.3   s4: ok train=0.0296 test=0.1220 rW_end=0.9990 234s
+train cont     s4: ok train=0.0147 test=0.0483 rW_end=0.9990 233s
+train reopen   s4: ok train=0.0974 test=0.3340 rW_end=0.9990 235s
+FIN 09:31:21

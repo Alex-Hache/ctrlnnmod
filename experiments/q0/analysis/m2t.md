@@ -38,3 +38,11 @@ Coût : U1, U2 < 5 min ; U3, U4 : 20 runs ≈ 45 min. Lancés après M2-s.
 
 ### Précision avant calcul (test de fumée de 20 pas, dossier temporaire)
 - U4 : le θ brut de P est hors de S (r brut 4 à 6) ; avec ρ_t = 2, Φ ferait sauter W à r = 2 au pas 0 (divergence observée au test de fumée). L'intention est de relâcher la borne depuis l'état bloqué. Donc, pour cont et reopen : θ est d'abord remis à W_P (même fonction, r = ρ), puis l'entraînement reprend. Règles inchangées.
+
+## Résultats (règles appliquées par `analyze_m2t.py`) — `m2t_analysis.txt`, `m2t_log.txt`, `m2t_U34_log.txt`, `results_m2t/`
+
+- **U1 : ambigu.** Gradient tangent à ∂S non petit (0,95 à 5,8 × ‖g₀‖), perte plate (pente < 1 % sur 4/5). Ni plateau stationnaire ni descente lente. Ce phénomène est confié à une session parallèle (`sessions/gradient_non_nul_perte_plate.md`).
+- **U2 : barrière sur ce chemin** (5/5 ; contrôle u-IO passé). Perte maximale 8 à 175 × L(0), vers λ = 0,4–0,6. Force faible : un seul chemin, qui mélange deux solutions de types différents.
+- **U3 : le transfert forcé ne suffit pas.** Pénalité sur B̃·C : 0,237 (λ = 0,03) et 0,231 (λ = 0,3).
+- **U4 : pas d'effet de la réouverture.** reopen 0,191 contre cont 0,179. Descriptif : poursuivre P depuis son état bloqué, avec un Adam neuf, l'améliore (0,288 → 0,179) sans le faire réussir.
+- Prédictions : U2 juste (barrière) ; U1, U3, U4 fausses.

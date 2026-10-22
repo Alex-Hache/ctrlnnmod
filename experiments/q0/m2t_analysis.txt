@@ -1,0 +1,24 @@
+== U1 — plateau ou lenteur
+  s0: ρ_g 1.652e+00 | pente -0.0001 | têtes saturées 8
+  s1: ρ_g 5.832e+00 | pente 0.0536 | têtes saturées 8
+  s2: ρ_g 1.038e+00 | pente 0.0071 | têtes saturées 8
+  s3: ρ_g 9.502e-01 | pente -0.0264 | têtes saturées 8
+  s4: ρ_g 3.092e+00 | pente 0.0048 | têtes saturées 8
+Ligne U1 : ambigu
+
+== U2 — barrière sur le chemin aligné
+Contrôle u-IO (sortie et r inchangés par l'alignement) : passé
+  s0: L(0) 0.0568 | max L 0.4627 en λ = 0.60 | L(1) 4.36e-12 | barrière oui | décroissant non
+  s1: L(0) 0.1084 | max L 18.9639 en λ = 0.45 | L(1) 6.42e-12 | barrière oui | décroissant non
+  s2: L(0) 0.1231 | max L 1.3084 en λ = 0.40 | L(1) 2.48e-12 | barrière oui | décroissant non
+  s3: L(0) 0.1428 | max L 1.5566 en λ = 0.50 | L(1) 4.63e-12 | barrière oui | décroissant non
+  s4: L(0) 0.0846 | max L 0.8851 en λ = 0.45 | L(1) 4.91e-12 | barrière oui | décroissant non
+Ligne U2 : barrière sur ce chemin
+
+== U3 / U4
+  pen0.03  test : 0.1531 0.3365 0.2368 0.2899 0.2296 | médiane 0.2368 (échoue) | r fin ≤ ρ : ok | statuts ['ok', 'ok', 'ok', 'ok', 'ok']
+  pen0.3   test : 0.1861 0.3855 0.2305 0.2658 0.1220 | médiane 0.2305 (échoue) | r fin ≤ ρ : ok | statuts ['ok', 'ok', 'ok', 'ok', 'ok']
+  cont     test : 0.0906 0.3248 0.1792 0.2870 0.0483 | médiane 0.1792 (partiel) | r fin ≤ ρ : ok | statuts ['ok', 'ok', 'ok', 'ok', 'ok']
+  reopen   test : 0.1905 0.0951 0.1688 0.4164 0.3340 | médiane 0.1905 (partiel) | r fin ≤ ρ : ok | statuts ['ok', 'ok', 'ok', 'ok', 'ok']
+Ligne U3 : le transfert forcé ne suffit pas
+Ligne U4 : pas d'effet
