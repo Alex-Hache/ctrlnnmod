@@ -6,8 +6,8 @@ Session du 2026-10-22. Fiche : `gradient_non_nul_perte_plate.md`. Bibliographie 
 
 - F1 : les 8 têtes restent saturées (W sur ∂S) pendant les 3000 pas ; le maître est à l'intérieur (marge 0,009).
 - F2 : au point final, le gradient en (Ã, B̃, C), projeté sur l'orthogonal des normales lisses ∇r_h, vaut 0,95 à 5,8 × ‖g(t = 0)‖ (U1). La composante normale est faible (‖g‖ ≈ ‖g_tan‖).
-- F3 : la perte est plate en moyenne après t ≈ 1000–2000, mais **oscille** : sur [2000, 3000), elle monte à 42–50 % des pas ; variation médiane par pas 0,1–1,4 % ; pics de 4 à 69 % en un pas (journaux de T4, lus le 2026-10-22, sans nouveau calcul).
-- F4 : r brut max passe de 0,90 à ≈ 4–5 en 10 pas, culmine à 5–8 vers t = 50, redescend vers 3–5 (t = 100–500), puis remonte lentement (4,1–5,9 à t = 3000).
+- F3 : la perte est plate en moyenne après t ≈ 1000–2000, mais **oscille** : sur [2000, 3000), elle monte à 41–50 % des pas ; variation médiane par pas 0,1–1,4 % ; pics de 4 à 69 % en un pas (journaux de T4, lus le 2026-10-22, sans nouveau calcul).
+- F4 : r brut max passe de 0,90 à 3,8–4,6 en 10 pas, culmine à 4,8–8 vers t = 50, redescend vers 3–5 (t = 100–500), puis remonte lentement (4,1–5,9 à t = 3000).
 - F5 : le gradient projeté avec rétraction radiale (θ gardé à r ≤ ρ) fait pire (test 0,77 contre 0,29).
 - F6 : les mêmes équations sans contrainte réussissent (0,0018).
 - Point d'échelle : à la fin, le pas d'Adam sur W vaut ≈ η·ρ/r_brut ≈ 2e-3 par coordonnée (voir § 2). Ce n'est pas un pas minuscule.
@@ -57,7 +57,7 @@ Lecture : sur une tête saturée, l'échelle brute ‖θ_h‖ divise le pas : η
 Explique :
 - le déficit de rang de M1 (P1) ;
 - sous GD, l'absorption par ∂S quel que soit le pas (P5) ;
-- le saut initial de r brut (F4, 0,90 → 4–5 en 10 pas) : au départ, ‖θ_h‖ ≈ 0,005 par coordonnée, et Adam fait des pas de ≈ η = 0,01 par coordonnée quelle que soit l'échelle (P6) ; la norme doit croître jusqu'à ce que le pas relatif devienne modéré (auto-stabilisation [A1]) ;
+- le saut initial de r brut (F4, 0,90 → 3,8–4,6 en 10 pas) : au départ, ‖θ_h‖ ≈ 0,005 par coordonnée, et Adam fait des pas de ≈ η = 0,01 par coordonnée quelle que soit l'échelle (P6) ; la norme doit croître jusqu'à ce que le pas relatif devienne modéré (auto-stabilisation [A1]) ;
 - F5 (lecture) : la rétraction radiale garde ‖θ_h‖ à l'échelle du bord, donc un taux effectif d'Adam ≈ r_brut/ρ ≈ 4–6 fois plus grand que celui de P en fin de run (P6). Candidat au régime « marche aléatoire » [B1].
 
 N'explique pas :

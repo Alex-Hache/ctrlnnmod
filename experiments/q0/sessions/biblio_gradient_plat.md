@@ -10,7 +10,7 @@ Notation de notre cas : f(θ) = L(Φ(θ)) ; tête saturée h ⇒ Φ homogène de
 - Lien : [arXiv:1602.07868](https://arxiv.org/abs/1602.07868v3) ; NIPS 2016 ([métadonnées NeurIPS](https://papers.neurips.cc/paper_files/paper/2016/file/ed265bc903a5a097f61d3ec064d96d2e-Metadata.json)). Vérifié : § 2.1 du texte complet ([ar5iv](https://ar5iv.labs.arxiv.org/html/1602.07868)).
 - Résultat : avec w = g·v/‖v‖, le gradient en v est orthogonal à v. Sous GD sans moment, ‖v‖ croît à chaque pas (Pythagore). Un pas trop grand fait croître ‖v‖, ce qui réduit l'échelle effective : la méthode « s'auto-stabilise ».
 - Hypothèses : GD sans moment. Les auteurs disent que l'argument ne tient pas strictement pour Adam ou le moment (effet qualitatif seulement).
-- Lien avec notre cas : `proj` sur une tête saturée est une « weight normalization » par la norme r_h (pas la norme euclidienne). C'est la source de la piste 1. Le saut de r brut de 0,90 à ≈ 4–5 en 10 pas (T4) est cohérent avec l'auto-stabilisation.
+- Lien avec notre cas : `proj` sur une tête saturée est une « weight normalization » par la norme r_h (pas la norme euclidienne). C'est la source de la piste 1. Le saut de r brut de 0,90 à 3,8–4,6 en 10 pas (T4) est cohérent avec l'auto-stabilisation.
 
 ### A2. van Laarhoven (2017) — L2 regularization versus batch and weight normalization
 - Lien : [arXiv:1706.05350](https://arxiv.org/pdf/1706.05350). Vérifié : texte (résumé et résultats principaux).

@@ -2,7 +2,7 @@
 
 Fiche écrite le 2026-10-22 (07:50) à la demande de l'utilisateur. **À lire en premier par la session qui la reçoit.**
 
-**Statut (2026-10-22, 08:30)** : session faite. Livrables : `biblio_gradient_plat.md`, `theorie_gradient_plat.md` (§ 8 bilan, § 9 prochain test), `these-lean/TheseLean/Ext/ScaleInvariance.lean` (16 énoncés, 0 `sorry`).
+**Statut (2026-10-22, commit 68988cd, 08:22)** : session faite. Livrables : `biblio_gradient_plat.md`, `theorie_gradient_plat.md` (§ 8 bilan, § 9 prochain test), `these-lean/TheseLean/Ext/ScaleInvariance.lean` (16 énoncés, 0 `sorry`).
 
 ## Objectif unique de la session
 
