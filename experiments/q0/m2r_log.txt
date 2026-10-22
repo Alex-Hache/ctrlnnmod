@@ -27,3 +27,5 @@ train midalpha s2: ok train=0.1171 test=0.2517 c_end=0.9990 r_fixe_end=5.364 211
 train mid      s3: ok train=0.1426 test=0.3815 c_end=0.9990 r_fixe_end=1.017 213s
 train alpha    s3: ok train=0.1057 test=0.2786 c_end=0.9990 r_fixe_end=3.580 216s
 train midalpha s3: ok train=0.0665 test=0.1371 c_end=0.9990 r_fixe_end=2.179 217s
+train mid      s4: ok train=0.0853 test=0.2186 c_end=0.9990 r_fixe_end=1.050 214s
+train alpha    s4: ok train=0.0811 test=0.1898 c_end=0.9990 r_fixe_end=6.417 212s
