@@ -48,3 +48,22 @@ Journal toutes les 50 itér. : perte, c_max, r_max (triangulaire), α min/max.
 Prédictions (confiance faible) : T8 : r_box_lo du libre entre 2 et 5 ; r_mid / r entre 0,5 et 0,9. T9 : partiel. T10 : échoue (T6 montre qu'une mise à l'échelle par tête ne réduit r que de 17–37 % sur la solution libre). T11 : partiel.
 
 Coût : T8 < 5 min ; T9–T11 : 15 runs × ≈ 4,5 min sur 2 cœurs ≈ 35–40 min.
+
+## Résultats (règles appliquées par `analyze_m2r.py`) — `m2r_T8_analysis.txt`, `m2r_analysis.txt`, `results_m2r/`
+
+### T8 (contrôles k1, k2 passés)
+- Libre : r 56–64 ; r_mid 44–50 ; r_box_lo 30–37 ; lâcheté du certificat ≤ 1,5–2,0. **Ligne : aucun certificat de cette forme n'admet la solution libre, même le plus fin.**
+- fix2 : r_box_lo 1,92–2,00 (lâcheté ≤ 1,04) ; admissible à ρ = 1 sur 0/5.
+- P : r_box_lo ≈ r ≈ ρ.
+- Gain local le long des trajectoires (pentes réelles) du libre : R_loc = 24–30.
+- Correction de la lecture du 21/10 au soir : le facteur ≈ 20 entre r ≈ 60 et la dilatation réelle (≤ 2,5, T5) ne vient **pas** de l'inégalité triangulaire sur B̃·C.
+
+### T9–T11 (contrôles d0, d-fin, d-val passés ; E = 0,92 à 0,99 : les trois certificats sont valides)
+| bras | test (5 graines) | médiane | g | lecture |
+|---|---|---|---|---|
+| mid (borne centre-rayon) | 0,156 0,319 0,288 0,382 0,219 | 0,288 | 0,00 | **réfutée** |
+| alpha (métrique par tête apprise) | 0,102 0,110 0,234 0,279 0,190 | 0,190 | 0,34 | partiel |
+| midalpha (les deux) | 0,092 0,132 0,252 0,137 0,183 | 0,137 | 0,53 | partiel |
+- La métrique apprise s'étale beaucoup : α max/min de 160 à 3800 en fin de run. Le r à métrique fixe des modèles finaux vaut 2 à 7 : le certificat appris admet des modèles nettement hors de S.
+- Prédictions : 1 sur 3 juste (T11 partiel) ; T9 prédit partiel, observé échoue ; T10 prédit échoue, observé partiel.
+- Lecture provisoire : une borne plus fine seule ne change rien. Une métrique libre par tête aide en partie (jusqu'à la moitié de l'écart avec la borne fine), mais aucun bras n'apprend comme le libre.
