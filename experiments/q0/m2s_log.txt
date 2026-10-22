@@ -3,3 +3,5 @@ train linfree  s0: ok test0=1.2682 train=0.0000 test=0.0001 rW_end=12.268 |B|=0 
 train lin      s0: ok test0=1.2682 train=0.1307 test=0.2940 rW_end=0.999 |B|=0 213s
 train gate0    s0: ok test0=1.4830 train=0.0523 test=0.1128 rW_end=0.999 |B|=0.7 212s
 train lingate0 s0: ok test0=1.4890 train=0.0054 test=0.0309 rW_end=0.999 |B|=0 208s
+train basin2   s0: ok test0=0.0521 train=0.0011 test=0.0772 rW_end=0.999 |B|=0 220s
+train basin1   s0: ok test0=0.5323 train=0.0046 test=0.1479 rW_end=0.999 |B|=0 220s
