@@ -35,3 +35,6 @@ Commun : banc de T4, 5 graines, majorité = 3/5, réussit < 0,05, échoue > 0,2 
 
 Prédictions (confiance faible) : U1 quasi stationnaire ; U2 barrière ; U3 partiel ; U4 aide partielle.
 Coût : U1, U2 < 5 min ; U3, U4 : 20 runs ≈ 45 min. Lancés après M2-s.
+
+### Précision avant calcul (test de fumée de 20 pas, dossier temporaire)
+- U4 : le θ brut de P est hors de S (r brut 4 à 6) ; avec ρ_t = 2, Φ ferait sauter W à r = 2 au pas 0 (divergence observée au test de fumée). L'intention est de relâcher la borne depuis l'état bloqué. Donc, pour cont et reopen : θ est d'abord remis à W_P (même fonction, r = ρ), puis l'entraînement reprend. Règles inchangées.
